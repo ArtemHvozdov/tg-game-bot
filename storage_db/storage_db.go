@@ -3,6 +3,9 @@ package storage_db
 import (
 	"database/sql"
 	"log"
+	
+	"github.com/ArtemHvozdov/tg-game-bot.git/models"
+	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
@@ -61,7 +64,7 @@ func createTables() error {
 			FOREIGN KEY (game_room_id) REFERENCES game_rooms(id)
 		)`},
 		{"game_rooms", `CREATE TABLE IF NOT EXISTS game_rooms (
-			id INTEGER PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT NOT NULL,
 			invite_link TEXT NOT NULL UNIQUE,
 			game_id INTEGER,
@@ -111,4 +114,94 @@ func createTables() error {
 	}
 
 	return nil
+}
+
+// CreateGameRoom добавляет новую игровую комнату в базу данных и возвращает её ID и инвайт-ссылку
+// CreateGameRoom добавляет новую игровую комнату в базу данных и возвращает её ID и инвайт-ссылку
+func CreateGameRoom(gameRoom models.GameRoom) (int, string, error) {
+	// Вставка данных в таблицу game_rooms
+	query := `INSERT INTO game_rooms (title, invite_link) VALUES (?, ?)`
+	res, err := db.Exec(query, gameRoom.Title, gameRoom.InviteLink)
+	if err != nil {
+		return 0, "", err
+	}
+
+	// Получаем ID созданной игровой комнаты
+	gameRoomID, err := res.LastInsertId()
+	if err != nil {
+		return 0, "", err
+	}
+
+	// Создаем инвайт-ссылку с использованием ID игровой комнаты
+	inviteLink := utils.GenerateInviteLink(int(gameRoomID))
+
+	// Обновляем запись с инвайт-ссылкой
+	_, err = db.Exec(`UPDATE game_rooms SET invite_link = ? WHERE id = ?`, inviteLink, gameRoomID)
+	if err != nil {
+		return 0, "", err
+	}
+
+	log.Printf("Game room '%s' created with ID %d and invite link %s", gameRoom.Title, gameRoomID, inviteLink)
+
+	return int(gameRoomID), inviteLink, nil
+}
+
+
+
+// CreateGame добавляет новую игру в базу данных и возвращает ее ID
+func CreateGame(game models.Game) (int, error) {
+	query := `INSERT INTO games (name, status) VALUES (?, ?)`
+	res, err := db.Exec(query, game.Name, game.Status)
+	if err != nil {
+		log.Println("Ошибка при добавлении игры в БД:", err)
+		return 0, err
+	}
+
+	// Получаем ID созданной игры
+	gameID, err := res.LastInsertId()
+	if err != nil {
+		log.Println("Ошибка получения ID созданной игры:", err)
+		return 0, err
+	}
+
+	log.Printf("Game '%s' создана с ID %d", game.Name, gameID)
+	return int(gameID), nil
+}
+
+// CreateTask добавляет новую задачу (вопрос и ответ) в базу данных
+func CreateTask(task models.Task) error {
+	query := `INSERT INTO tasks (game_id, question, answer) VALUES (?, ?, ?)`
+	_, err := db.Exec(query, task.GameID, task.Question, task.Answer)
+	if err != nil {
+		log.Println("Ошибка при добавлении задания в БД:", err)
+		return err
+	}
+
+	log.Printf("Task для GameID %d добавлен: '%s' -> '%s'", task.GameID, task.Question, task.Answer)
+	return nil
+}
+
+// GetGameRoomByID получает игровую комнату по её ID
+func GetGameRoomByID(gameRoomID int) (*models.GameRoom, error) {
+	query := `SELECT id, title, invite_link, game_id FROM game_rooms WHERE id = ?`
+	row := db.QueryRow(query, gameRoomID)
+
+	var gameRoom models.GameRoom
+	var gameID sql.NullInt64
+
+	err := row.Scan(&gameRoom.ID, &gameRoom.Title, &gameRoom.InviteLink, &gameID)
+	if err != nil {
+		log.Printf("Error fetching game room with ID %d: %v", gameRoomID, err)
+		return nil, err
+	}
+
+	// Если gameID не NULL, записываем его
+	if gameID.Valid {
+		gameRoom.GameID = new(int)
+		*gameRoom.GameID = int(gameID.Int64)
+	} else {
+		gameRoom.GameID = nil
+	}
+
+	return &gameRoom, nil
 }

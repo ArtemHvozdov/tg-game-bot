@@ -5,6 +5,7 @@ type Player struct {
     UserName string
     Name string
 	Passes uint8
+    Role string // "admin", "player"
 	GameRoomID int
 }
 
@@ -12,7 +13,8 @@ type GameRoom struct{
     ID int
     Title string
 	InviteLink string
-    GameID int
+    GameID *int
+    TotalPlayers int // max 5
 }
 
 type Game struct {
