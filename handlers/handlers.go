@@ -1,6 +1,7 @@
 package handlers
 
 import (
+
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
+
 
 	"gopkg.in/telebot.v3"
 )
@@ -26,12 +28,15 @@ var botState = AwaiteState{}
 
 // Handler for /start
 func StartHandler(bot *telebot.Bot, btnCreateGame, btnJoinGame telebot.Btn) func(c telebot.Context) error {
+
 	return func(c telebot.Context) error {
 		startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
+
 
 		// Create keyboard
 		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
 		menu.Reply(menu.Row(btnCreateGame, btnJoinGame))
+
 
 		// Получаем ID игровой комнаты из инвайт-ссылки
 		inviteData := c.Data() // Получаем строку, переданную после /start
@@ -201,6 +206,7 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		return nil
 	}
 }
+
 
 
 
