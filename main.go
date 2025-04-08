@@ -40,15 +40,30 @@ func main() {
 		log.Fatalf("Failed to create a new bot: %v", err)
 	}
 
+	err = bot.SetCommands([]telebot.Command{
+		{Text: "start", Description: "Запустити бота"},
+		{Text: "help", Description: "Хелп мі"},
+	})
+	if err != nil {
+		log.Printf("Failed to set bot commands: %v", err)
+	}
+
 	// Create buttons
 	btnCreateGame := telebot.Btn{Text: "Створити гру"}
 	btnJoinGame := telebot.Btn{Text: "Доєднатися до гри"}
+	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
 	bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
 	bot.Handle(&btnJoinGame, handlers.JoinGameHandler(bot))
+	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
+
+	bot.Handle(&telebot.Btn{Unique: "start_game"}, handlers.StartGameHandler(bot))
 
 
-	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnJoinGame))
+
+	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnJoinGame, btnHelpMe))
+	bot.Handle("/help", handlers.HelpMeHandler(bot))
+
 	
 
 
