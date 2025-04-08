@@ -1,27 +1,29 @@
 package models
 
 type Player struct {
-    ID int
+    ID int64
     UserName string
     Name string
 	Passes uint8
+    GameID int
     Role string // "admin", "player"
-	GameRoomID int
 }
 
-type GameRoom struct{
-    ID int
-    Title string
-	InviteLink string
-    GameID *int
-    TotalPlayers int // max 5
-}
+// type GameRoom struct{
+//     ID int
+//     Title string
+// 	InviteLink string
+//     GameID *int
+//     TotalPlayers int // max 5
+// }
 
 type Game struct {
 	ID int
 	Name string
-	GameRoomID int
+	//GameRoomID int
+    InviteLink string
 	CurrentTaskID int
+    TotalPlayers int // max 5
 	Status string // "waiting", "playing", "finished"
 }
 
