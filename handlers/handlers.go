@@ -1,15 +1,19 @@
 package handlers
 
 import (
+
 	"fmt"
 	"strconv"
 	"strings"
+
 	"time"
+
 
 	"log"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
+
 
 	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -75,6 +79,7 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnJoinGame, btnHelpMe telebo
 			)
 			return c.Send(successMsg)
 		}
+
 
 		// If this is not invite-link, send start-message
 		c.Send(startMsg, menu)
@@ -349,7 +354,6 @@ func StartGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 }
 
 
-
 // Handler join to game
 func JoinGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
@@ -389,5 +393,6 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 			msg := fmt.Sprintf("🎉 Гравець %s приєднався до гри!", player.UserName)
 			bot.Send(&telebot.Chat{ID: p.ID}, msg)
 		}
+
 	}
 }

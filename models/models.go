@@ -4,7 +4,7 @@ type Player struct {
     ID int64
     UserName string
     Name string
-	Passes uint8
+	  Passes uint8
     GameID int
     Role string // "admin", "player"
 }

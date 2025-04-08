@@ -124,8 +124,6 @@ func createTables() error {
 	return nil
 }
 
-
-// CreateGameRoom добавляет новую игровую комнату в базу данных и возвращает её ID и инвайт-ссылку
 // CreateGameRoom добавляет новую игровую комнату в базу данных и возвращает её ID и инвайт-ссылку
 // func CreateGameRoom(gameRoom models.GameRoom) (int, string, error) {
 // 	// Вставка данных в таблицу game_rooms
@@ -154,8 +152,6 @@ func createTables() error {
 
 // 	return int(gameRoomID), inviteLink, nil
 // }
-
-
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
 func CreateGame(gameName string) (*models.Game, error) {
