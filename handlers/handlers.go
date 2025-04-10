@@ -5,33 +5,28 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
 	"time"
-
-
 	"log"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
-
-
 	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
 	"gopkg.in/telebot.v3"
 )
 
-type AwaiteState struct {
-	StartStateAwait bool
-	NameGameRoomAwait bool
-	NameGameAwait bool
-	QuestionsAwait bool
-}
+// type AwaiteState struct {
+// 	StartStateAwait bool
+// 	NameGameRoomAwait bool
+// 	NameGameAwait bool
+// 	QuestionsAwait bool
+// }
 
 
-var botState = AwaiteState{}
+// var botState = AwaiteState{}
 
 // Handler for /start
-func StartHandler(bot *telebot.Bot, btnCreateGame, btnJoinGame, btnHelpMe telebot.Btn) func(c telebot.Context) error {
+func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		user := c.Sender()
 		startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
@@ -41,11 +36,11 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnJoinGame, btnHelpMe telebo
 		//.Reply(menu.Row(btnCreateGame, btnJoinGame, btnHelpMe))
 
 		// Buttons on the first line
-		row1 := menu.Row(btnCreateGame, btnJoinGame)
+		menuBtns := menu.Row(btnCreateGame, btnHelpMe)
 		// Button on the second row (all size)
-		row2 := menu.Row(btnHelpMe)
+		//row2 := menu.Row(btnHelpMe)
 
-		menu.Reply(row1, row2)
+		menu.Reply(menuBtns)
 
 		// Get ID game fron invite-link
 		inviteData := c.Data() // Get string before /start
@@ -96,8 +91,14 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnJoinGame, btnHelpMe telebo
 func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		userAdmin := c.Sender()
+		gameStartMsg := `Для початку тобі потрібно:
+		1. Створити супергрупу
+		2. Додати мене в цю групу з правами адміна
+		3. У групі викликати команду /check_admin_bot`
+
+
 		// Ask tha name game
-		if err := c.Send("🎲 Введіть назву гри:"); err != nil {
+		if err := c.Send(gameStartMsg); err != nil {
 			return err
 		}
 
@@ -131,91 +132,6 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
         })
 
         return nil
-
-		// bot.Handle(telebot.OnText, func(tc telebot.Context) error {
-		// 	gameName = tc.Text()
-
-		// 	// Создаем игровую комнату (БЕЗ СОЗДАНИЯ В БД)
-		// 	gameRoom := models.GameRoom{
-		// 		Title: gameRoomTitle,
-		// 	}
-
-		// 	// Запрашиваем у пользователя название игры
-		// 	if err := tc.Send("📛 Введіть назву гри:"); err != nil {
-		// 		return err
-		// 	}
-
-		// 	bot.Handle(telebot.OnText, func(tc telebot.Context) error {
-		// 		gameTitle := tc.Text()
-
-		// 		// Создаем игру в БД и получаем её ID
-		// 		game := models.Game{
-		// 			Name:   gameTitle,
-		// 			Status: "waiting",
-		// 		}
-
-		// 		gameID, err := storage_db.CreateGame(game)
-		// 		if err != nil {
-		// 			log.Println("Ошибка создания игры:", err)
-		// 			return tc.Send("❌ Виникла помилка при створенні гри. Спробуйте ще раз!")
-		// 		}
-
-		// 		// Теперь создаем GameRoom и передаем туда GameID
-		// 		gameRoom.GameID = &gameID
-		// 		_, inviteLink, err := storage_db.CreateGameRoom(gameRoom)
-		// 		if err != nil {
-		// 			log.Println("Ошибка создания игровой комнаты:", err)
-		// 			return tc.Send("❌ Виникла помилка при створенні кімнати. Спробуйте ще раз!")
-		// 		}
-
-		// 		// Просим пользователя ввести вопросы
-		// 		if err := tc.Send("❓ Введіть 4 питання та відповіді у форматі:\n`Питання 1 | Відповідь 1`"); err != nil {
-		// 			return err
-		// 		}
-
-		// 		var tasks []models.Task
-
-		// 		bot.Handle(telebot.OnText, func(tc telebot.Context) error {
-		// 			text := tc.Text()
-		// 			parts := strings.SplitN(text, "|", 2)
-
-		// 			if len(parts) != 2 {
-		// 				return tc.Send("⚠ Неправильний формат! Використовуйте `Питання | Відповідь`")
-		// 			}
-
-		// 			question := strings.TrimSpace(parts[0])
-		// 			answer := strings.TrimSpace(parts[1])
-
-		// 			tasks = append(tasks, models.Task{
-		// 				GameID:   gameID,
-		// 				Question: question,
-		// 				Answer:   answer,
-		// 			})
-
-		// 			// Если получили 4 вопроса, записываем их в БД
-		// 			if len(tasks) == 2 {
-		// 				for _, task := range tasks {
-		// 					storage_db.CreateTask(task)
-		// 				}
-
-		// 				successMsg := fmt.Sprintf(
-		// 					"✅ Гру '%s' створено!\nЗапросіть своїх друзів за цим посиланням: %s",
-		// 					gameTitle, inviteLink,
-		// 				)
-		// 				return tc.Send(successMsg)
-		// 			}
-
-		// 			// Просим следующий вопрос
-		// 			return tc.Send(fmt.Sprintf("📝 Введіть питання %d:", len(tasks)+1))
-		// 		})
-
-		// 		return nil
-		// 	})
-
-		// 	return nil
-		// })
-
-		//return nil
 	}
 }
 
@@ -394,5 +310,109 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 			bot.Send(&telebot.Chat{ID: p.ID}, msg)
 		}
 
+	}
+}
+
+// CheckAdminBotHandler handles the /check_admin_bot command
+func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		// Step 1: Ensure the command is used in a group chat
+		if c.Chat().Type == telebot.ChatPrivate {
+			return c.Send("Цю команду можна викликати тільки у груповому чаті ✋")
+		}
+
+		chat := c.Chat()
+		user := c.Sender()
+		//chatID := chat.ID
+		//userID := user.ID
+		username := user.Username
+
+		// Step 2: Check if the user is an admin in the group
+		memberUser, err := bot.ChatMemberOf(chat, user)
+		if err != nil {
+			log.Printf("Error fetching user's role in the group: %v", err)
+			return nil
+		}
+
+		if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
+			// Notify the group the user is not an admin
+			warnMsg := fmt.Sprintf("@%s, цю команду може викликати тільки адмін групи 🚫", username)
+			groupMsg, err := bot.Send(chat, warnMsg)
+			if err != nil {
+				log.Printf("Error sending non-admin warning: %v", err)
+				return err
+			}
+
+			// Try deleting the messages after 30 seconds
+			go func() {
+				time.Sleep(30 * time.Second)
+				_ = bot.Delete(groupMsg)
+				err = bot.Delete(c.Message())
+				if err != nil {
+					log.Printf("Error deleting non-admin warning: %v", err)
+				}
+			}()
+
+			return nil
+		}
+
+		// Step 3: Check if the bot itself is an admin
+		memberBot, err := bot.ChatMemberOf(chat, &telebot.User{ID: bot.Me.ID})
+		if err != nil {
+			log.Printf("Error fetching bot's role in the group: %v", err)
+			bot.Send(chat, "Я не можу перевірити свою роль у групі. Переконайся, що в мене є права адміна 🤖")
+			return nil
+		}
+
+		if memberBot.Role != telebot.Administrator && memberBot.Role != telebot.Creator {
+			notAdminMsg, err := bot.Send(chat, "Я не адміністратор у цій групі. Додай мене як адміна, будь ласка 🙏")
+			if err != nil {
+				log.Printf("Error sending bot admin warning: %v", err)
+			}
+
+			time.Sleep(30 * time.Second)
+			err = bot.Delete(c.Message())
+			if err != nil {
+				log.Printf("Error deleting user message: %v", err)
+			}
+			_ = bot.Delete(notAdminMsg)
+
+			return nil
+		}
+
+		// Step 4: All checks passed, notify in group and proceed in private
+		groupSuccessMsg := fmt.Sprintf("@%s, я все перевірив ✅ Повернись до приватного чату зі мною, щоб продовжити створення гри. Чекаю тебе... 🌟", username)
+		groupMsg, err := bot.Send(chat, groupSuccessMsg)
+		if err != nil {
+			log.Printf("Error sending success message to group: %v", err)
+			return err
+		}
+
+		// Try deleting the group messages after 1 minute
+		go func() {
+			time.Sleep(1 * time.Minute)
+			_ = bot.Delete(groupMsg)
+			_ = bot.Delete(c.Message())
+		}()
+
+		// Continue interaction in private chat
+		privateMsg := "Ухх, все в порядку! Групу створено і я маю права адміністратора 🛡️\nЙдемо далі..."
+		_, err = bot.Send(user, privateMsg)
+		if err != nil {
+			log.Printf("Error sending private message to user: %v", err)
+			return err
+		}
+
+		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+		row1 := menu.Row(btnStartGame)
+		menu.Reply(row1)
+
+		time.Sleep(700 * time.Millisecond)
+
+		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почату гру! 🎮", menu)
+
+		//askQuestions(bot)
+
+		return nil
 	}
 }
