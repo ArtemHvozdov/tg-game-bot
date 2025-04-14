@@ -56,11 +56,11 @@ func main() {
 	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
 	bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
-	bot.Handle(&btnStartGame, handlers.StartGameHandler(bot))
+	bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
 	//bot.Handle(&btnJoinGame, handlers.JoinGameHandler(bot))
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 
-	bot.Handle(&telebot.Btn{Unique: "start_game"}, handlers.StartGameHandler(bot))
+	//bot.Handle(&telebot.Btn{Unique: "start_game"}, handlers.StartGameHandlerFoo(bot))
 
 
 

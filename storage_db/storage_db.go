@@ -154,7 +154,7 @@ func createTables() error {
 // }
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
-func CreateGame(gameName string) (*models.Game, error) {
+func CreateGame(gameName, inviteChatLink string) (*models.Game, error) {
 	game := &models.Game{
 		ID: 1,
 		Name: gameName,
@@ -179,7 +179,7 @@ func CreateGame(gameName string) (*models.Game, error) {
 	}
 
 	game.ID = int(gameID)
-	log.Printf("Game '%s' создана с ID %d", game.Name, game.ID)
+	log.Printf("DB-Create-game-log: Game '%s' создана с ID %d", game.Name, game.ID)
 
 	return game, nil
 
@@ -248,7 +248,7 @@ func AddPlayerToGame(player *models.Player) error {
 		return err
 	}
 
-	log.Printf("Player %s as role %s added to game %d", player.UserName, player.Role, player.GameID)
+	log.Printf("DB-add-player-log:Player %s as role %s added to game %d", player.UserName, player.Role, player.GameID)
 
 	return nil
 }
