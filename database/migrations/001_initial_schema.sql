@@ -1,3 +1,4 @@
+
 -- +++ Create players table
 CREATE TABLE IF NOT EXISTS players (
 	id INTEGER PRIMARY KEY,
