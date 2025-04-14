@@ -60,9 +60,7 @@ func main() {
 	//bot.Handle(&btnJoinGame, handlers.JoinGameHandler(bot))
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 
-	//bot.Handle(&telebot.Btn{Unique: "start_game"}, handlers.StartGameHandlerFoo(bot))
-
-
+	bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
 
 	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))

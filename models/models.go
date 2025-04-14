@@ -5,22 +5,14 @@ type Player struct {
     UserName string
     Name string
 	Passes uint8
-    GameID int64
+    GameID int
     Role string // "admin", "player"
 }
-
-// type GameRoom struct{
-//     ID int
-//     Title string
-// 	InviteLink string
-//     GameID *int
-//     TotalPlayers int // max 5
-// }
 
 type Game struct {
 	ID int
 	Name string
-	//GameRoomID int
+	GameChatID int64
     InviteLink string
 	CurrentTaskID int
     TotalPlayers int // max 5

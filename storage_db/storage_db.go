@@ -69,8 +69,9 @@ func createTables() error {
 		{
 			"games",
 			`CREATE TABLE IF NOT EXISTS games (
-				id INTEGER PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
+				game_chat_id INTEGER,
 				invite_link TEXT NOT NULL UNIQUE,
 				current_task_id INTEGER NOT NULL DEFAULT 0,
 				total_players INTEGER NOT NULL DEFAULT 0,
@@ -154,18 +155,18 @@ func createTables() error {
 // }
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
-func CreateGame(gameName, inviteChatLink string) (*models.Game, error) {
+func CreateGame(gameName, inviteChatLink string, gameGroupChatId int64) (*models.Game, error) {
 	game := &models.Game{
-		ID: 1,
 		Name: gameName,
+		GameChatID: gameGroupChatId,
 		InviteLink: utils.GenerateInviteLink(1),
 		CurrentTaskID: 0,
 		TotalPlayers: 0,
 		Status: "waiting",
 	}
 
-	query := `INSERT INTO games (name, invite_link, status ) VALUES (?, ?, ?)`
-	res, err := db.Exec(query, game.Name, game.InviteLink, game.Status)
+	query := `INSERT INTO games (name, game_chat_id ,invite_link, status ) VALUES (?, ?, ?, ?)`
+	res, err := db.Exec(query, game.Name, game.GameChatID ,game.InviteLink, game.Status)
 	if err != nil {
 		log.Println("Ошибка при добавлении игры в БД:", err)
 		return nil, err
@@ -179,7 +180,7 @@ func CreateGame(gameName, inviteChatLink string) (*models.Game, error) {
 	}
 
 	game.ID = int(gameID)
-	log.Printf("DB-Create-game-log: Game '%s' создана с ID %d", game.Name, game.ID)
+	log.Printf("DB-Create-game-log: Game '%s' создана с ID %d и ID группового чата%d ", game.Name, game.ID, game.GameChatID)
 
 	return game, nil
 
@@ -233,6 +234,22 @@ func GetGameById(gameID int) (*models.Game, error) {
 	err := row.Scan(&game.ID, &game.Name, &game.InviteLink, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		log.Printf("Error fetching game with ID %d: %v", gameID, err)
+		return nil, err
+	}
+
+	return game, nil
+}
+
+// GetGameByChatId getting a game by chat ID
+func GetGameByChatId(chatID int64) (*models.Game, error) {
+	query := `SELECT id, name, invite_link, current_task_id, total_players, status FROM games WHERE game_chat_id = ?`
+	row := db.QueryRow(query, chatID)
+
+	game := &models.Game{}
+
+	err := row.Scan(&game.ID, &game.Name, &game.InviteLink, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
+	if err != nil {
+		log.Printf("Error fetching game with chat ID %d: %v", chatID, err)
 		return nil, err
 	}
 
