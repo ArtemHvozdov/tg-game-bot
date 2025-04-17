@@ -61,6 +61,7 @@ func main() {
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 
 	bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
+	bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
 
 	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))

@@ -106,11 +106,19 @@ func createTables() error {
 				player_id INTEGER,
 				game_id INTEGER,
 				task_id INTEGER,
-				answer TEXT NOT NULL,
-				is_correct BOOLEAN DEFAULT FALSE,
+				has_answer BOOLEAN,
+				skipped BOOLEAN DEFAULT FALSE,
 				FOREIGN KEY (player_id) REFERENCES players(id),
 				FOREIGN KEY (game_id) REFERENCES games(id),
 				FOREIGN KEY (task_id) REFERENCES tasks(id)
+			)`,
+		},
+		{
+			"game_state",
+			`CREATE TABLE IF NOT EXISTS game_state (
+				game_id INTEGER PRIMARY KEY UNIQUE ,
+				status TEXT NOT NULL,
+				FOREIGN KEY (game_id) REFERENCES games(id)
 			)`,
 		},
 	}
@@ -153,6 +161,35 @@ func createTables() error {
 
 // 	return int(gameRoomID), inviteLink, nil
 // }
+
+// SetGameState sets the state of the game
+func SetGameState(gameID int64, state string) error {
+	query := `INSERT OR REPLACE INTO game_state (game_id, status) VALUES (?, ?)`
+	_, err := db.Exec(query, gameID, state)
+	if err != nil {
+		log.Printf("Error setting game state for game ID %d: %v", gameID, err)
+		return err
+	}
+
+	log.Printf("Game state for game ID %d set to '%s'", gameID, state)
+	return nil
+}
+
+// GetGamesState gets the state of the game
+func GetGamesState(gameID int64) (string, error) {
+	query := `SELECT status FROM game_state WHERE game_id = ?`
+	row := db.QueryRow(query, gameID)
+
+	var state string
+	err := row.Scan(&state)
+	if err != nil {
+		log.Printf("Error fetching game state for game ID %d: %v", gameID, err)
+		return "", err
+	}
+
+	log.Printf("Game state for game ID %d is '%s'", gameID, state)
+	return state, nil
+}
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
 func CreateGame(gameName, inviteChatLink string, gameGroupChatId int64) (*models.Game, error) {
@@ -343,3 +380,30 @@ func GetAllTasksByGameID(gameId int) ([]models.Task, error) {
 
 	return tasks, nil
 }
+
+func GetGameByUserId(playerID int64) (*models.Game, error) {
+	query := `
+		SELECT g.id, g.name, g.game_chat_id, g.invite_link, g.current_task_id, g.total_players, g.status
+		FROM players p
+		JOIN games g ON p.game_id = g.id
+		WHERE p.id = ?
+	`
+
+	var game models.Game
+	err := db.QueryRow(query, playerID).Scan(
+		&game.ID,
+		&game.Name,
+		&game.GameChatID,
+		&game.InviteLink,
+		&game.CurrentTaskID,
+		&game.TotalPlayers,
+		&game.Status,
+	)
+	if err != nil {
+		log.Printf("failed to get game for player_id %d: %v", playerID, err)
+		return nil, err
+	}
+
+	return &game, nil
+}
+
