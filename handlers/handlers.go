@@ -244,18 +244,18 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			return nil
 		}
 
-		// Step 4: All checks passed, notify in group and proceed in private
-		groupSuccessMsg := fmt.Sprintf("@%s, я все перевірив ✅ Повернись до приватного чату зі мною, щоб продовжити створення гри. Чекаю тебе... 🌟", username)
-		groupMsg, err := bot.Send(chat, groupSuccessMsg)
-		if err != nil {
-			log.Printf("Error sending success message to group: %v", err)
-			return err
-		}
+		// // Step 4: All checks passed, notify in group and proceed in private
+		// groupSuccessMsg := fmt.Sprintf("@%s, я все перевірив ✅ Повернись до приватного чату зі мною, щоб продовжити створення гри. Чекаю тебе... 🌟", username)
+		// groupMsg, err := bot.Send(chat, groupSuccessMsg)
+		// if err != nil {
+		// 	log.Printf("Error sending success message to group: %v", err)
+		// 	return err
+		// }
 
 		// Try deleting the group messages after 1 minute
 		go func() {
 			time.Sleep(1 * time.Minute)
-			_ = bot.Delete(groupMsg)
+			// _ = bot.Delete(groupMsg)
 			_ = bot.Delete(c.Message())
 		}()
 
@@ -272,7 +272,11 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 		pinnedMsg := chat.PinnedMessage
 		if pinnedMsg != nil {
-			_ = bot.Delete(pinnedMsg)
+			log.Printf("Deleting previous pinned message: %s", pinnedMsg.Text)
+			err = bot.Delete(pinnedMsg)
+			if err != nil {
+				log.Printf("Error deleting previous pinned message: %v", err)
+			}
 		}
 
 		// Pin message with invite link in the group chat
@@ -359,7 +363,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 		memberUser, _ := bot.ChatMemberOf(chat, user)
 
-		log.Println("StartGameHandlerFoo logs: User:", user.Username, "Chat Name:", chat.Title)
+		log.Println("StartGameHandlerFoo logs: User:", user.Username, "Chat Name:", chat.Title, "Game status:", game.Status)
 
 		// Checking: this have to be a group chat
 		if chat.Type == telebot.ChatPrivate {
@@ -377,6 +381,23 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
+		if game.Status == models.StatusGamePlaying {
+			msgText := fmt.Sprintf("@%s, ти вже розпочав гру!", user.Username)
+			msg, err := bot.Send(chat, msgText)
+			if err != nil {
+				log.Printf("Error sending message: %v", err)
+			}
+
+			time.Sleep(1 * time.Minute)
+			err = bot.Delete(msg)
+			if err != nil {
+				log.Printf("Error deleting message: %v", err)
+			}
+
+			return nil
+
+		}
+
 		startGameMsg := `ПРИВІТ, мене звати Фібі 😊, і наступні три тижні я буду вашим провідником у грі ✨ Грі, з якої вийдуть переможницями всі, якщо поділяться одна з одною своїм особливим скарбом – увагою. Від вас вимагається трошки часу і готове до досліджень серденько, від мене – цікава пригода, яку я загорнула у розроблені спеціально для вас спільні завдання.
 
 Кожна дружба - неповторна, як булочка, повна родзинок 🍇 Ми будемо відщипувати шматочок за шматочком, виконуючи завдання. На кожне у вас буде 48 годин і незліченна кількість підтримки ваших бесті. Якщо якась родзинка вам не до смаку, ви можете пропустити це завдання. Але таких пропусків за всю гру кожній учасниці дозволяється лише 3.
@@ -392,6 +413,8 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		storage_db.SetGameState(int64(game.ID), models.StateGameStarted)
+		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
+		// Send the first two tasks
 
 		time.Sleep(5 * time.Second)
 

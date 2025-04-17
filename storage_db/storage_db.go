@@ -223,6 +223,35 @@ func CreateGame(gameName, inviteChatLink string, gameGroupChatId int64) (*models
 
 }
 
+// UpdateGameStatus update status game in DB
+func UpdateGameStatus(gameID int64, status string) error {
+	query := `UPDATE games SET status = ? WHERE id = ?`
+	_, err := db.Exec(query, status, gameID)
+	if err != nil {
+		log.Printf("Error updating game status for game ID %d: %v", gameID, err)
+		return err
+	}
+
+	log.Printf("Game status for game ID %d updated to '%s'", gameID, status)
+	return nil
+}
+
+// GetCurrentGameStatus gett current status game by ID
+func GetCurrentGameStatus(gameID int) (string, error) {
+	query := `SELECT status FROM games WHERE id = ?`
+	row := db.QueryRow(query, gameID)
+
+	var status string
+	err := row.Scan(&status)
+	if err != nil {
+		log.Printf("Error fetching current game status for game ID %d: %v", gameID, err)
+		return "", err
+	}
+
+	log.Printf("Current game status for game ID %d is '%s'", gameID, status)
+	return status, nil
+}
+
 // CreateTask add a new task (question | answer) to DB
 func CreateTask(task models.Task) error {
 	query := `INSERT INTO tasks (game_id, question, answer) VALUES (?, ?, ?)`

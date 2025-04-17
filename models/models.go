@@ -69,6 +69,10 @@ const (
 	StateWaitingAnswer12   = "waiting_answer_12"
 
 	StateGameFinished      = "game_finished"
+
+	StatusGameWaiting	   = "waiting"
+	StatusGamePlaying	   = "playing"
+	StatusGameFinished	   = "finished"
 )
 
 // Set устанавливает новое состояние
