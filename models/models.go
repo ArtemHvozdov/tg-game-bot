@@ -4,8 +4,8 @@ type Player struct {
     ID int64
     UserName string
     Name string
-	Status string
-	Skipped int
+	  Status string
+	  Skipped int
     GameID int
     Role string // "admin", "player"
 }

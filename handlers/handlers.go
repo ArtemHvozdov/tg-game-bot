@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-
 	//"strings"
 	"time"
 
@@ -103,12 +102,12 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 2. Додати мене в цю групу з правами адміна
 3. У групі викликати команду /check_admin_bot`
 
-		// Ask tha name game
+    // Ask tha name game
 		if err := c.Send(gameStartMsg); err != nil {
 			return err
 		}
 
-        return nil
+    return nil
 	}
 }
 
@@ -319,11 +318,13 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		
 		chat := c.Chat()
 		user := c.Sender()
+
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
 			log.Printf("Error getting game by chat ID: %v", err)
 			return c.Send("❌ Не вдалося знайти гру для цього чату.")
 		}
+
 		memberUser, _ := bot.ChatMemberOf(chat, user)
 
 		log.Println("StartGameHandlerFoo logs: User:", user.Username, "Chat Name:", chat.Title, "Game status:", game.Status)
