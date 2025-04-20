@@ -512,7 +512,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) error {
         }
 
 		if i < len(tasks)-1 {
-			time.Sleep(30 * time.Second) // await some minutes or hours before sending the next task
+			time.Sleep(3 * time.Minute) // await some minutes or hours before sending the next task
 		}
 
     }
