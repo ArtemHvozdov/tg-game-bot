@@ -134,35 +134,6 @@ func createTables() error {
 	return nil
 }
 
-// SetGameState sets the state of the game
-// func SetGameState(gameID int64, state string) error {
-// 	query := `INSERT OR REPLACE INTO game_state (game_id, status) VALUES (?, ?)`
-// 	_, err := db.Exec(query, gameID, state)
-// 	if err != nil {
-// 		log.Printf("Error setting game state for game ID %d: %v", gameID, err)
-// 		return err
-// 	}
-
-// 	log.Printf("Game state for game ID %d set to '%s'", gameID, state)
-// 	return nil
-// }
-
-// GetGamesState gets the state of the game
-// func GetGamesState(gameID int64) (string, error) {
-// 	query := `SELECT status FROM game_state WHERE game_id = ?`
-// 	row := db.QueryRow(query, gameID)
-
-// 	var state string
-// 	err := row.Scan(&state)
-// 	if err != nil {
-// 		log.Printf("Error fetching game state for game ID %d: %v", gameID, err)
-// 		return "", err
-// 	}
-
-// 	log.Printf("Game state for game ID %d is '%s'", gameID, state)
-// 	return state, nil
-// }
-
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
 func CreateGame(gameName, inviteChatLink string, gameGroupChatId int64) (*models.Game, error) {
 	game := &models.Game{
@@ -427,71 +398,6 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 	return nil
 }
 
-// type AddResponseResult struct {
-// 	AlreadyAnswered bool
-// 	AlreadySkipped  bool
-// 	Success         bool
-// }
-
-// AddPlayerResponse adds a player's response to the DB
-// func AddPlayerResponse(playerResponse *models.PlayerResponse) (*models.AddResponseResult, error) {
-// 	log.Println("AddPlayerResponse-log: AddPlayerResponse was called")
-
-// 	var hasAnswer, skipped bool
-
-// 	err := db.QueryRow(`
-// 		SELECT has_answer, skipped FROM player_responses 
-// 		WHERE player_id = ? AND game_id = ? AND task_id = ?
-// 	`, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID).Scan(&hasAnswer, &skipped)
-
-// 	switch {
-// 	case err == sql.ErrNoRows:
-// 		// Ответа нет — добавим новую запись
-// 		query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped) VALUES (?, ?, ?, ?, ?)`
-// 		_, err = db.Exec(query,
-// 			playerResponse.PlayerID,
-// 			playerResponse.GameID,
-// 			playerResponse.TaskID,
-// 			playerResponse.HasResponse,
-// 			playerResponse.Skipped,
-// 		)
-// 		if err != nil {
-// 			log.Println("AddPlayerResponse-log: Failed to insert response:", err)
-// 			return nil, err
-// 		}
-// 		log.Printf("AddPlayerResponse-log: Added new response for game ID %d, task ID %d", playerResponse.GameID, playerResponse.TaskID)
-// 		return &models.AddResponseResult{Success: true}, nil
-
-// 	case err != nil:
-// 		log.Printf("AddPlayerResponse-log: Error checking for existing response: %v", err)
-// 		return nil, err
-
-// 	default:
-// 		if hasAnswer {
-// 			log.Printf("AddPlayerResponse-log: Player already answered task %d", playerResponse.TaskID)
-// 			return &models.AddResponseResult{AlreadyAnswered: true}, nil
-// 		}
-// 		if skipped {
-// 			log.Printf("AddPlayerResponse-log: Player already skipped task %d", playerResponse.TaskID)
-// 			return &models.AddResponseResult{AlreadySkipped: true}, nil
-// 		}
-// 	}
-
-// 	// Если запись существует, но нет ни ответа, ни skip — обновим has_answer = true
-// 	_, err = db.Exec(`
-// 		UPDATE player_responses 
-// 		SET has_answer = 1 
-// 		WHERE player_id = ? AND game_id = ? AND task_id = ?
-// 	`, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID)
-// 	if err != nil {
-// 		log.Printf("AddPlayerResponse-log: Failed to update response: %v", err)
-// 		return nil, err
-// 	}
-
-// 	log.Printf("AddPlayerResponse-log: Updated has_answer for player %d on task %d", playerResponse.PlayerID, playerResponse.TaskID)
-// 	return &models.AddResponseResult{Success: true}, nil
-// }
-
 func CheckPlayerResponseStatus(playerID int64, gameID int, taskID int) (*models.AddResponseResult, error) {
 	var hasAnswer, skipped bool
 
@@ -512,64 +418,6 @@ func CheckPlayerResponseStatus(playerID int64, gameID int, taskID int) (*models.
 		AlreadySkipped:  skipped,
 	}, nil
 }
-
-
-// func SkipPlayerResponse(playerID int64, gameID int, taskID int) (bool, error) {
-// 	// Check if a response record exists for the given player, game, and task
-// 	var exists bool
-// 	err := db.QueryRow(`
-// 		SELECT EXISTS (
-// 			SELECT 1 FROM player_responses 
-// 			WHERE player_id = ? AND game_id = ? AND task_id = ?
-// 		)
-// 	`, playerID, gameID, taskID).Scan(&exists)
-// 	if err != nil {
-// 		log.Printf("Error checking response existence: %v", err)
-// 		return false, err
-// 	}
-// 	if !exists {
-// 		log.Printf("Response not found for player ID %d, game ID %d, task ID %d", playerID, gameID, taskID)
-// 		return false, err
-// 	}
-
-// 	// Check how many tasks the player has already skipped
-// 	var skipCount int
-// 	err = db.QueryRow(`
-// 		SELECT COUNT(*) FROM player_responses 
-// 		WHERE player_id = ? AND skipped = 1
-// 	`, playerID).Scan(&skipCount)
-// 	if err != nil {
-// 		log.Printf("Error checking skip count: %v", err)
-// 		return false, err
-// 	}
-// 	if skipCount >= 3 {
-// 		log.Printf("Player ID %d has already skipped 3 tasks", playerID)
-// 		return true, nil // true means skip limit reached
-// 	}
-
-// 	// Update the record to mark this task as skipped
-// 	query := `
-// 		UPDATE player_responses 
-// 		SET skipped = 1 
-// 		WHERE player_id = ? AND game_id = ? AND task_id = ?
-// 	`
-// 	_, err = db.Exec(query, playerID, gameID, taskID)
-// 	if err != nil {
-// 		log.Printf("Error updating skip for player ID %d in game ID %d and task ID %d: %v", playerID, gameID, taskID, err)
-// 		return false, err
-// 	}
-
-// 	log.Printf("Player ID %d skipped task ID %d in game ID %d", playerID, taskID, gameID)
-// 	return false, nil // false means skip limit not reached
-// }
-
-
-// type SkipStatus struct {
-// 	AlreadyAnswered     bool
-// 	AlreadySkipped      bool
-// 	SkipLimitReached    bool
-// 	RemainingSkips      int
-// }
 
 // SkipPlayerResponse handles skip logic for a specific task by a player
 func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipStatus, error) {
@@ -647,7 +495,6 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 
 	return status, nil
 }
-
 
 
 // Update current task ID in game

@@ -63,7 +63,22 @@ func main() {
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
 	
 	bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
-	bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
+	//bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
+
+	
+	bot.Handle(telebot.OnText, handlers.HandlerPlayerResponse(bot))
+	bot.Handle(telebot.OnPhoto, handlers.HandlerPlayerResponse(bot))
+	bot.Handle(telebot.OnVideo, handlers.HandlerPlayerResponse(bot))
+	bot.Handle(telebot.OnVoice, handlers.HandlerPlayerResponse(bot))
+	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
+	
+	
+	//Общий хендлер, возвращает обработчик
+	// func OnGenericMessageHandler(bot *telebot.Bot) func(c telebot.Context) error {
+	// 	return func(c telebot.Context) error {
+	// 		return handlers.HandlerPlayerResponse(bot, c) // ✅ правильный вызов
+	// 	}
+	// }
 
 	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))

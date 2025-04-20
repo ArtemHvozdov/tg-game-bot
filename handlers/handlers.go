@@ -48,13 +48,9 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c
 
 		// Create keyboard
 		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
-		//.Reply(menu.Row(btnCreateGame, btnJoinGame, btnHelpMe))
 
 		// Buttons on the first line
 		menuBtns := menu.Row(btnCreateGame, btnHelpMe)
-		// Button on the second row (all size)
-		//row2 := menu.Row(btnHelpMe)
-
 		menu.Reply(menuBtns)
 
 		// Get ID game fron invite-link
@@ -91,7 +87,6 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c
 			return c.Send(successMsg)
 		}
 
-
 		// If this is not invite-link, send start-message
 		c.Send(startMsg, menu)
 
@@ -107,7 +102,6 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 1. Створити супергрупу
 2. Додати мене в цю групу з правами адміна
 3. У групі викликати команду /check_admin_bot`
-
 
 		// Ask tha name game
 		if err := c.Send(gameStartMsg); err != nil {
@@ -172,10 +166,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 		chat := c.Chat()
 		user := c.Sender()
-		//chatID := chat.ID
-		//userID := user.ID
-		username := user.Username
-
+		
 		// Step 2: Check if the user is an admin in the group
 		memberUser, err := bot.ChatMemberOf(chat, user)
 		if err != nil {
@@ -185,7 +176,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 		if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
 			// Notify the group the user is not an admin
-			warnMsg := fmt.Sprintf("@%s, цю команду може викликати тільки адмін групи 🚫", username)
+			warnMsg := fmt.Sprintf("@%s, цю команду може викликати тільки адмін групи 🚫", user.Username)
 			groupMsg, err := bot.Send(chat, warnMsg)
 			if err != nil {
 				log.Printf("Error sending non-admin warning: %v", err)
@@ -282,8 +273,6 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			return c.Send("Ой, не вдалося додати тебе до гри. Спробуй ще раз!")
 		}
 
-		//storage_db.SetGameState(int64(game.ID), models.StateJoin)
-
 		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
 		row1 := menu.Row(btnStartGame)
 		menu.Reply(row1)
@@ -295,10 +284,6 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 		return nil
 	}
-}
-
-func CreateGame(groupChat *telebot.Chat, user *telebot.User) error {
-	return nil
 }
 
 func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error) {
@@ -351,7 +336,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		if chat.Type == telebot.ChatGroup && memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
 			warningMsg := fmt.Sprintf("@%s, не треба тицяти на кнопку, зараз тестуються нові фічі! 🚫", user.Username)
-			// c.Send(warningMsg)
+		
 			_, err := bot.Send(chat, warningMsg)
 			if err != nil {
 				log.Println("Error sending warning message in the chat:", err)
@@ -390,12 +375,11 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			log.Printf("Error sending welcome start game message: %v", err)
 		}
 
-		//storage_db.SetGameState(int64(game.ID), models.StateGameStarted)
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
-		// Send the first two tasks
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 
+		// Start sending tasks
 		return SendTasks(bot, chat.ID)
 	}
 }
@@ -441,7 +425,7 @@ func HandleUserJoined(bot *telebot.Bot) telebot.HandlerFunc {
     }
 }
 
-func OnTextMsgHandler(bot *telebot.Bot) func(c telebot.Context) error {
+func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		user := c.Sender()
 		chat := c.Chat()
@@ -471,24 +455,7 @@ func OnTextMsgHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				Skipped: false,
 			}
 
-			// result, err := storage_db.AddPlayerResponse(playerResponse)
-			// if err != nil {
-			// 	log.Println("Error adding player response:", err)
-			// 	return nil
-			// }
-
 			storage_db.AddPlayerResponse(playerResponse)
-
-			//log.Printf("OnTextMsgHandler logs: Result of adding player @%s response: %v", user.Username, result)
-
-			// switch {
-			// case result.AlreadyAnswered:
-			// 	bot.Send(chat, fmt.Sprintf("@%s,ци вже відповідав на це завдання 😉", user.Username))
-			// case result.AlreadySkipped:
-			// 	bot.Send(chat, fmt.Sprintf("@%s,це завдання ти вже пропуcтив 😅", user.Username))
-			// case result.Success:
-			// 	bot.Send(chat, fmt.Sprintf("@%s,дякуємо! Твоя відповідь на завдання %d прийнята", user.Username, game.CurrentTaskID))
-			// }
 
 			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
 		}
@@ -542,12 +509,9 @@ func SendTasks(bot *telebot.Bot, chatID int64) error {
         }
 
 		if i < len(tasks)-1 {
-			time.Sleep(15 * time.Second) // await some minutes or hours before sending the next task
+			time.Sleep(30 * time.Second) // await some minutes or hours before sending the next task
 		}
 
-        // if i == 0 {
-        //     time.Sleep(2 * time.Minute) // await some minutes or hours before sending the next task
-        // }
     }
 
 	// Final game. Future - function of final game will be here run
@@ -642,10 +606,6 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		default:
 			bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
 		}
-
-		// log.Printf("OnSkipTaskHandler logs: User: %s, Chat Name: %s, Data Button: %s", user.Username, chat.Title, dataButton)
-		// skipMsg := fmt.Sprintf("@%s, ти пропустила завдання. Тепер у тебе залишилось 2 спроби.", user.Username)
-		// bot.Send(chat, skipMsg)
 
 		return nil
 	}
