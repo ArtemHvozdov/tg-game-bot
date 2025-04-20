@@ -443,9 +443,9 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		
-		log.Printf("OnTextMsgHandler logs: User: %s, Chat Name: %s", user.Username, chat.Title)
-		log.Print("OnTextMsgHandler logs: User status: ", statusUser)
-		log.Print("OnTextMsgHandler logs: User status in block if:: ", models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID))
+		log.Printf("HandlerPlayerResponse logs: User: %s, Chat Name: %s", user.Username, chat.Title)
+		log.Print("HandlerPlayerResponse logs: User status: ", statusUser)
+		log.Print("HandlerPlayerResponse logs: User status in block if: ", models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID))
 
 		if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
 			playerResponse := &models.PlayerResponse{
@@ -459,6 +459,8 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 			storage_db.AddPlayerResponse(playerResponse)
 
 			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
+
+			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
 		}
 
 		return nil
@@ -492,7 +494,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) error {
 		// create buttons Answer and Skip
 		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
 
-		answerBtn := inlineKeys.Data("Відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
+		answerBtn := inlineKeys.Data("Хочу відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
 		skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
 
 		inlineKeys.Inline(
@@ -561,9 +563,9 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch {
 		case status.AlreadyAnswered:
-			return c.Send(fmt.Sprintf("@%s, ти вже відповідав на це завдання 😉", user.Username))
+			return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
 		case status.AlreadySkipped:
-			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустив 😅", user.Username))
+			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустила 😅", user.Username))
 		}
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
