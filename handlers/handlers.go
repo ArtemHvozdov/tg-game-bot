@@ -12,6 +12,7 @@ import (
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
+	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
 	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -19,6 +20,7 @@ import (
 )
 
 type Task struct {
+	ID 		int    `json:"id"`
 	Tittle string `json:"title"`
 	Description string `json:"description"`
 }
@@ -69,7 +71,8 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c
 				ID:       user.ID,
 				UserName: user.Username,
 				Name:     user.FirstName,
-				Passes:   0,
+				Status:   models.StatusPlayerNoWaiting,
+				Skipped:  0,
 				GameID:   game.ID,
 				Role:     "player",
 			}
@@ -92,10 +95,6 @@ func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c
 		// If this is not invite-link, send start-message
 		c.Send(startMsg, menu)
 
-		// bot.Handle(telebot.OnText, func(tc telebot.Context) error {
-		// 	return tc.Send("🤔 Зараз я не очікую від тебе текстових повідомлень. Якщо ти хочеш створити гру або приєднатися до гри, натискай на кнопки нижче.")
-		// })
-
 		return nil
 	}
 }
@@ -114,20 +113,6 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		if err := c.Send(gameStartMsg); err != nil {
 			return err
 		}
-
-		//var gameName string
-
-		// bot.Handle(telebot.OnText, func(tc telebot.Context) error {
-        //     chat := tc.Chat()
-		// 	user := tc.Sender()
-
-		// 	if chat.Type != telebot.ChatPrivate {
-		// 		warningMsg := fmt.Sprintf("@%s, я поки не вмію оброблювати повідомлення. Почекай трохи і я скоро навчусь✋", user.Username)
-		// 		tc.Send(warningMsg)
-		// 	}
-        //     // Move on to collecting questions
-        //     return nil
-        // })
 
         return nil
 	}
@@ -244,14 +229,6 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			return nil
 		}
 
-		// // Step 4: All checks passed, notify in group and proceed in private
-		// groupSuccessMsg := fmt.Sprintf("@%s, я все перевірив ✅ Повернись до приватного чату зі мною, щоб продовжити створення гри. Чекаю тебе... 🌟", username)
-		// groupMsg, err := bot.Send(chat, groupSuccessMsg)
-		// if err != nil {
-		// 	log.Printf("Error sending success message to group: %v", err)
-		// 	return err
-		// }
-
 		// Try deleting the group messages after 1 minute
 		go func() {
 			time.Sleep(1 * time.Minute)
@@ -294,7 +271,8 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			ID: user.ID,
 			UserName: user.Username,
 			Name: user.FirstName,
-			Passes: 0,
+			Status:   models.StatusPlayerNoWaiting,
+			Skipped:  0,
 			GameID: game.ID,
 			Role: "admin",
 		}
@@ -304,7 +282,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			return c.Send("Ой, не вдалося додати тебе до гри. Спробуй ще раз!")
 		}
 
-		storage_db.SetGameState(int64(game.ID), models.StateJoin)
+		//storage_db.SetGameState(int64(game.ID), models.StateJoin)
 
 		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
 		row1 := menu.Row(btnStartGame)
@@ -412,7 +390,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			log.Printf("Error sending welcome start game message: %v", err)
 		}
 
-		storage_db.SetGameState(int64(game.ID), models.StateGameStarted)
+		//storage_db.SetGameState(int64(game.ID), models.StateGameStarted)
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
 		// Send the first two tasks
 
@@ -443,7 +421,8 @@ func HandleUserJoined(bot *telebot.Bot) telebot.HandlerFunc {
             ID:       user.ID,
             UserName: user.Username,
             Name:     user.FirstName,
-            Passes:   0,
+            Status:   models.StatusPlayerNoWaiting,
+			Skipped:  0,
             GameID:   game.ID,
             Role:     "player",
         }
@@ -467,72 +446,207 @@ func OnTextMsgHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		user := c.Sender()
 		chat := c.Chat()
 
-		var gameState string
-
-		if chat.Type == telebot.ChatGroup {
-			game, _ := storage_db.GetGameByChatId(chat.ID)
-			gameState, _ = storage_db.GetGamesState(int64(game.ID))
+		game, err := storage_db.GetGameByChatId(chat.ID)
+		if err != nil {
+			log.Printf("Error getting game by chat ID: %v", err)
+			return nil
 		}
 
-		if chat.Type == telebot.ChatPrivate {
-			game, _ := storage_db.GetGameByUserId(user.ID)
-			gameState, _ = storage_db.GetGamesState(int64(game.ID))
+		statusUser, err := storage_db.GetStatusPlayer(user.ID)
+		if err != nil {
+			log.Printf("Error getiing status player: %v", err)
+			return nil
 		}
+		
+		log.Printf("OnTextMsgHandler logs: User: %s, Chat Name: %s", user.Username, chat.Title)
+		log.Print("OnTextMsgHandler logs: User status: ", statusUser)
+		log.Print("OnTextMsgHandler logs: User status in block if:: ", models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID))
 
-		log.Printf("OnTextMsgHandler logs: User: %s, Chat Name: %s, Game State: %s", user.Username, chat.Title, gameState)
+		if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
+			playerResponse := &models.PlayerResponse{
+				PlayerID:   user.ID,
+				GameID: 	game.ID,
+				TaskID:		game.CurrentTaskID,
+				HasResponse: true,
+				Skipped: false,
+			}
 
-		switch gameState {
-		case models.StateWaitingAnswer01:
-			msg := fmt.Sprintf("@%s, о вітаю. Ти виконала перше завдання.", user.Username)
-			bot.Send(chat, msg)
-		case models.StateWaitingAnswer02:
-			msg := fmt.Sprintf("@%s, о вітаю. Ти виконала друге завдання.", user.Username)
-			bot.Send(chat, msg)
+			// result, err := storage_db.AddPlayerResponse(playerResponse)
+			// if err != nil {
+			// 	log.Println("Error adding player response:", err)
+			// 	return nil
+			// }
+
+			storage_db.AddPlayerResponse(playerResponse)
+
+			//log.Printf("OnTextMsgHandler logs: Result of adding player @%s response: %v", user.Username, result)
+
+			// switch {
+			// case result.AlreadyAnswered:
+			// 	bot.Send(chat, fmt.Sprintf("@%s,ци вже відповідав на це завдання 😉", user.Username))
+			// case result.AlreadySkipped:
+			// 	bot.Send(chat, fmt.Sprintf("@%s,це завдання ти вже пропуcтив 😅", user.Username))
+			// case result.Success:
+			// 	bot.Send(chat, fmt.Sprintf("@%s,дякуємо! Твоя відповідь на завдання %d прийнята", user.Username, game.CurrentTaskID))
+			// }
+
+			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
 		}
 
 		return nil
 	}
 }
 
-// SendFirstTasks публикует первые два задания с интервалом в 5 минут
+// SendFirstTasks send all tasks in group chat
 func SendTasks(bot *telebot.Bot, chatID int64) error {
 	game, err := storage_db.GetGameByChatId(chatID)
 	if err != nil {
 		log.Printf("SendTasks logs: Error getting game by chat ID: %v", err)
+		return err
 	}
+
     tasks, err := LoadTasks("tasks/tasks.json")
     if err != nil {
+		log.Printf("SendTasks logs: Error loading tasks: %v", err)
         return err
     }
 
-    if len(tasks) < 2 {
-        return nil // Недостаточно заданий
-    }
+    if len(tasks) == 0 {
+		log.Println("SendTasks logs: No tasks to send.")
+		return nil
+	}
 
-    for i := range 2 {
-        task := tasks[i]
+    for i, task := range tasks {
+        //task := tasks[i]
+		storage_db.UpdateCurrentTaskID(game.ID, task.ID)
         msg := "🌟 *" + task.Tittle + "*\n" + task.Description
+
+		// create buttons Answer and Skip
+		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
+
+		answerBtn := inlineKeys.Data("Відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
+		skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
+
+		inlineKeys.Inline(
+			inlineKeys.Row(answerBtn, skipBtn),
+		)
 
         _, err := bot.Send(
             &telebot.Chat{ID: chatID},
             msg,
+			inlineKeys,
             telebot.ModeMarkdown,
         )
         if err != nil {
             return err
         }
 
-		if i == 0 {
-			storage_db.SetGameState(int64(game.ID), models.StateWaitingAnswer01)
-		}
-		if i == 1 {
-			storage_db.SetGameState(int64(game.ID), models.StateWaitingAnswer02)
+		if i < len(tasks)-1 {
+			time.Sleep(15 * time.Second) // await some minutes or hours before sending the next task
 		}
 
-        if i == 0 {
-            time.Sleep(2 * time.Minute) // Ждём 5 минут перед вторым заданием
-        }
+        // if i == 0 {
+        //     time.Sleep(2 * time.Minute) // await some minutes or hours before sending the next task
+        // }
     }
 
+	// Final game. Future - function of final game will be here run
+	finalMsg := `✨ Оʼкей, богині дружби, це офіційно — ВИ ПРОЙШЛИ ЦЕЙ ШЛЯХ РАЗОМ! ✨
+
+Я хочу, щоб ви зараз на секунду відірвалися від екрану, зробили глибокий вдих і усвідомили: ВИ НЕЙОВІРНІ! Не тому, що виконали всі завдання (хоча це теж круто!), а тому, що ви створюєте простір, де можна бути собою. Де можна нити, мріяти, реготати, підтримувати, відкриватися і бути справжньою. Ви даєте одна одній свою увагу, час і ментальні обнімашки. 
+
+І це точно найкращий момент, щоб подякувати всесвіту за ВАС! Серйозно, в світі 8 мільярдів людей, а ви зустріли своїх сестер по духу і змогли пронести цю дружбу крізь роки попри все! Це магія, це досягнення і це вдячність. Бережіть цю булочку з родзинками — вона унікальна.💛
+
+Я сподіваюся, що цей досвід залишиться з вами не просто у вигляді чатику, а як тепле тріпотіння всередині: у мене є мої люди. І це — безцінно.
+І, звісно, цей квест не має закінчення! Тому що дружба — це безперервна і прекрасна пригода.
+
+Тепер питання: коли і де ви зустрічаєтеся, щоб відсвяткувати вашу перемогу, зіроньки? 🥂 😉`
+	_, err = bot.Send(&telebot.Chat{ID: chatID}, finalMsg)
+	if err != nil {
+		log.Println("Error sending final message:", err)
+	}
+
     return nil
+}
+
+// Handler for answering a task
+func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		log.Println("OnAnswerTaskHandler called")
+
+		user := c.Sender()
+		chat := c.Chat()
+		dataButton := c.Data()
+		game, err := storage_db.GetGameByChatId(chat.ID)
+		if err != nil {
+			log.Printf("Error getting game by chat ID: %v", err)
+			return nil
+		}
+
+		idTask, err := utils.GetWaitingTaskID(dataButton)
+		if err != nil {
+			log.Printf("Error getting task ID from data button: %v", err)
+		}
+
+		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, idTask)
+		if err != nil {
+			log.Printf("Error checking player response status: %v", err)
+			return nil
+		}
+
+		switch {
+		case status.AlreadyAnswered:
+			return c.Send(fmt.Sprintf("@%s, ти вже відповідав на це завдання 😉", user.Username))
+		case status.AlreadySkipped:
+			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустив 😅", user.Username))
+		}
+
+		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
+
+		
+		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
+		_, err = bot.Send(chat, msg)
+		if err != nil {
+			log.Printf("Error sending message: %v", err)
+		}
+
+		return nil
+	}
+}
+
+// Handler for skipping a task
+func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		log.Println("OnSkipTaskHadler called")
+
+		user := c.Sender()
+		chat := c.Chat()
+		dataButton := c.Data()
+		game, _ := storage_db.GetGameByChatId(chat.ID)
+
+		log.Println("OnSkipTaskHandler logs: User:", user.Username, "Chat Name:", chat.Title, "Data Button:", dataButton, "Current Task ID:", game.CurrentTaskID)
+
+		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, game.CurrentTaskID)
+		if err != nil {
+			log.Printf("Error skipping task: %v", err)
+			return nil
+		}
+
+		switch {
+		case status.AlreadyAnswered:
+			bot.Send(chat, fmt.Sprintf("📝 @%s, ти вже виконала це завдання.", user.Username))
+		case status.AlreadySkipped:
+			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
+		case status.SkipLimitReached:
+			bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+		default:
+			bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
+		}
+
+		// log.Printf("OnSkipTaskHandler logs: User: %s, Chat Name: %s, Data Button: %s", user.Username, chat.Title, dataButton)
+		// skipMsg := fmt.Sprintf("@%s, ти пропустила завдання. Тепер у тебе залишилось 2 спроби.", user.Username)
+		// bot.Send(chat, skipMsg)
+
+		return nil
+	}
 }
