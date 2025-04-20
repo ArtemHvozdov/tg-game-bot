@@ -2,22 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	//"math/rand"
 	//"time"
 )
 
-// Function generation unique invite link
-// func GenerateInviteLink() string {
-// 	rand.Seed(time.Now().UnixNano())
-// 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-// 	linkLength := 10
-// 	link := make([]byte, linkLength)
-// 	for i := 0; i < linkLength; i++ {
-// 		link[i] = charset[rand.Intn(len(charset))]
-// 	}
-// 	return "https://t.me/bestie_game_bot?start=" + string(link)
-// }
 
 func GenerateInviteLink(gameRoomID int) string {
 	return "https://t.me/bestie_game_bot?start=" + fmt.Sprintf("%d", gameRoomID)
@@ -31,4 +21,22 @@ func ExtractGameRoomID(link string) string {
 		return parts[1]
 	}
 	return ""
+}
+
+func GetWaitingTaskID(status string) (int, error) {
+	if !strings.HasPrefix(status, "waiting_") {
+		return 0, fmt.Errorf("status does not start with 'waiting_'")
+	}
+
+	parts := strings.Split(status, "_")
+	if len(parts) != 2 {
+		return 0, fmt.Errorf("invalid status format")
+	}
+
+	id, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid task ID: %v", err)
+	}
+
+	return id, nil
 }

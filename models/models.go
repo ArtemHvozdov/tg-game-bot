@@ -4,7 +4,8 @@ type Player struct {
     ID int64
     UserName string
     Name string
-	Passes uint8
+	  Status string
+	  Skipped int
     GameID int
     Role string // "admin", "player"
 }
@@ -32,11 +33,39 @@ type Task struct {
 	Answer string
 }
 
-type PlayerAnswer struct {
+type PlayerResponse struct {
     ID        int    
-    PlayerID  int    
+    PlayerID  int64    
     GameID    int    
     TaskID    int    
-    Answer    string 
-    IsCorrect bool   
+    HasResponse bool 
+    Skipped bool   
 }
+
+type GameState struct {
+	GameID int64 
+	Current  string // Текущее состояние
+}
+
+type SkipStatus struct {
+	AlreadyAnswered     bool // true, if player already answer
+	AlreadySkipped      bool // true, if player already skipped this task
+	SkipLimitReached    bool // true, if player already has three skipсли у игрока уже 3 пропуска
+	RemainingSkips      int  // количество оставшихся пропусков
+}
+
+type AddResponseResult struct {
+	AlreadyAnswered bool
+	AlreadySkipped  bool
+	Success         bool
+}
+
+// Const of state
+const (
+	StatusGameWaiting	   = "waiting"
+	StatusGamePlaying	   = "playing"
+	StatusGameFinished	   = "finished"
+
+	StatusPlayerWaiting	   = "waiting_"
+	StatusPlayerNoWaiting  = "no_waiting"
+)
