@@ -40,58 +40,71 @@ func LoadTasks(path string) ([]Task, error) {
 }
 
 // Handler for /start
+// func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		user := c.Sender()
+// 		startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
+
+// 		// Create keyboard
+// 		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+
+// 		// Buttons on the first line
+// 		menuBtns := menu.Row(btnCreateGame, btnHelpMe)
+// 		menu.Reply(menuBtns)
+
+// 		// If this is not invite-link, send start-message
+// 		c.Send(startMsg, menu)
+
+// 		return nil
+// 	}
+// }
+
 func StartHandler(bot *telebot.Bot, btnCreateGame, btnHelpMe telebot.Btn) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		user := c.Sender()
-		startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
+		chat := c.Chat()
 
-		// Create keyboard
-		menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+		if chat.Type == telebot.ChatPrivate {
+			// Приватный чат: стандартное меню
+			startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
 
-		// Buttons on the first line
-		menuBtns := menu.Row(btnCreateGame, btnHelpMe)
-		menu.Reply(menuBtns)
+			// menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
+			// menuBtns := menu.Row(btnCreateGame, btnHelpMe)
+			// menu.Reply(menuBtns)
 
-		// Get ID game fron invite-link
-		inviteData := c.Data() // Get string before /start
-		gameID, err := strconv.Atoi(inviteData)
-		if err == nil && gameID > 0 { // Check that number is correct
-			// Get info about game from DB
-			game, err := storage_db.GetGameById(gameID)
-			if err != nil || gameID == 0 {
-				return c.Send("❌ Не вдалося знайти гру за цим посиланням.") 
-			}
+			creatorID := fmt.Sprintf("%d", c.Sender().ID)
+			deepLink := "https://t.me/bestie_game_bot?startgroup=" + creatorID
 
-			player := &models.Player{
-				ID:       user.ID,
-				UserName: user.Username,
-				Name:     user.FirstName,
-				Status:   models.StatusPlayerNoWaiting,
-				Skipped:  0,
-				GameID:   game.ID,
-				Role:     "player",
-			}
+			menu := &telebot.ReplyMarkup{}
+			btnDeepLink := menu.URL("➕ Створити гру", deepLink)
+			btnHelp := menu.Data("❓ Help Me", "help_me")
 
-			if err := storage_db.AddPlayerToGame(player); err != nil {
-				log.Printf("Failed to add player to game: %v", err)
-				return c.Send("Ой, не вдалося додати тебе до гри. Спробуй ще раз!")
-			}
-
-			notifyPlayerJoined(bot, game.ID, *player)
-
-			successMsg := fmt.Sprintf(
-				"Йей! Ти приєдналася до гри '%s'. 🎉 Чекаємо, поки всі зберуться, і можна буде розпочати.",
-				game.Name,
+			menu.Inline(
+				menu.Row(btnDeepLink),
+				menu.Row(btnHelp),
 			)
-			return c.Send(successMsg)
+
+			return c.Send(startMsg, menu)
 		}
 
-		// If this is not invite-link, send start-message
-		c.Send(startMsg, menu)
+		// Групповой чат — пришли по startgroup-ссылке с payload
+		payload := c.Message().Payload
+		if payload == "" {
+			return c.Send("Щось пішло не так. 😔 Спробуй створити гру ще раз через особисте повідомлення боту.")
+		}
 
-		return nil
+		creatorID, err := strconv.ParseInt(payload, 10, 64)
+		if err != nil {
+			log.Printf("❌ Не вдалося розпізнати ID користувача: %v", err)
+			return c.Send("Помилка при запуску гри. Спробуй ще раз.")
+		}
+
+		// Тут можно создать игру
+		log.Printf("Бот доданий у групу: %s (ID: %d), creatorID: %d", chat.Title, chat.ID, creatorID)
+
+		return c.Send("🎉 Гру створено! Додайте своїх подруг і вперед до веселощів!")
 	}
 }
+
 
 /// Handler create game
 func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
@@ -102,14 +115,46 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 2. Додати мене в цю групу з правами адміна
 3. У групі викликати команду /check_admin_bot`
 
-    // Ask tha name game
+		user := c.Sender()
+		log.Println("CreateGameHandler butonns logs: User:", user.Username, user.ID)
+    	
+		//createGameLink := fmt.Sprintf("https://t.me/%s?startgroup=%d", bot.Me.Username, user.ID)
+
 		if err := c.Send(gameStartMsg); err != nil {
 			return err
 		}
 
+		// time.Sleep(2 * time.Second)
+
+		// if err := c.Send(createGameLink); err != nil {
+		// 	log.Printf("Error sending create game link: %v", err)
+		// }
+
     return nil
 	}
 }
+
+func HandleAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		chat := c.Chat()          // Групповой чат
+		user := c.Sender()
+		
+		log.Printf("User: %d | %s", user.ID, user.Username)// Пользователь, который добавил бота
+
+		// ✅ Ответ пользователю в группе:
+		bot.Send(chat, fmt.Sprintf("Привіт, @%s! Я бот для ігор з подругами на відстані. Готова до пригод? 🎉", user.Username))
+
+		time.Sleep(2 * time.Second)
+
+		btnStartGame := telebot.Btn{Text: "Почати гру"}
+
+		CheckAdminBotHandler(bot, btnStartGame)(c)
+
+		return nil
+	}
+
+}
+
 
 // Handler join to game
 func JoinGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
@@ -159,100 +204,102 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		// Step 1: Ensure the command is used in a group chat
-		if c.Chat().Type == telebot.ChatPrivate {
-			return c.Send("Цю команду можна викликати тільки у груповому чаті ✋")
-		}
+		// if c.Chat().Type == telebot.ChatPrivate {
+		// 	return c.Send("Цю команду можна викликати тільки у груповому чаті ✋")
+		// }
+
+		log.Println("CheckAdminBotHandler called")
 
 		chat := c.Chat()
 		user := c.Sender()
 		
-		// Step 2: Check if the user is an admin in the group
-		memberUser, err := bot.ChatMemberOf(chat, user)
-		if err != nil {
-			log.Printf("Error fetching user's role in the group: %v", err)
-			return nil
-		}
+		// // Step 2: Check if the user is an admin in the group
+		// memberUser, err := bot.ChatMemberOf(chat, user)
+		// if err != nil {
+		// 	log.Printf("Error fetching user's role in the group: %v", err)
+		// 	return nil
+		// }
 
-		if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
-			// Notify the group the user is not an admin
-			warnMsg := fmt.Sprintf("@%s, цю команду може викликати тільки адмін групи 🚫", user.Username)
-			groupMsg, err := bot.Send(chat, warnMsg)
-			if err != nil {
-				log.Printf("Error sending non-admin warning: %v", err)
-				return err
-			}
+		// if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
+		// 	// Notify the group the user is not an admin
+		// 	warnMsg := fmt.Sprintf("@%s, цю команду може викликати тільки адмін групи 🚫", user.Username)
+		// 	groupMsg, err := bot.Send(chat, warnMsg)
+		// 	if err != nil {
+		// 		log.Printf("Error sending non-admin warning: %v", err)
+		// 		return err
+		// 	}
 
-			// Try deleting the messages after 30 seconds
-			go func() {
-				time.Sleep(30 * time.Second)
-				_ = bot.Delete(groupMsg)
-				err = bot.Delete(c.Message())
-				if err != nil {
-					log.Printf("Error deleting non-admin warning: %v", err)
-				}
-			}()
+		// 	// Try deleting the messages after 30 seconds
+		// 	go func() {
+		// 		time.Sleep(30 * time.Second)
+		// 		_ = bot.Delete(groupMsg)
+		// 		err = bot.Delete(c.Message())
+		// 		if err != nil {
+		// 			log.Printf("Error deleting non-admin warning: %v", err)
+		// 		}
+		// 	}()
 
-			return nil
-		}
+		// 	return nil
+		// }
 
-		// Step 3: Check if the bot itself is an admin
-		memberBot, err := bot.ChatMemberOf(chat, &telebot.User{ID: bot.Me.ID})
-		if err != nil {
-			log.Printf("Error fetching bot's role in the group: %v", err)
-			bot.Send(chat, "Я не можу перевірити свою роль у групі. Переконайся, що в мене є права адміна 🤖")
-			return nil
-		}
+		// // Step 3: Check if the bot itself is an admin
+		// memberBot, err := bot.ChatMemberOf(chat, &telebot.User{ID: bot.Me.ID})
+		// if err != nil {
+		// 	log.Printf("Error fetching bot's role in the group: %v", err)
+		// 	bot.Send(chat, "Я не можу перевірити свою роль у групі. Переконайся, що в мене є права адміна 🤖")
+		// 	return nil
+		// }
 
-		if memberBot.Role != telebot.Administrator && memberBot.Role != telebot.Creator {
-			notAdminMsg, err := bot.Send(chat, "Я не адміністратор у цій групі. Додай мене як адміна, будь ласка 🙏")
-			if err != nil {
-				log.Printf("Error sending bot admin warning: %v", err)
-			}
+		// if memberBot.Role != telebot.Administrator && memberBot.Role != telebot.Creator {
+		// 	notAdminMsg, err := bot.Send(chat, "Я не адміністратор у цій групі. Додай мене як адміна, будь ласка 🙏")
+		// 	if err != nil {
+		// 		log.Printf("Error sending bot admin warning: %v", err)
+		// 	}
 
-			time.Sleep(30 * time.Second)
-			err = bot.Delete(c.Message())
-			if err != nil {
-				log.Printf("Error deleting user message: %v", err)
-			}
-			_ = bot.Delete(notAdminMsg)
+		// 	time.Sleep(30 * time.Second)
+		// 	err = bot.Delete(c.Message())
+		// 	if err != nil {
+		// 		log.Printf("Error deleting user message: %v", err)
+		// 	}
+		// 	_ = bot.Delete(notAdminMsg)
 
-			return nil
-		}
+		// 	return nil
+		// }
 
-		// Try deleting the group messages after 1 minute
-		go func() {
-			time.Sleep(1 * time.Minute)
-			// _ = bot.Delete(groupMsg)
-			_ = bot.Delete(c.Message())
-		}()
+		// // Try deleting the group messages after 1 minute
+		// go func() {
+		// 	time.Sleep(1 * time.Minute)
+		// 	// _ = bot.Delete(groupMsg)
+		// 	_ = bot.Delete(c.Message())
+		// }()
 
 		gameName := chat.Title
-		inviteChatLink, err := GenerateChatInviteLink(bot, chat)
-		if err != nil {
-			log.Printf("Error generating invite link: %v", err)
-		}
+		//inviteChatLink, err := GenerateChatInviteLink(bot, chat)
+		// if err != nil {
+		// 	log.Printf("Error generating invite link: %v", err)
+		// }
 
-		msgInviteLink, err := bot.Send(chat, fmt.Sprintf("Ухх, все в порядку! Гра створена, ось твоє магічне посилання: %s", inviteChatLink))
-		if err != nil {
-			log.Printf("Error sending invite link message: %v", err)
-		}
+		// msgInviteLink, err := bot.Send(chat, fmt.Sprintf("Ухх, все в порядку! Гра створена, ось твоє магічне посилання: %s", inviteChatLink))
+		// if err != nil {
+		// 	log.Printf("Error sending invite link message: %v", err)
+		// }
 
-		pinnedMsg := chat.PinnedMessage
-		if pinnedMsg != nil {
-			log.Printf("Deleting previous pinned message: %s", pinnedMsg.Text)
-			err = bot.Delete(pinnedMsg)
-			if err != nil {
-				log.Printf("Error deleting previous pinned message: %v", err)
-			}
-		}
+		// pinnedMsg := chat.PinnedMessage
+		// if pinnedMsg != nil {
+		// 	log.Printf("Deleting previous pinned message: %s", pinnedMsg.Text)
+		// 	err = bot.Delete(pinnedMsg)
+		// 	if err != nil {
+		// 		log.Printf("Error deleting previous pinned message: %v", err)
+		// 	}
+		// }
 
 		// Pin message with invite link in the group chat
-		err = bot.Pin(msgInviteLink)
-		if err != nil {
-			log.Printf("Error pinning message in group chat: %v", err)
-		}
+		// err = bot.Pin(msgInviteLink)
+		// if err != nil {
+		// 	log.Printf("Error pinning message in group chat: %v", err)
+		// }
 
-		game, err := storage_db.CreateGame(gameName, inviteChatLink, chat.ID)
+		game, err := storage_db.CreateGame(gameName, chat.ID)
 		if err != nil {
 			log.Printf("Error creating game: %v", err)
 		}

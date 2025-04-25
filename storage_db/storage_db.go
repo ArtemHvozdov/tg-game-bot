@@ -5,7 +5,7 @@ import (
 	"log"
 	
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
-	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
+	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
@@ -73,7 +73,7 @@ func createTables() error {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
 				game_chat_id INTEGER,
-				invite_link TEXT NOT NULL UNIQUE,
+				
 				current_task_id INTEGER NOT NULL DEFAULT 0,
 				total_players INTEGER NOT NULL DEFAULT 0,
 				status TEXT CHECK(status IN ('waiting', 'playing', 'finished')) NOT NULL
@@ -135,18 +135,18 @@ func createTables() error {
 }
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
-func CreateGame(gameName, inviteChatLink string, gameGroupChatId int64) (*models.Game, error) {
+func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error) {
 	game := &models.Game{
 		Name: gameName,
 		GameChatID: gameGroupChatId,
-		InviteLink: utils.GenerateInviteLink(1),
+		//InviteLink: "",
 		CurrentTaskID: 0,
 		TotalPlayers: 0,
 		Status: "waiting",
 	}
 
-	query := `INSERT INTO games (name, game_chat_id ,invite_link, status ) VALUES (?, ?, ?, ?)`
-	res, err := db.Exec(query, game.Name, game.GameChatID ,game.InviteLink, game.Status)
+	query := `INSERT INTO games (name, game_chat_id, status ) VALUES (?, ?, ?)`
+	res, err := db.Exec(query, game.Name, game.GameChatID , game.Status)
 	if err != nil {
 		log.Println("Ошибка при добавлении игры в БД:", err)
 		return nil, err
@@ -210,12 +210,12 @@ func CreateTask(task models.Task) error {
 
 // GetGameById getting a game by ID
 func GetGameById(gameID int) (*models.Game, error) {
-	query := `SELECT id, name, invite_link, current_task_id, total_players, status FROM games WHERE id = ?`
+	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE id = ?`
 	row := db.QueryRow(query, gameID)
 
 	game := &models.Game{}
 
-	err := row.Scan(&game.ID, &game.Name, &game.InviteLink, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
+	err := row.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		log.Printf("Error fetching game with ID %d: %v", gameID, err)
 		return nil, err
@@ -226,12 +226,12 @@ func GetGameById(gameID int) (*models.Game, error) {
 
 // GetGameByChatId getting a game by chat ID
 func GetGameByChatId(chatID int64) (*models.Game, error) {
-	query := `SELECT id, name, invite_link, current_task_id, total_players, status FROM games WHERE game_chat_id = ?`
+	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE game_chat_id = ?`
 	row := db.QueryRow(query, chatID)
 
 	game := &models.Game{}
 
-	err := row.Scan(&game.ID, &game.Name, &game.InviteLink, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
+	err := row.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		log.Printf("Error fetching game with chat ID %d: %v", chatID, err)
 		return nil, err
@@ -331,7 +331,7 @@ func GetAllTasksByGameID(gameId int) ([]models.Task, error) {
 
 func GetGameByUserId(playerID int64) (*models.Game, error) {
 	query := `
-		SELECT g.id, g.name, g.game_chat_id, g.invite_link, g.current_task_id, g.total_players, g.status
+		SELECT g.id, g.name, g.game_chat_id, g.current_task_id, g.total_players, g.status
 		FROM players p
 		JOIN games g ON p.game_id = g.id
 		WHERE p.id = ?
@@ -342,7 +342,7 @@ func GetGameByUserId(playerID int64) (*models.Game, error) {
 		&game.ID,
 		&game.Name,
 		&game.GameChatID,
-		&game.InviteLink,
+		//&game.InviteLink,
 		&game.CurrentTaskID,
 		&game.TotalPlayers,
 		&game.Status,

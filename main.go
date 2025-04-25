@@ -71,6 +71,8 @@ func main() {
 	bot.Handle(telebot.OnVoice, handlers.HandlerPlayerResponse(bot))
 	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
 	
+	bot.Handle(telebot.OnAddedToGroup, handlers.HandleAddedToGroup(bot))
+	
 
 	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))
