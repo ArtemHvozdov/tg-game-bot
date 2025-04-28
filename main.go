@@ -7,10 +7,14 @@ import (
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
+	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
+
 	"gopkg.in/telebot.v3"
 )
 func main() {
 	cfg := config.LoadConfig() // Loading the configuration from a file or environment variable
+
+	utils.InitNewLogger()
 
 	// Initialize the database
 	dataDir := cfg.DatabaseDir
@@ -19,12 +23,14 @@ func main() {
 	dbPath := dataDir + dataFile
 
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		log.Fatalf("Error creating folder %s: %v", dataDir, err)
+		utils.Logger.WithError(err).Fatal("Error creating folder:")
+		//log.Fatalf("Error creating folder %s: %v", dataDir, err)
 	}
 	
 	db, err := storage_db.InitDB(dbPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		utils.Logger.WithError(err).Fatal("Failed ti initialize database")
+		//log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer storage_db.CloseDB(db)
 
@@ -46,7 +52,8 @@ func main() {
 		{Text: "check_admin_bot", Description: "Перевірити права бота"},
 	})
 	if err != nil {
-		log.Printf("Failed to set bot commands: %v", err)
+		utils.Logger.Error("Failed to set bot commands")
+		//log.Printf("Failed to set bot commands: %v", err)
 	}
 
 	// Create buttons
@@ -77,7 +84,7 @@ func main() {
 	bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
 	
 
-
-	log.Println("Bot is running...")
+	utils.Logger.Info("Bot started successfully")
+	//log.Println("Bot is running...")
 	bot.Start()
 }
