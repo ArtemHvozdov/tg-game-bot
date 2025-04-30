@@ -59,6 +59,8 @@ func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				menu.Row(btnHelp),
 			)
 
+			bot.Handle(&btnHelp, HelpMeHandler(bot))
+
 			return c.Send(startMsg, menu)
 		}
 
@@ -106,7 +108,6 @@ func HandleAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
 		user := c.Sender()
 		
 		log.Printf("User: %d | %s", user.ID, user.Username)
-
 
 		btnStartGame := telebot.Btn{Text: "Почати гру"}
 

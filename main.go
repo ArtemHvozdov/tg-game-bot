@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
@@ -27,6 +29,9 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer storage_db.CloseDB(db)
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	pref := telebot.Settings{
 		Token: cfg.TelegramToken,
@@ -82,5 +87,22 @@ func main() {
 
 
 	log.Println("Bot is running...")
-	bot.Start()
+	//bot.Start()
+
+	go func() {
+		bot.Start()
+	}()
+
+	<-stop // Wait Ctrl+C or SIGTERM
+
+	if cfg.Mode == "dev" {
+		err := os.RemoveAll(dataDir)
+		if err != nil {
+			log.Printf("Failed to remove sessDBion dir: %v", err)
+		} else {
+			log.Println("DB dir removed (dev mode).")
+		}
+	} else {
+		log.Println("Prod mode — DB dir not removed.")
+	}
 }
