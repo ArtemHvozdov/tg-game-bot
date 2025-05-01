@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	//"log"
 	"os"
 	"strconv"
 
@@ -105,7 +105,7 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 3. У групі викликати команду /check_admin_bot`
 
 		user := c.Sender()
-		log.Println("CreateGameHandler butonns logs: User:", user.Username, user.ID)
+		utils.Logger.Infof("CreateGameHandler buton's logs: User:", user.Username, user.ID)
     	
 		if err := c.Send(gameStartMsg); err != nil {
 			return err
@@ -117,11 +117,17 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 func HandleAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		//chat := c.Chat()
+		chat := c.Chat()
 		user := c.Sender()
 		
-		log.Printf("User: %d | %s", user.ID, user.Username)
-
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "HandleAddedToGroup",
+			"user:": user.Username,
+			"user_id": user.ID,
+			"group": chat.Title,
+			"group_id": chat.ID,
+		}).Info("User added bot gto group")
+		
 		btnStartGame := telebot.Btn{Text: "Почати гру"}
 
 		CheckAdminBotHandler(bot, btnStartGame)(c)
@@ -163,7 +169,7 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 	// Notify all players in the game that a new player has joined
 	allPlayers, err := storage_db.GetAllPlayersByGameID(gameID)
 	if err != nil {
-		log.Printf("Failed to get players for game %d: %v", gameID, err)
+		utils.Logger.Errorf("Failed to get players for game %d: %v", gameID, err)
 		return
 	}
 
@@ -187,7 +193,6 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 		game, err := storage_db.CreateGame(gameName, chat.ID)
 		if err != nil {
 			utils.Logger.Errorf("Error creating game %s in the group %s: %v", gameName, chat.Title, err)
-			//log.Printf("Error creating game: %v", err)
 		}
 
 		playerAdmin := &models.Player{
@@ -230,30 +235,30 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			user := c.Sender()
 			chat := c.Chat()
       
-      utils.Logger.WithFields(logrus.Fields{
-          "user_id": user.ID,
-          "username": user.Username,
-          "group": chat.Title,
-          "group_id": chat.ID,
-		  }).Info("Inline button was called for joined to game")
+			utils.Logger.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"username": user.Username,
+				"group": chat.Title,
+				"group_id": chat.ID,
+		  	}).Info("Inline button was called for joined to game")
 
 			// Get game by chat ID
 			game, err := storage_db.GetGameByChatId(chat.ID)
 			if err != nil {
-				log.Printf("Game not found for chat %d: %v", chat.ID, err)
+				utils.Logger.Errorf("Game not found for chat %d: %v", chat.ID, err)
 				return c.Respond(&telebot.CallbackResponse{Text: "Гру не знайдено 😢"})
 			}
 
 			userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
 			if err != nil {
-				log.Printf("Failed to check if user is in game: %v", err)
+				utils.Logger.Errorf("Failed to check if user is in game: %v", err)
 				return nil
 			}
 
 			if userIsInGame {
 				msg, err := bot.Send(chat, fmt.Sprintf("🎉 @%s, ти вже в грі! Не нервуйся", user.Username))
 				if err != nil {
-					log.Printf("Failed to send message: %v", err)
+					utils.Logger.Errorf("Failed to send message for user %s: %v", user.Username, err)
 					return nil
 				}
 
@@ -261,7 +266,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 				err = bot.Delete(msg)
 				if err != nil {
-					log.Printf("Failed to delete message: %v", err)
+					utils.Logger.Errorf("Failed to delete message for user %s: %v", user.Username, err)
 					return nil
 				}
 				return nil
@@ -278,13 +283,18 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 			}
 
 			if err := storage_db.AddPlayerToGame(player); err != nil {
-				log.Printf("Failed to add player: %v", err)
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "CheckAdminHandler",
+					"player:": player.UserName,
+					"player_id": player.ID,
+					"game_id": game.ID,
+				}).Error("Failed to add player to game")
 				return c.Respond(&telebot.CallbackResponse{Text: "Не вдалося приєднатися 😢"})
 			}
 
 			msg, err := bot.Send(chat, fmt.Sprintf("✨ @%s приєднався до гри!", user.Username))
 			if err != nil {
-				log.Printf("Failed to send join message: %v", err)
+				utils.Logger.Errorf("Failed to send join message for user %s: %v", user.Username, err)
 				return nil
 			}
 
@@ -346,13 +356,13 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		
 			warningMsgSend, err := bot.Send(chat, warningMsg)
 			if err != nil {
-				log.Println("Error sending warning message in the chat:", err)
+				utils.Logger.Errorf("Error sending warning message about start game in the chat: %v", err)
 			}
 
 			time.Sleep(30 * time.Second)
 			err = bot.Delete(warningMsgSend)
 			if err != nil {
-				log.Printf("Error deleting message: %v", err)
+				utils.Logger.Errorf("Error deleting message warning message for user %s: %v", user.Username, err)
 			}
 			return nil
 		}
@@ -607,7 +617,6 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, game.CurrentTaskID)
 		if err != nil {
 			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", game.CurrentTaskID, user.Username, err)
-			//log.Printf("Error skipping task: %v", err)
 			return nil
 		}
 
