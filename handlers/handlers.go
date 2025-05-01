@@ -44,7 +44,8 @@ func LoadTasks(path string) ([]Task, error) {
 func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
-
+		user := c.Sender()
+		
 		utils.Logger.WithFields(logrus.Fields{
 			"user_id": user.ID,
 			"username": user.Username,
@@ -86,7 +87,7 @@ func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
       "source": "StartHandler",
       "group": chat.Title,
       "group_id": chat.ID,
-      "admin_id:": creatorID
+      "admin_id:": creatorID,
     }).Info("Bot was join to group")
 		
 		return c.Send("🎉 Гру створено! Додайте своїх подруг і вперед до веселощів!")
@@ -232,7 +233,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
       utils.Logger.WithFields(logrus.Fields{
           "user_id": user.ID,
           "username": user.Username,
-          "group": chat.Tittle,
+          "group": chat.Title,
           "group_id": chat.ID,
 		  }).Info("Inline button was called for joined to game")
 
