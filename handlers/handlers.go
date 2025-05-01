@@ -105,7 +105,7 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 3. У групі викликати команду /check_admin_bot`
 
 		user := c.Sender()
-		utils.Logger.Infof("CreateGameHandler buton's logs: User:", user.Username, user.ID)
+		utils.Logger.Info("CreateGameHandler buton's logs: User:", user.Username, user.ID)
     	
 		if err := c.Send(gameStartMsg); err != nil {
 			return err
