@@ -353,7 +353,13 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
 			warningMsg := fmt.Sprintf("@%s, розпочати гру може тільки адмін групи. Трохи терпіння і почнемо.", user.Username)
-		
+			
+			utils.Logger.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"username": user.Username,
+				"group": chat.Title,
+			}).Warn("Second click to button, user is not admin in the group, tha can't start game")
+
 			warningMsgSend, err := bot.Send(chat, warningMsg)
 			if err != nil {
 				utils.Logger.Errorf("Error sending warning message about start game in the chat: %v", err)
@@ -419,7 +425,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
 
-		time.Sleep(1 * time.Hour)
+		time.Sleep(1 * time.Minute)
 
 		// Start sending tasks
 		return SendTasks(bot, chat.ID)
