@@ -175,7 +175,7 @@ func UpdateGameStatus(gameID int64, status string) error {
 		return err
 	}
 
-	log.Printf("Game status for game ID %d updated to '%s'", gameID, status)
+	log.Printf("DB logs: (UpdateGameStatus) Game status for game ID %d updated to '%s'", gameID, status)
 	return nil
 }
 
@@ -364,7 +364,7 @@ func UpdatePlayerStatus(playerID int64, status string) error {
 		return err
 	}
 
-	log.Printf("Player status for player ID %d updated to '%s'", playerID, status)
+	log.Printf("DB logs: (UpdatePlayerStatus) Player status for player ID %d updated to '%s'", playerID, status)
 	return nil
 }
 
@@ -380,13 +380,13 @@ func GetStatusPlayer(playerID int64) (string, error) {
 		return "", err
 	}
 
-	log.Printf("Player status for player ID %d is '%s'", playerID, status)
+	log.Printf("DB logs: (GetStatusPlayer) Player status for player ID %d is '%s'", playerID, status)
 	return status, nil
 }
 
 // AddPlayerAnswer add player answer to DB
 func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
-	log.Println("AadPlayerResponse-log: AddPlayerResponse was called")
+	log.Println("DB logs: (AadPlayerResponse) AddPlayerResponse was called")
 	query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped) VALUES (?, ?, ?, ?, ?)`
 	_, err := db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped)
 	if err != nil {
@@ -394,7 +394,7 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 		return err
 	}
 
-	log.Printf("Player response for game ID %d and task ID %d added", playerResponse.GameID, playerResponse.TaskID)
+	log.Printf("DB logs: (AddPlayerResponse) Player response for game ID %d and task ID %d added", playerResponse.GameID, playerResponse.TaskID)
 	return nil
 }
 
@@ -472,7 +472,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		// Response exists
 		if hasAnswer {
 			status.AlreadyAnswered = true
-			log.Printf("Player ID %d already answered task ID %d", playerID, taskID)
+			log.Printf("DB logs: (SkipPlayerResponse) Player ID %d already answered task ID %d", playerID, taskID)
 			return status, nil
 		}
 		if skipped {
@@ -506,7 +506,7 @@ func UpdateCurrentTaskID(gameID int, taskID int) error {
 		return err
 	}
 
-	log.Printf("Current task ID for game ID %d updated to %d", gameID, taskID)
+	log.Printf("DB logs: (UpdateCurrentTaskID) Current task ID for game ID %d updated to %d", gameID, taskID)
 	return nil
 }
 

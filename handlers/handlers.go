@@ -6,12 +6,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+
 	//"strings"
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
+	"github.com/sirupsen/logrus"
 
 	//"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -43,9 +45,14 @@ func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 
+		utils.Logger.WithFields(logrus.Fields{
+			"user_id": user.ID,
+			"username": user.Username,
+		}).Info("User started the bot")
+
 		if chat.Type == telebot.ChatPrivate {
-			
 			startMsg := "Оу, привіт, зіронько! 🌟 Хочеш створити гру для своїх найкращих подруг? Натискай кнопку нижче і вперед до пригод!"
+
 
 			creatorID := fmt.Sprintf("%d", c.Sender().ID)
 			deepLink := "https://t.me/bestie_game_bot?startgroup=" + creatorID
@@ -71,12 +78,17 @@ func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		creatorID, err := strconv.ParseInt(payload, 10, 64)
 		if err != nil {
-			log.Printf("❌ Не вдалося розпізнати ID користувача: %v", err)
+		  utils.Logger.Errorf("Не вдалося розпізнати ID користувача: %v", err)
 			return c.Send("Помилка при запуску гри. Спробуй ще раз.")
 		}
-
-		log.Printf("Bot was join to group: %s (ID: %d), creatorID: %d", chat.Title, chat.ID, creatorID)
-
+    
+    utils.Logger.WithFields(logrus.Fields{
+      "source": "StartHandler",
+      "group": chat.Title,
+      "group_id": chat.ID,
+      "admin_id:": creatorID
+    }).Info("Bot was join to group")
+		
 		return c.Send("🎉 Гру створено! Додайте своїх подруг і вперед до веселощів!")
 	}
 }
@@ -166,8 +178,6 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 // CheckAdminBotHandler handles the /check_admin_bot command
 func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		log.Println("CheckAdminBotHandler called")
-
 		chat := c.Chat()
 		user := c.Sender()
 		
@@ -175,7 +185,8 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 		
 		game, err := storage_db.CreateGame(gameName, chat.ID)
 		if err != nil {
-			log.Printf("Error creating game: %v", err)
+			utils.Logger.Errorf("Error creating game %s in the group %s: %v", gameName, chat.Title, err)
+			//log.Printf("Error creating game: %v", err)
 		}
 
 		playerAdmin := &models.Player{
@@ -189,7 +200,7 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 		}
 		
 		if err := storage_db.AddPlayerToGame(playerAdmin); err != nil {
-			log.Printf("Failed to add player-admin to game: %v", err)
+			utils.Logger.Errorf("Failed to add player-admin (%d | %s) to game %s: %v", playerAdmin.ID, playerAdmin.UserName, gameName, err)
 			return c.Send("Ой, не вдалося додати тебе до гри. Спробуй ще раз!")
 		}
 
@@ -199,7 +210,6 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 
 		time.Sleep(700 * time.Millisecond)	
 
-		
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
 
 		time.Sleep(5 * time.Second)
@@ -218,8 +228,13 @@ func CheckAdminBotHandler(bot *telebot.Bot, btnStartGame telebot.Btn) func(c tel
 		bot.Handle(&joinBtn, func(c telebot.Context) error {
 			user := c.Sender()
 			chat := c.Chat()
-
-			log.Printf("Inline button was called for joined to game(DM): %s (%d) in chat %s (%d)\n", user.Username, user.ID, chat.Title, chat.ID)
+      
+      utils.Logger.WithFields(logrus.Fields{
+          "user_id": user.ID,
+          "username": user.Username,
+          "group": chat.Tittle,
+          "group_id": chat.ID,
+		  }).Info("Inline button was called for joined to game")
 
 			// Get game by chat ID
 			game, err := storage_db.GetGameByChatId(chat.ID)
@@ -292,7 +307,7 @@ func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error
 
 	raw, err := bot.Raw("exportChatInviteLink", params)
 	if err != nil {
-		log.Printf("Error generating invite link: %v", err)
+		utils.Logger.Errorf("Error generating invite link for the group %s: %v", chat.Title, err)
 		return "", fmt.Errorf("failed to export chat invite link: %w", err)
 	}
 
@@ -303,7 +318,7 @@ func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error
 
 	err = json.Unmarshal(raw, &result)
 	if err != nil {
-		log.Printf("Error parsing invite link response: %v", err)
+		utils.Logger.Errorf("Error parsing invite link for the group %s response: %v", chat.Title, err)
 		return "", fmt.Errorf("failed to parse invite link response: %w", err)
 	}
 
@@ -314,10 +329,14 @@ func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error
 // StartGameHandlerFoo handles the "start_game" button press in a group chat
 func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		log.Println("StartGameHandlerFoo called")
-		
 		chat := c.Chat()
 		user := c.Sender()
+
+		utils.Logger.WithFields(logrus.Fields{
+			"user_id": user.ID,
+			"username": user.Username,
+			"group": chat.Title,
+		}).Info("Start game handler called")
 
 		memberUser, _ := bot.ChatMemberOf(chat, user)
 
@@ -339,11 +358,11 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
-			log.Printf("Error getting game by chat ID: %v", err)
+			utils.Logger.Errorf("Error getting game by chat ID(%d): %v", chat.ID, err)
 			return c.Send("❌ Не вдалося знайти гру для цього чату.")
 		}
 
-		log.Println("StartGameHandlerFoo logs: User:", user.Username, "Chat Name:", chat.Title, "Game status:", game.Status)
+		utils.Logger.Infof("Game (%s) status: %s", game.Name, game.Status)
 
 		// Checking: this have to be a group chat
 		if chat.Type == telebot.ChatPrivate {
@@ -355,13 +374,17 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			msgText := fmt.Sprintf("@%s, ти вже розпочав гру!", user.Username)
 			msg, err := bot.Send(chat, msgText)
 			if err != nil {
-				log.Printf("Error sending message: %v", err)
+				utils.Logger.Errorf(
+					"Error sending message that game %s has already started for user (%d | %s): %v", game.Name, user.ID, user.Username, err,
+				)
 			}
 
 			time.Sleep(1 * time.Minute)
 			err = bot.Delete(msg)
 			if err != nil {
-				log.Printf("Error deleting message: %v", err)
+				utils.Logger.Errorf(
+					"Error deleting message that game %s has already started for user (%d | %s): %v", game.Name, user.ID, user.Username, err,
+				)
 			}
 
 			return nil
@@ -379,7 +402,8 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		time.Sleep(600 * time.Millisecond) // Wait for 2 seconds before sending the next message
 		_, err = bot.Send(chat, startGameMsg)
 		if err != nil {
-			log.Printf("Error sending welcome start game message: %v", err)
+			utils.Logger.Errorf("Error sending welcome start game message go the chat %s: %v", chat.Title, err)
+			
 		}
 
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
@@ -398,20 +422,35 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
-			log.Printf("Error getting game by chat ID: %v", err)
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "HandleUHandlerPlayerResponseserJoined",
+				"chat_id": chat.ID,
+				"user_called": user.Username,
+			}).Errorf("Error getting game by chat ID: %v", err)
+			
 			return nil
 		}
 
 		statusUser, err := storage_db.GetStatusPlayer(user.ID)
 		if err != nil {
-			log.Printf("Error getiing status player: %v", err)
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "HandlerPlayerResponse",
+				"user_id": user.ID,
+				"username": user.Username,
+				"group": chat.Title,
+			}).Errorf("Error getting status player: %v", err)
+		
 			return nil
 		}
-		
-		log.Printf("HandlerPlayerResponse logs: User: %s, Chat Name: %s", user.Username, chat.Title)
-		log.Print("HandlerPlayerResponse logs: User status: ", statusUser)
-		log.Print("HandlerPlayerResponse logs: User status in block if: ", models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID))
 
+		utils.Logger.WithFields(logrus.Fields{
+				"source": "HandlerPlayerResponse",
+				"username": user.Username,
+				"group": chat.Title,
+				"status_uer_from_DB": statusUser,
+				"status_user_in_blocK_if": models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID),
+			}).Info("Info about player and his status")
+		
 		if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
 			playerResponse := &models.PlayerResponse{
 				PlayerID:   user.ID,
@@ -436,18 +475,23 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 func SendTasks(bot *telebot.Bot, chatID int64) error {
 	game, err := storage_db.GetGameByChatId(chatID)
 	if err != nil {
-		log.Printf("SendTasks logs: Error getting game by chat ID: %v", err)
+		utils.Logger.WithFields(logrus.Fields{
+			"siource": "SendTasks",
+			"chat_id": chatID,
+			"chat_name": game.Name,
+		}).Errorf("Error getting game by chat ID: %v", err)
+	
 		return err
 	}
 
     tasks, err := LoadTasks("tasks/tasks.json")
     if err != nil {
-		log.Printf("SendTasks logs: Error loading tasks: %v", err)
+		    utils.Logger.Errorf("SendTasks logs: Error loading tasks: %v", err)
         return err
     }
 
     if len(tasks) == 0 {
-		log.Println("SendTasks logs: No tasks to send.")
+		utils.Logger.Error("SendTasks logs: No tasks to send. Tasks's array is empty" )
 		return nil
 	}
 
@@ -495,7 +539,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) error {
 Тепер питання: коли і де ви зустрічаєтеся, щоб відсвяткувати вашу перемогу, зіроньки? 🥂 😉`
 	_, err = bot.Send(&telebot.Chat{ID: chatID}, finalMsg)
 	if err != nil {
-		log.Println("Error sending final message:", err)
+		utils.Logger.Errorf("Error sending final message: %v", err)
 	}
 
     return nil
@@ -504,25 +548,28 @@ func SendTasks(bot *telebot.Bot, chatID int64) error {
 // Handler for answering a task
 func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		log.Println("OnAnswerTaskHandler called")
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "OnAnswerTaskBtnHandler",
+			"username": c.Sender().Username,
+		}).Info("OnAnswerTaskBtnHandler called")
 
 		user := c.Sender()
 		chat := c.Chat()
 		dataButton := c.Data()
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
-			log.Printf("Error getting game by chat ID: %v", err)
+			utils.Logger.Errorf("Error getting game by chat ID (%d): %v", chat.ID, err)
 			return nil
 		}
 
 		idTask, err := utils.GetWaitingTaskID(dataButton)
 		if err != nil {
-			log.Printf("Error getting task ID from data button: %v", err)
+			utils.Logger.Errorf("Error getting task ID from data button: %v", err)
 		}
 
 		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, idTask)
 		if err != nil {
-			log.Printf("Error checking player response status: %v", err)
+			utils.Logger.Errorf("Error checking player response status: %v", err)
 			return nil
 		}
 
@@ -542,18 +589,24 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 // Handler for skipping a task
 func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		log.Println("OnSkipTaskHadler called")
+		utils.Logger.Info("OnSkipTaskHandler called")
 
 		user := c.Sender()
 		chat := c.Chat()
 		dataButton := c.Data()
 		game, _ := storage_db.GetGameByChatId(chat.ID)
 
-		log.Println("OnSkipTaskHandler logs: User:", user.Username, "Chat Name:", chat.Title, "Data Button:", dataButton, "Current Task ID:", game.CurrentTaskID)
+		utils.Logger.WithFields(logrus.Fields{
+			"user": user.Username,
+			"group": chat.Title,
+			"data_button": dataButton,
+			"current_task_id": game.CurrentTaskID,
+		}).Info("Info of user, data buttin and task ID")
 
 		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, game.CurrentTaskID)
 		if err != nil {
-			log.Printf("Error skipping task: %v", err)
+			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", game.CurrentTaskID, user.Username, err)
+			//log.Printf("Error skipping task: %v", err)
 			return nil
 		}
 
