@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
@@ -34,6 +36,9 @@ func main() {
 	}
 	defer storage_db.CloseDB(db)
 
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
 	pref := telebot.Settings{
 		Token: cfg.TelegramToken,
 		Poller: &telebot.LongPoller{
@@ -57,19 +62,19 @@ func main() {
 	}
 
 	// Create buttons
-	btnCreateGame := telebot.Btn{Text: "Створити гру"}
+	//btnCreateGame := telebot.Btn{Text: "Створити гру"}
 	btnStartGame := telebot.Btn{Text: "Почати гру"}
 	//btnJoinGame := telebot.Btn{Text: "Доєднатися до гри"}
 	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
 	// Handlers for buttons
-	bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
+	//bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
 	bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "answer_task"}, handlers.OnAnswerTaskBtnHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
 	
-	bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
+	//bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
 	//bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
 
 	bot.Handle(telebot.OnText, handlers.HandlerPlayerResponse(bot))
@@ -78,13 +83,32 @@ func main() {
 	bot.Handle(telebot.OnVoice, handlers.HandlerPlayerResponse(bot))
 	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
 	
+	bot.Handle(telebot.OnAddedToGroup, handlers.HandleAddedToGroup(bot))
+	
 
-	bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
+	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
+	bot.Handle("/start", handlers.StartHandler(bot))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))
 	bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
 	
 
-	utils.Logger.Info("Bot started successfully")
-	//log.Println("Bot is running...")
-	bot.Start()
+	go func() {
+		bot.Start()
+	}()
+  
+  utils.Logger.Info("Bot started successfully")
+
+	<-stop // Wait Ctrl+C or SIGTERM
+
+	if cfg.Mode == "dev" {
+		err := os.RemoveAll(dataDir)
+		if err != nil {
+			utils.Logger.Errorf("Failed to remove DB dir: %v", err)
+		} else {
+			utils.Logger.Info("DB dir removed (dev mode).")
+		}
+	} else {
+		utils.Logger.Info("Prod mode — DB dir not removed.")
+	}
 }
+

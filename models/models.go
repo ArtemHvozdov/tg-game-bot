@@ -14,7 +14,7 @@ type Game struct {
 	ID int
 	Name string
 	GameChatID int64
-    InviteLink string
+    //InviteLink string
 	CurrentTaskID int
     TotalPlayers int // max 5
 	Status string // "waiting", "playing", "finished"
