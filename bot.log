@@ -1423,3 +1423,5 @@
 [36mINFO[0m[2025-05-15 13:40:04] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=12
 [36mINFO[0m[2025-05-15 13:40:04] Finish game handler called                    [36mgroup[0m="Test 3" [36msource[0m=FinishGameHandler
 [36mINFO[0m[2025-05-15 13:40:04] Game status has been updated successfully     [36mgame_id[0m=1 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=finished
+[36mINFO[0m[2025-05-15 13:44:36] DB dir removed (dev mode).                   
+[36mINFO[0m[2025-05-15 13:44:36] The database connection was closed successfully. 
