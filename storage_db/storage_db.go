@@ -59,7 +59,7 @@ func createTables() error {
 		{
 			"players",
 			`CREATE TABLE IF NOT EXISTS players (
-				id INTEGER PRIMARY KEY,
+				id INTEGER,
 				username TEXT NOT NULL,
 				name TEXT NOT NULL,
 				game_id INTEGER,
@@ -227,22 +227,22 @@ func GetCurrentGameStatus(gameID int) (string, error) {
 }
 
 // CreateTask add a new task (question | answer) to DB
-func CreateTask(task models.Task) error {
-	query := `INSERT INTO tasks (game_id, question, answer) VALUES (?, ?, ?)`
-	_, err := db.Exec(query, task.GameID, task.Question, task.Answer)
-	if err != nil {
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: CreateTask",
-			"game_id": task.GameID,
-			"task_id": task.ID,
-			"error": err,
-		}).Error("Failed to add task to DB")
-		return err
-	}
+// func CreateTask(task models.Task) error {
+// 	query := `INSERT INTO tasks (game_id, question, answer) VALUES (?, ?, ?)`
+// 	_, err := db.Exec(query, task.GameID, task.Question, task.Answer)
+// 	if err != nil {
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"source": "DB: CreateTask",
+// 			"game_id": task.GameID,
+// 			"task_id": task.ID,
+// 			"error": err,
+// 		}).Error("Failed to add task to DB")
+// 		return err
+// 	}
 
-	utils.Logger.Infof("DB: CreateTask: Task для GameID %d добавлен: '%s' -> '%s'", task.GameID, task.Question, task.Answer)
-	return nil
-}
+// 	utils.Logger.Infof("DB: CreateTask: Task для GameID %d добавлен: '%s' -> '%s'", task.GameID, task.Question, task.Answer)
+// 	return nil
+// }
 
 // GetGameById getting a game by ID
 func GetGameById(gameID int) (*models.Game, error) {

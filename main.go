@@ -54,7 +54,7 @@ func main() {
 	err = bot.SetCommands([]telebot.Command{
 		{Text: "start", Description: "Запустити бота"},
 		{Text: "help", Description: "Хелп мі"},
-		{Text: "check_admin_bot", Description: "Перевірити права бота"},
+		//{Text: "check_admin_bot", Description: "Перевірити права бота"},
 	})
 	if err != nil {
 		utils.Logger.Error("Failed to set bot commands")
@@ -63,13 +63,13 @@ func main() {
 
 	// Create buttons
 	//btnCreateGame := telebot.Btn{Text: "Створити гру"}
-	btnStartGame := telebot.Btn{Text: "Почати гру"}
+	//btnStartGame := telebot.Btn{Text: "Почати гру"}
 	//btnJoinGame := telebot.Btn{Text: "Доєднатися до гри"}
 	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
 	// Handlers for buttons
 	//bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
-	bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
+	//bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "answer_task"}, handlers.OnAnswerTaskBtnHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
@@ -89,7 +89,7 @@ func main() {
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
 	bot.Handle("/start", handlers.StartHandler(bot))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))
-	bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
+	//bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
 	
 
 	go func() {

@@ -1,9 +1,14 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ArtemHvozdov/tg-game-bot.git/models"
+	
 	//"math/rand"
 	//"time"
 )
@@ -39,4 +44,32 @@ func GetWaitingTaskID(status string) (int, error) {
 	}
 
 	return id, nil
+}
+
+func LoadTasks(path string) ([]models.Task, error) {
+    file, err := os.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+
+    var tasks []models.Task
+    err = json.Unmarshal(file, &tasks)
+    if err != nil {
+        return nil, err
+    }
+
+    return tasks, nil
+}
+
+func LoadJoinMessagges(path string) ([]string, error) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var messages []string
+	err = json.Unmarshal(file, &messages)
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
 }

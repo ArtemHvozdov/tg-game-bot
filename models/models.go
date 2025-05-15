@@ -26,12 +26,13 @@ type GamePlayer struct {
     Status   string // "joined", "playing", "finished"
 }
 
-type Task struct {
-	ID int
-	GameID int
-	Question string
-	Answer string
-}
+// Struct for storing task information in DB
+// type Task struct {
+// 	ID int
+// 	GameID int
+// 	Question string
+// 	Answer string
+// }
 
 type PlayerResponse struct {
     ID        int    
@@ -58,6 +59,13 @@ type AddResponseResult struct {
 	AlreadyAnswered bool
 	AlreadySkipped  bool
 	Success         bool
+}
+
+// Struct for storing task information for downloading from JSON
+type Task struct {
+	ID 		int    `json:"id"`
+	Tittle string `json:"title"`
+	Description string `json:"description"`
 }
 
 // Const of state
