@@ -294,7 +294,7 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 			userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
 			if err != nil {
-				utils.Logger.Errorf("Failed to check if user is in game: %v", err)
+				utils.Logger.Errorf("Failed to check if user %s is in game: %v", chat.Username, err)
 				return nil
 			}
 
@@ -397,7 +397,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			"user_id": user.ID,
 			"username": user.Username,
 			"group": chat.Title,
-		}).Info("Start game handler called")
+		}).Infof("Start game handler called by %s", user.Username)
 
 		memberUser, _ := bot.ChatMemberOf(chat, user)
 
@@ -708,6 +708,25 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
+
+		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання", user.Username)
+		awaitingAnswerMsg, err := bot.Send(chat, msg)
+		if err != nil {
+			utils.Logger.Errorf("Error sending message: %v", err)
+		}
+
+		time.AfterFunc(3 * time.Second, func() {
+			err = bot.Delete(awaitingAnswerMsg)
+			if err != nil {
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "OnAnswerTaskBtnHandler",
+					"username": user.Username,
+					"group": chat.Title,
+					"data_button": dataButton,
+					"task_id": idTask,
+				}).Errorf("Error deleting answer task message for user %s in the group %s: %v", chat.Username, chat.Title, err)
+			}
+		})
 
 		return nil
 	}
