@@ -2694,3 +2694,6 @@
 [36mINFO[0m[2025-05-23 14:11:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=2
 [36mINFO[0m[2025-05-23 14:14:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=3
 [36mINFO[0m[2025-05-23 14:17:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-23 14:20:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=5
+[36mINFO[0m[2025-05-23 14:21:05] DB dir removed (dev mode).                   
+[36mINFO[0m[2025-05-23 14:21:05] The database connection was closed successfully. 
