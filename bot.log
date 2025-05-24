@@ -2694,3 +2694,35 @@
 [36mINFO[0m[2025-05-23 14:11:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=2
 [36mINFO[0m[2025-05-23 14:14:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=3
 [36mINFO[0m[2025-05-23 14:17:23] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 16:07:18] The database has been initialized successfully. 
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=players
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=games
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_players
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=tasks
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=player_responses
+[36mINFO[0m[2025-05-24 16:07:18] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_state
+[36mINFO[0m[2025-05-24 16:07:18] Bot started successfully                     
+[36mINFO[0m[2025-05-24 16:11:51] The user added the bot to the group manually  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:11:51] Start creating game in the group (-4633144279 | Test 3)  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:11:51] Game has been created successfully            [36mgame[0m="Test 3" [36mgame_id[0m=1 [36mgroup_id[0m=-4633144279 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:11:51] Player has been added to game successfully    [36mgame_id[0m=1 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:12:05] Start game handler called by green_delfin     [36mgroup[0m="Test 3" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:12:05] Game (Test 3) status: waiting                
+[36mINFO[0m[2025-05-24 16:12:05] Game status has been updated successfully     [36mgame_id[0m=1 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:12:32] The user added the bot to the group manually  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:12:32] Start creating game in the group (-4848444690 | Test 4)  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:12:32] Game has been created successfully            [36mgame[0m="Test 4" [36mgame_id[0m=2 [36mgroup_id[0m=-4848444690 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:12:32] Player has been added to game successfully    [36mgame_id[0m=2 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:12:40] Start game handler called by green_delfin     [36mgroup[0m="Test 4" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:12:40] Game (Test 4) status: waiting                
+[36mINFO[0m[2025-05-24 16:12:41] Game status has been updated successfully     [36mgame_id[0m=2 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:13:05] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:13:16] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:13:16] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:13:16] Player skipped task (new entry)               [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:13:41] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:13:45] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:13:45] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 4" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:13:45] Player skipped task (new entry)               [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:15:25] DB dir removed (dev mode).                   
+[36mINFO[0m[2025-05-24 16:15:25] The database connection was closed successfully. 
