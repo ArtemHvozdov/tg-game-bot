@@ -483,7 +483,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 
 	// Check how many times player has already skipped tasks
 	var skipCount int
-	err := db.QueryRow(`SELECT COUNT(*) FROM player_responses WHERE player_id = ? AND skipped = 1`, playerID).Scan(&skipCount)
+	err := db.QueryRow(`SELECT COUNT(*) FROM player_responses WHERE player_id = ? AND game_id = ? AND skipped = 1`, playerID, gameID  ).Scan(&skipCount)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "DB: SkipPlayerResponse",
