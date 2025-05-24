@@ -2726,3 +2726,120 @@
 [36mINFO[0m[2025-05-24 16:13:45] Player skipped task (new entry)               [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
 [36mINFO[0m[2025-05-24 16:15:25] DB dir removed (dev mode).                   
 [36mINFO[0m[2025-05-24 16:15:25] The database connection was closed successfully. 
+[36mINFO[0m[2025-05-24 16:45:34] The database has been initialized successfully. 
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=players
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=games
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_players
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=tasks
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=player_responses
+[36mINFO[0m[2025-05-24 16:45:34] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_state
+[36mINFO[0m[2025-05-24 16:45:34] Bot started successfully                     
+[36mINFO[0m[2025-05-24 16:46:10] The user added the bot to the group manually  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:46:10] Start creating game in the group (-4633144279 | Test 3)  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:46:10] Game has been created successfully            [36mgame[0m="Test 3" [36mgame_id[0m=1 [36mgroup_id[0m=-4633144279 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:46:10] Player has been added to game successfully    [36mgame_id[0m=1 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:46:17] Start game handler called by green_delfin     [36mgroup[0m="Test 3" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:46:17] Game (Test 3) status: waiting                
+[36mINFO[0m[2025-05-24 16:46:18] Game status has been updated successfully     [36mgame_id[0m=1 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:46:28] The user added the bot to the group manually  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:46:28] Start creating game in the group (-4848444690 | Test 4)  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:46:28] Game has been created successfully            [36mgame[0m="Test 4" [36mgame_id[0m=2 [36mgroup_id[0m=-4848444690 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:46:28] Player has been added to game successfully    [36mgame_id[0m=2 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:46:35] Start game handler called by green_delfin     [36mgroup[0m="Test 4" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:46:35] Game (Test 4) status: waiting                
+[36mINFO[0m[2025-05-24 16:46:36] Game status has been updated successfully     [36mgame_id[0m=2 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:47:18] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:47:28] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:47:28] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[31mERRO[0m[2025-05-24 16:47:28] Error checking skip count                     [31merror[0m="not enough args to execute query: want 2 got 1" [31mgame_id[0m=1 [31mplayer_id[0m=385672319 [31msource[0m="DB: SkipPlayerResponse" [31mtask_id[0m=1
+[31mERRO[0m[2025-05-24 16:47:28] Error skipping task 1 bu user: green_delfin. not enough args to execute query: want 2 got 1 
+[36mINFO[0m[2025-05-24 16:47:36] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:48:23] DB dir removed (dev mode).                   
+[36mINFO[0m[2025-05-24 16:48:23] The database connection was closed successfully. 
+[36mINFO[0m[2025-05-24 16:49:10] The database has been initialized successfully. 
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=players
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=games
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_players
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=tasks
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=player_responses
+[36mINFO[0m[2025-05-24 16:49:10] Table has been created or already exists.     [36msource[0m="DB: createTables" [36mtable[0m=game_state
+[36mINFO[0m[2025-05-24 16:49:10] Bot started successfully                     
+[36mINFO[0m[2025-05-24 16:49:17] The user added the bot to the group manually  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:49:17] Start creating game in the group (-4848444690 | Test 4)  [36mgroup[0m="Test 4" [36mgroup_id[0m=-4848444690 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:49:17] Game has been created successfully            [36mgame[0m="Test 4" [36mgame_id[0m=1 [36mgroup_id[0m=-4848444690 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:49:17] Player has been added to game successfully    [36mgame_id[0m=1 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:49:28] Start game handler called by green_delfin     [36mgroup[0m="Test 4" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:49:28] Game (Test 4) status: waiting                
+[36mINFO[0m[2025-05-24 16:49:29] Game status has been updated successfully     [36mgame_id[0m=1 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:49:46] The user added the bot to the group manually  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=HandleAddedToGroup [36muser:[0m=green_delfin [36muser_id[0m=385672319
+[36mINFO[0m[2025-05-24 16:49:46] Start creating game in the group (-4633144279 | Test 3)  [36mgroup[0m="Test 3" [36mgroup_id[0m=-4633144279 [36msource[0m=CheckAdminBotHandler [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:49:46] Game has been created successfully            [36mgame[0m="Test 3" [36mgame_id[0m=2 [36mgroup_id[0m=-4633144279 [36msource[0m="DB: CreateGame"
+[36mINFO[0m[2025-05-24 16:49:46] Player has been added to game successfully    [36mgame_id[0m=2 [36mplayer[0m=green_delfin [36mplayer_id[0m=385672319 [36mrole[0m=admin [36msource[0m="DB: AddPlayerToGame"
+[36mINFO[0m[2025-05-24 16:49:53] Start game handler called by green_delfin     [36mgroup[0m="Test 3" [36muser_id[0m=385672319 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:49:53] Game (Test 3) status: waiting                
+[36mINFO[0m[2025-05-24 16:49:54] Game status has been updated successfully     [36mgame_id[0m=2 [36msource[0m="DB: UpdateGameStatus" [36mstatus[0m=playing
+[36mINFO[0m[2025-05-24 16:50:29] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:50:38] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:50:38] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 4" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:50:38] Player skipped task (new entry)               [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:50:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:51:02] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:51:02] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:51:02] Player skipped task (new entry)               [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:53:29] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=2
+[36mINFO[0m[2025-05-24 16:53:38] User click to button WantAnswer to task waiting_2  [36mdata_button[0m=waiting_2 [36mgroup[0m="Test 4" [36msource[0m=OnAnswerTaskBtnHandler [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:53:38] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=waiting_2
+[36mINFO[0m[2025-05-24 16:53:44] Player status get successfully                [36mplayer_id[0m=385672319 [36msource[0m="DB: GetStatusPlayer" [36mstatus[0m=waiting_2
+[36mINFO[0m[2025-05-24 16:53:44] Info about player and his status              [36mgroup[0m="Test 4" [36msource[0m=HandlerPlayerResponse [36mstatus_uer_from_DB[0m=waiting_2 [36mstatus_user_in_blocK_if[0m=waiting_2 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:53:44] DB: AddPlayerResponse - AddPlayerResponse was called  [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=2
+[36mINFO[0m[2025-05-24 16:53:44] Player response added successfully            [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=2
+[36mINFO[0m[2025-05-24 16:53:44] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=no_waiting
+[36mINFO[0m[2025-05-24 16:53:52] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:53:52] User click to button SkipTask from tasl skip_1  [36mcurrent_task_id[0m=1 [36mdata_button[0m=skip_1 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:53:52] Player has already skipped the task           [36mgame_id[0m=2 [36mhas_answer[0m=false [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=1
+[36mINFO[0m[2025-05-24 16:53:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=2
+[36mINFO[0m[2025-05-24 16:54:23] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:54:23] User click to button SkipTask from tasl skip_2  [36mcurrent_task_id[0m=2 [36mdata_button[0m=skip_2 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:54:23] Player skipped task (new entry)               [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=2
+[36mINFO[0m[2025-05-24 16:56:29] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=3
+[36mINFO[0m[2025-05-24 16:56:47] User click to button WantAnswer to task waiting_3  [36mdata_button[0m=waiting_3 [36mgroup[0m="Test 4" [36msource[0m=OnAnswerTaskBtnHandler [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:56:47] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=waiting_3
+[36mINFO[0m[2025-05-24 16:56:51] Player status get successfully                [36mplayer_id[0m=385672319 [36msource[0m="DB: GetStatusPlayer" [36mstatus[0m=waiting_3
+[36mINFO[0m[2025-05-24 16:56:51] Info about player and his status              [36mgroup[0m="Test 4" [36msource[0m=HandlerPlayerResponse [36mstatus_uer_from_DB[0m=waiting_3 [36mstatus_user_in_blocK_if[0m=waiting_3 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:56:51] DB: AddPlayerResponse - AddPlayerResponse was called  [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=3
+[36mINFO[0m[2025-05-24 16:56:51] Player response added successfully            [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=3
+[36mINFO[0m[2025-05-24 16:56:51] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=no_waiting
+[36mINFO[0m[2025-05-24 16:56:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=3
+[36mINFO[0m[2025-05-24 16:57:38] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 16:57:38] User click to button SkipTask from tasl skip_3  [36mcurrent_task_id[0m=3 [36mdata_button[0m=skip_3 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 16:57:38] Player skipped task (new entry)               [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=3
+[36mINFO[0m[2025-05-24 16:59:29] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 16:59:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 17:00:28] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 17:00:28] User click to button SkipTask from tasl skip_4  [36mcurrent_task_id[0m=4 [36mdata_button[0m=skip_4 [36mgroup[0m="Test 3" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:00:28] Player has reached the skip limit             [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 17:00:32] Player status get successfully                [36mplayer_id[0m=385672319 [36msource[0m="DB: GetStatusPlayer" [36mstatus[0m=no_waiting
+[36mINFO[0m[2025-05-24 17:00:32] Info about player and his status              [36mgroup[0m="Test 3" [36msource[0m=HandlerPlayerResponse [36mstatus_uer_from_DB[0m=no_waiting [36mstatus_user_in_blocK_if[0m=waiting_4 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:00:41] User click to button WantAnswer to task waiting_4  [36mdata_button[0m=waiting_4 [36mgroup[0m="Test 3" [36msource[0m=OnAnswerTaskBtnHandler [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:00:41] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=waiting_4
+[36mINFO[0m[2025-05-24 17:00:46] Player status get successfully                [36mplayer_id[0m=385672319 [36msource[0m="DB: GetStatusPlayer" [36mstatus[0m=waiting_4
+[36mINFO[0m[2025-05-24 17:00:46] Info about player and his status              [36mgroup[0m="Test 3" [36msource[0m=HandlerPlayerResponse [36mstatus_uer_from_DB[0m=waiting_4 [36mstatus_user_in_blocK_if[0m=waiting_4 [36musername[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:00:46] DB: AddPlayerResponse - AddPlayerResponse was called  [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 17:00:46] Player response added successfully            [36mgame_id[0m=2 [36mplayer_id[0m=385672319 [36msource[0m="DB: AddPlayerResponse" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 17:00:46] Player status updated successfully            [36mplayer_id[0m=385672319 [36msource[0m="DB: UpdatePlayerStatus" [36mstatus[0m=no_waiting
+[36mINFO[0m[2025-05-24 17:01:06] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 17:01:06] User click to button SkipTask from tasl skip_4  [36mcurrent_task_id[0m=4 [36mdata_button[0m=skip_4 [36mgroup[0m="Test 4" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:01:06] Player skipped task (new entry)               [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=4
+[36mINFO[0m[2025-05-24 17:02:30] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=5
+[36mINFO[0m[2025-05-24 17:02:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=5
+[36mINFO[0m[2025-05-24 17:03:05] OnSkipTaskHandler called                     
+[36mINFO[0m[2025-05-24 17:03:05] User click to button SkipTask from tasl skip_5  [36mcurrent_task_id[0m=5 [36mdata_button[0m=skip_5 [36mgroup[0m="Test 4" [36msource[0m=OnSkipTaskBtnHandler [36muser[0m=green_delfin
+[36mINFO[0m[2025-05-24 17:03:05] Player skipped task (new entry)               [36mgame_id[0m=1 [36mplayer_id[0m=385672319 [36mskipped[0m=true [36msource[0m="DB: SkipPlayerResponse" [36mtask_id[0m=5
+[36mINFO[0m[2025-05-24 17:05:31] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=6
+[36mINFO[0m[2025-05-24 17:05:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=6
+[36mINFO[0m[2025-05-24 17:08:31] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=7
+[36mINFO[0m[2025-05-24 17:08:54] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=7
+[36mINFO[0m[2025-05-24 17:11:31] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=8
+[36mINFO[0m[2025-05-24 17:11:55] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=8
+[36mINFO[0m[2025-05-24 17:14:31] Current task ID for game updated successfully  [36mgame_id[0m=1 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=9
+[36mINFO[0m[2025-05-24 17:14:55] Current task ID for game updated successfully  [36mgame_id[0m=2 [36msource[0m="DB: UpdateCurrentTaskID" [36mtask_id[0m=9
