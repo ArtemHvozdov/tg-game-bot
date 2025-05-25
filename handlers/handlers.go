@@ -43,6 +43,10 @@ import (
 //     return tasks, nil
 // }
 
+var processedAlbums = make(map[string]time.Time) // processedAlbums keeps track of AlbumIDs that were already handled,
+												 // to prevent sending multiple acknowledgments for a single album.
+
+
 func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
@@ -490,6 +494,21 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		user := c.Sender()
 		chat := c.Chat()
+		msg := c.Message()
+
+		// ПCheck: if the message is part of an album and has already been processed, ignore it
+		if msg.AlbumID != "" {
+			if _, exists := processedAlbums[msg.AlbumID]; exists {
+				return nil
+			}
+
+			// Register the album and set it to clear after 2 minutes
+			processedAlbums[msg.AlbumID] = time.Now()
+
+			time.AfterFunc(2 * time.Minute, func() {
+				delete(processedAlbums, msg.AlbumID)
+			})
+		}
 
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
