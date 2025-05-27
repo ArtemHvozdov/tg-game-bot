@@ -809,7 +809,15 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.AlreadySkipped:
 			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
 		case status.SkipLimitReached:
-			bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+			msg, _ := bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+			
+			// Delete the message after 5 seconds
+			time.AfterFunc(5 * time.Second, func() {
+				err = bot.Delete(msg)
+				if err != nil {
+					utils.Logger.Errorf("Error deleting skip limit reached message for user %s: %v", user.Username, err)
+				}
+			})
 		default:
 			bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
 		}
