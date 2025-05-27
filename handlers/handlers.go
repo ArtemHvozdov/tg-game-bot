@@ -428,6 +428,14 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
+		// Delete message with button "Start game" after click
+		go func ()  {
+			err := bot.Delete(c.Message())
+			if err != nil {
+			utils.Logger.Errorf("Failed to delete message with button: %v", err)
+			}
+		}()
+
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
 			utils.Logger.Errorf("Error getting game by chat ID(%d): %v", chat.ID, err)
