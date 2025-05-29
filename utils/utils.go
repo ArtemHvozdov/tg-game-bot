@@ -73,3 +73,8 @@ func LoadJoinMessagges(path string) ([]string, error) {
 	}
 	return messages, nil
 }
+
+func CleanChatID(chatID int64) string {
+	idStr := strconv.FormatInt(chatID, 10)
+	return strings.TrimPrefix(idStr, "-100")
+}

@@ -74,7 +74,7 @@ func createTables() error {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
 				game_chat_id INTEGER,
-				
+				msg_join_id INTEGER NOT NULL DEFAULT 0,
 				current_task_id INTEGER NOT NULL DEFAULT 0,
 				total_players INTEGER NOT NULL DEFAULT 0,
 				status TEXT CHECK(status IN ('waiting', 'playing', 'finished')) NOT NULL
@@ -143,6 +143,7 @@ func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error) {
 	game := &models.Game{
 		Name: gameName,
 		GameChatID: gameGroupChatId,
+		MsgJointID: 0,
 		//InviteLink: "",
 		CurrentTaskID: 0,
 		TotalPlayers: 0,
@@ -199,6 +200,53 @@ func UpdateGameStatus(gameID int64, status string) error {
 		"status": status,
 	}).Info("Game status has been updated successfully")
 	return nil
+}
+
+// Update MsgJoinID in game
+func UpdateMsgJoinID(gameID int, msgJoinID int) error {
+	query := `UPDATE games SET msg_join_id = ? WHERE id = ?`
+	_, err := db.Exec(query, msgJoinID, gameID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "DB: UpdateMsgJointID",
+			"game_id": gameID,
+			"msg_joint_id": msgJoinID,
+			"error": err,
+		}).Error("Failed to update MsgJointID in game")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "DB: UpdateMsgJointID",
+		"game_id": gameID,
+		"msg_joint_id": msgJoinID,
+	}).Info("MsgJointID has been updated successfully")
+	return nil
+}
+
+// Get MsgJointID by game ID
+func GetMsgJoinID(gameID int) (int, error) {
+	query := `SELECT msg_join_id FROM games WHERE id = ?`
+	row := db.QueryRow(query, gameID)
+
+	var msgJoinID int
+	err := row.Scan(&msgJoinID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "DB: GetMsgJointID",
+			"game_id": gameID,
+			"error": err,
+		}).Error("Failed to get MsgJointID by game ID")
+		return 0, err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "DB: GetMsgJointID",
+		"game_id": gameID,
+		"msg_joint_id": msgJoinID,
+	}).Info("MsgJointID has been retrieved successfully")
+
+	return msgJoinID, nil
 }
 
 // GetCurrentGameStatus gett current status game by ID
