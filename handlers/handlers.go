@@ -240,7 +240,9 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			{joinBtn},
 		}
 
-		bot.Send(chat, "Хочеш #приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		joinMsgId := msgJoin.ID
+		storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
 		
 		time.Sleep(5 * time.Second)
 
@@ -427,6 +429,14 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 			}
 			return nil
 		}
+
+		// Delete message with button "Start game" after click
+		go func ()  {
+			err := bot.Delete(c.Message())
+			if err != nil {
+			utils.Logger.Errorf("Failed to delete message with button: %v", err)
+			}
+		}()
 
 		game, err := storage_db.GetGameByChatId(chat.ID)
 		if err != nil {
@@ -694,11 +704,27 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msg, err := bot.Send(chat, fmt.Sprintf("🎉 @%s, ти ще не в грі! Натисни кнопку на початку гри #приєднатися щоб приєднатися і повертайся до завдання.", user.Username))
+			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
 			if err != nil {
-				utils.Logger.Errorf("Error sending message to user %s: %v", user.Username, err)
+				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
 				return nil
 			}
+			chatID := utils.CleanChatID(chat.ID)
+
+			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
+
+			msg, err := bot.Send(chat, fmt.Sprintf(
+				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
+				user.Username, msgJoinLink),
+				&telebot.SendOptions{
+					ParseMode: telebot.ModeHTML,
+				})
+
+			if err != nil {
+				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
+				return nil
+			}
+
 			time.Sleep(30 * time.Second)
 			err = bot.Delete(msg)
 			if err != nil {
@@ -775,11 +801,27 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msg, err := bot.Send(chat, fmt.Sprintf("🎉 @%s, ти ще не в грі! Натисни кнопку #приєднатися на початку щоб приєднатися і повертайся до завдання.", user.Username))
+			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
 			if err != nil {
-				utils.Logger.Errorf("Error sending message to user %s: %v", user.Username, err)
+				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
 				return nil
 			}
+			chatID := utils.CleanChatID(chat.ID)
+
+			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
+
+			msg, err := bot.Send(chat, fmt.Sprintf(
+				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
+				user.Username, msgJoinLink),
+				&telebot.SendOptions{
+					ParseMode: telebot.ModeHTML,
+				})
+
+			if err != nil {
+				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
+				return nil
+			}
+
 			time.Sleep(30 * time.Second)
 			err = bot.Delete(msg)
 			if err != nil {
@@ -801,7 +843,15 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.AlreadySkipped:
 			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
 		case status.SkipLimitReached:
-			bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+			msg, _ := bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+			
+			// Delete the message after 5 seconds
+			time.AfterFunc(5 * time.Second, func() {
+				err = bot.Delete(msg)
+				if err != nil {
+					utils.Logger.Errorf("Error deleting skip limit reached message for user %s: %v", user.Username, err)
+				}
+			})
 		default:
 			bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
 		}
