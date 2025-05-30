@@ -46,6 +46,24 @@ func GetWaitingTaskID(status string) (int, error) {
 	return id, nil
 }
 
+func GetSkipTaskID(status string) (int, error) {
+	if !strings.HasPrefix(status, "skip_") {
+		return 0, fmt.Errorf("status does not start with 'skip_'")
+	}
+
+	parts := strings.Split(status, "_")
+	if len(parts) != 2 {
+		return 0, fmt.Errorf("invalid status format")
+	}
+
+	id, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid task ID: %v", err)
+	}
+
+	return id, nil
+}
+
 func LoadTasks(path string) ([]models.Task, error) {
     file, err := os.ReadFile(path)
     if err != nil {

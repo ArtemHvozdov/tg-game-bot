@@ -551,21 +551,38 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 				"status_user_in_blocK_if": models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID),
 			}).Info("Info about player and his status")
 		
-		if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
-			playerResponse := &models.PlayerResponse{
+		userTaskID, _ := utils.GetWaitingTaskID(statusUser)
+
+		playerResponse := &models.PlayerResponse{
 				PlayerID:   user.ID,
 				GameID: 	game.ID,
-				TaskID:		game.CurrentTaskID,
+				TaskID:		userTaskID,
 				HasResponse: true,
 				Skipped: false,
 			}
 
 			storage_db.AddPlayerResponse(playerResponse)
 
-			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
+			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, userTaskID))
 
 			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
-		}
+
+		// Feature: придумать как сюда передать TaskID, на который хочет ответить игрое
+		// if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
+		// 	playerResponse := &models.PlayerResponse{
+		// 		PlayerID:   user.ID,
+		// 		GameID: 	game.ID,
+		// 		TaskID:		game.CurrentTaskID,
+		// 		HasResponse: true,
+		// 		Skipped: false,
+		// 	}
+
+		// 	storage_db.AddPlayerResponse(playerResponse)
+
+		// 	bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
+
+		// 	storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
+		// }
 
 		return nil
 	}
@@ -786,13 +803,19 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		chat := c.Chat()
 		dataButton := c.Data()
 		game, _ := storage_db.GetGameByChatId(chat.ID)
+		//statusUser, err := storage_db.GetStatusPlayer(user.ID)
+		userTaskID, err := utils.GetSkipTaskID(dataButton)
+		if err != nil {
+			utils.Logger.Errorf("Error getting skip task ID from data button: %v", err)
+			return nil
+		}
 
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "OnSkipTaskBtnHandler",
 			"user": user.Username,
 			"group": chat.Title,
 			"data_button": dataButton,
-			"current_task_id": game.CurrentTaskID,
+			"skip_task_id": userTaskID,
 		}).Infof("User click to button SkipTask from tasl %v", dataButton)
 
 		userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
@@ -831,9 +854,9 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
-		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, game.CurrentTaskID)
+		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, userTaskID)
 		if err != nil {
-			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", game.CurrentTaskID, user.Username, err)
+			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", userTaskID, user.Username, err)
 			return nil
 		}
 
