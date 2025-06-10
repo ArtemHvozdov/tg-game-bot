@@ -269,21 +269,19 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		//time.Sleep(700 * time.Millisecond)	
 
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
-		
-		// joinBtn := telebot.InlineButton{
-		// 	Unique: "join_game_btn",
-		// 	Text:   "🎲 Приєднатися до гри",
-		// }
-		// inline := &telebot.ReplyMarkup{}
-		// inline.InlineKeyboard = [][]telebot.InlineButton{
-		// 	{joinBtn},
-		// }
+				
+		JoinBtnHandler(bot, joinBtn)
 
-		// bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)		
+		return nil
+	}
+}
 
-		bot.Handle(&joinBtn, func(c telebot.Context) error {
+func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
+	bot.Handle(&btn, func(c telebot.Context) error {
 			user := c.Sender()
 			chat := c.Chat()
+
+			utils.Logger.Info("Join btn handler was called. New funcion")
       
 			utils.Logger.WithFields(logrus.Fields{
 				"user_id": user.ID,
@@ -364,9 +362,6 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 			return c.Respond(&telebot.CallbackResponse{Text: "Ти в грі! 🎉"})
 		})
-
-		return nil
-	}
 }
 
 func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error) {
