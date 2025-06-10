@@ -772,14 +772,33 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch {
 		case status.AlreadyAnswered:
-			return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
+			textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
+			msgYouAlreadyAnswered, err := bot.Send(chat, textYouAlreadyAnswered)
+			if err != nil {
+				utils.Logger.Errorf("Error sending message that user %s already answered task %d: %v", user.Username, idTask, err)
+			}
+
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAlreadyAnswered, func() {
+				err = bot.Delete(msgYouAlreadyAnswered)
+				if err != nil {
+					utils.Logger.WithFields(logrus.Fields{
+						"source": "OnAnswerTaskBtnHandler",
+						"username": user.Username,
+						"group": chat.Title,
+						"data_button": dataButton,
+						"task_id": idTask,
+					}).Errorf("Error deleting message that user %s already answered task %d: %v", user.Username, idTask, err)
+				}
+			})
+
+			//return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
 		case status.AlreadySkipped:
 			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустила 😅", user.Username))
 		}
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
-		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання", user.Username)
+		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
 		awaitingAnswerMsg, err := bot.Send(chat, msg)
 		if err != nil {
 			utils.Logger.Errorf("Error sending message: %v", err)
