@@ -9,7 +9,7 @@ import (
 	//"os"
 	"strconv"
 
-	//"strings"
+	"strings"
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
@@ -242,9 +242,10 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			{joinBtn},
 		}
 
-		msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
-		joinMsgId := msgJoin.ID
-		storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
+		//msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		//joinMsgId := msgJoin.ID
+		//storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
 		
 		// Delay pause between start game msg and join msg 
 		time.Sleep(cfg.Durations.TimePauseMsgStartGameAndMsgJoinGame)
@@ -341,6 +342,15 @@ func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
 				return c.Respond(&telebot.CallbackResponse{Text: "Не вдалося приєднатися 😢"})
 			}
 
+			statusGame := game.Status
+			if statusGame == models.StatusGamePlaying {
+				err := bot.Delete(c.Callback().Message)
+				if err != nil {
+					utils.Logger.Errorf("Failed to delete message with join button: %v", err)
+					return nil
+				}
+			}
+
 			joinedMessages, err := utils.LoadJoinMessagges("internal_data/hello_messages/hello_messages.json")
 			if err != nil {
 				utils.Logger.Errorf("Failed to load join messages: %v", err)
@@ -354,14 +364,62 @@ func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
 				return nil
 			}
 
-			// Delete message fate 1 minutes
-			// go func() {
-			// 	time.Sleep(60 * time.Second)
-			// 	bot.Delete(msg)
-			// }()
-
 			return c.Respond(&telebot.CallbackResponse{Text: "Ти в грі! 🎉"})
 		})
+}
+
+func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
+	return func (c telebot.Context) error {
+		joinBtn := telebot.InlineButton{
+			Unique: "join_game_btn",
+			Text:   "🎲 Приєднатися до гри",
+		}
+		inline := &telebot.ReplyMarkup{}
+		inline.InlineKeyboard = [][]telebot.InlineButton{
+			{joinBtn},
+		}
+
+		msgText := fmt.Sprintf(`🎉 @%s, ти ще не в грі! Натисни на кнопку щоб приєднатися і повертайся до завдання.`, c.Sender().Username)
+		msgJoinGamerReminder, err := bot.Send(c.Chat(), msgText, inline)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "SendJoinGameReminder",
+				"group": c.Chat().Title,
+				"group_id": c.Chat().ID,
+				"user_id": c.Sender().ID,
+				"username": c.Sender().Username,
+			}).Errorf("Failed to send join game reminder: %v", err)
+		}
+
+		JoinBtnHandler(bot, joinBtn)
+
+		time.AfterFunc(cfg.Durations.TimeDeleteMsgJoinGamerReminder, func() {
+			if msgJoinGamerReminder != nil {
+				err := bot.Delete(msgJoinGamerReminder)
+				if err != nil {
+					if strings.Contains(err.Error(), "message to delete not found") {
+						utils.Logger.WithFields(logrus.Fields{
+							"source": "SendJoinGameReminder",
+							"group": c.Chat().Title,
+							"group_id": c.Chat().ID,
+							"user_id": c.Sender().ID,
+							"username": c.Sender().Username,
+						}).Info("Message was already deleted earlier, skip deleting")
+					} else {
+						utils.Logger.WithFields(logrus.Fields{
+							"source": "SendJoinGameReminder",
+							"group": c.Chat().Title,
+							"group_id": c.Chat().ID,
+							"user_id": c.Sender().ID,
+							"username": c.Sender().Username,
+						}).Errorf("Failed to delete join game reminder message: %v", err)
+					}
+				}
+			}
+		})
+
+		return nil
+	}
 }
 
 func GenerateChatInviteLink(bot *telebot.Bot, chat *telebot.Chat) (string, error) {
@@ -568,23 +626,6 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 
 			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
 
-		// Feature: придумать как сюда передать TaskID, на который хочет ответить игрое
-		// if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
-		// 	playerResponse := &models.PlayerResponse{
-		// 		PlayerID:   user.ID,
-		// 		GameID: 	game.ID,
-		// 		TaskID:		game.CurrentTaskID,
-		// 		HasResponse: true,
-		// 		Skipped: false,
-		// 	}
-
-		// 	storage_db.AddPlayerResponse(playerResponse)
-
-		// 	bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
-
-		// 	storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
-		// }
-
 		return nil
 	}
 }
@@ -723,34 +764,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
-			if err != nil {
-				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
-				return nil
-			}
-			chatID := utils.CleanChatID(chat.ID)
+			SendJoinGameReminder(bot)(c)
 
-			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
-
-			msg, err := bot.Send(chat, fmt.Sprintf(
-				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
-				user.Username, msgJoinLink),
-				&telebot.SendOptions{
-					ParseMode: telebot.ModeHTML,
-				})
-
-			if err != nil {
-				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
-				return nil
-			}
-
-			// Delay delete msg you are not in game, you have to join to game
-			time.Sleep(cfg.Durations.TimeDeleteMsgYouAreNotInGame)
-			err = bot.Delete(msg)
-			if err != nil {
-				utils.Logger.Errorf("Error deleting message for user %s: %v", user.Username, err)
-				return nil
-			}
 			return nil
 		}
 
@@ -847,34 +862,8 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
-			if err != nil {
-				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
-				return nil
-			}
-			chatID := utils.CleanChatID(chat.ID)
+			SendJoinGameReminder(bot)(c)
 
-			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
-
-			msg, err := bot.Send(chat, fmt.Sprintf(
-				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
-				user.Username, msgJoinLink),
-				&telebot.SendOptions{
-					ParseMode: telebot.ModeHTML,
-				})
-
-			if err != nil {
-				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
-				return nil
-			}
-
-			// Delay delete msg you are not in game, you have to join to game
-			time.Sleep(cfg.Durations.TimeDeleteMsgYouAreNotInGame)
-			err = bot.Delete(msg)
-			if err != nil {
-				utils.Logger.Errorf("Error deleting message for user %s: %v", user.Username, err)
-				return nil
-			}
 			return nil
 		}
 

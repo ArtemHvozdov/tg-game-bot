@@ -14,7 +14,8 @@ type TimeDurations struct {
 	TimeDeleteMsgUserIsAlreadyInGame 		time.Duration // Pause before delete message user is already in game
 	TimeDeleteMsgOnlyAdmniCanStartGame 		time.Duration // Pause before delete message only admin can start game
 	TimeDeleteMsgYouAlreadyStartedGame 		time.Duration // Pause before delete message you already started game
-	TimePauseBeforeStartSendingTask 				time.Duration // Pause before sending task to user
+	TimePauseBeforeStartSendingTask 		time.Duration // Pause before sending task to user
+	TimeDeleteMsgJoinGamerReminder 			time.Duration // Pause before delete message join gamer reminder
 	TimeDeleteAlbumId 						time.Duration // Pause before delete album id
 	TimePauseBetweenSendingTasks 			time.Duration // Pause between sending tasks to user
 	TimeDeleteMsgYouAlreadyAnswered 		time.Duration // Pause before delete message you already answered
@@ -35,6 +36,7 @@ var devDurations = TimeDurations{
 	TimePauseBeforeStartSendingTask:	   1 * time.Minute,  // 1 minute				
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
 	TimePauseBetweenSendingTasks:		   3 * time.Minute,  // 3 minutes
+	TimeDeleteMsgJoinGamerReminder:		   5 * time.Second,  // 5 seconds
 	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
 	TimeDeleteMsgYouAreNotInGame: 		   30 * time.Second, // 30 seconds			
 	TimeDeleteMsgAwaitingAnswer:		   5 * time.Second,  // 3 seconds 			
@@ -46,7 +48,8 @@ var prodDurations = TimeDurations{
 	TimeDeleteMsgUserIsAlreadyInGame:      30 * time.Second, // 30 seconds Feature: change time to 5 seconds
 	TimeDeleteMsgOnlyAdmniCanStartGame:	   30 * time.Second, // 30 seconds
 	TimeDeleteMsgYouAlreadyStartedGame:	   1 * time.Minute,	 // 1 minute 		
-	TimePauseBeforeStartSendingTask:	   1 * time.Minute,  // 1 minute				
+	TimePauseBeforeStartSendingTask:	   1 * time.Minute,  // 1 minute
+	TimeDeleteMsgJoinGamerReminder:		   45 * time.Second,  // 5 seconds				
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
 	TimePauseBetweenSendingTasks:		   3 * time.Minute,  // 3 minutes
 	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
