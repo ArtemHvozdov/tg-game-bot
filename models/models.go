@@ -14,7 +14,7 @@ type Game struct {
 	ID int
 	Name string
 	GameChatID int64
-	MsgJointID int // ID of the message with the "Join" button
+	//MsgJointID int // ID of the message with the "Join" button
     //InviteLink string
 	CurrentTaskID int
     TotalPlayers int // max 5

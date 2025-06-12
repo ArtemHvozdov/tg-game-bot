@@ -9,9 +9,10 @@ import (
 	//"os"
 	"strconv"
 
-	//"strings"
+	"strings"
 	"time"
 
+	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
@@ -46,6 +47,7 @@ import (
 var processedAlbums = make(map[string]time.Time) // processedAlbums keeps track of AlbumIDs that were already handled,
 												 // to prevent sending multiple acknowledgments for a single album.
 
+var cfg = config.LoadConfig()
 
 func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
@@ -240,11 +242,13 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			{joinBtn},
 		}
 
-		msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
-		joinMsgId := msgJoin.ID
-		storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
+		//msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
+		//joinMsgId := msgJoin.ID
+		//storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
 		
-		time.Sleep(5 * time.Second)
+		// Delay pause between start game msg and join msg 
+		time.Sleep(cfg.Durations.TimePauseMsgStartGameAndMsgJoinGame)
 
 		// Version with Markup Button
 		// menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
@@ -263,26 +267,22 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		})
 
-		time.Sleep(700 * time.Millisecond)	
+		//time.Sleep(700 * time.Millisecond)	
 
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
-		
-		// time.Sleep(5 * time.Second)
+				
+		JoinBtnHandler(bot, joinBtn)
 
-		// joinBtn := telebot.InlineButton{
-		// 	Unique: "join_game_btn",
-		// 	Text:   "🎲 Приєднатися до гри",
-		// }
-		// inline := &telebot.ReplyMarkup{}
-		// inline.InlineKeyboard = [][]telebot.InlineButton{
-		// 	{joinBtn},
-		// }
+		return nil
+	}
+}
 
-		// bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)		
-
-		bot.Handle(&joinBtn, func(c telebot.Context) error {
+func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
+	bot.Handle(&btn, func(c telebot.Context) error {
 			user := c.Sender()
 			chat := c.Chat()
+
+			utils.Logger.Info("Join btn handler was called. New funcion")
       
 			utils.Logger.WithFields(logrus.Fields{
 				"user_id": user.ID,
@@ -311,7 +311,8 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 					return nil
 				}
 
-				time.Sleep(30 * time.Second)
+				// Delay delete msg user is in game aready. Future: change time to 5 cseconds
+				time.Sleep(cfg.Durations.TimeDeleteMsgUserIsAlreadyInGame)
 
 				err = bot.Delete(msg)
 				if err != nil {
@@ -341,6 +342,15 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				return c.Respond(&telebot.CallbackResponse{Text: "Не вдалося приєднатися 😢"})
 			}
 
+			statusGame := game.Status
+			if statusGame == models.StatusGamePlaying {
+				err := bot.Delete(c.Callback().Message)
+				if err != nil {
+					utils.Logger.Errorf("Failed to delete message with join button: %v", err)
+					return nil
+				}
+			}
+
 			joinedMessages, err := utils.LoadJoinMessagges("internal_data/hello_messages/hello_messages.json")
 			if err != nil {
 				utils.Logger.Errorf("Failed to load join messages: %v", err)
@@ -354,13 +364,58 @@ func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				return nil
 			}
 
-			// Delete message fate 1 minutes
-			// go func() {
-			// 	time.Sleep(60 * time.Second)
-			// 	bot.Delete(msg)
-			// }()
-
 			return c.Respond(&telebot.CallbackResponse{Text: "Ти в грі! 🎉"})
+		})
+}
+
+func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
+	return func (c telebot.Context) error {
+		joinBtn := telebot.InlineButton{
+			Unique: "join_game_btn",
+			Text:   "🎲 Приєднатися до гри",
+		}
+		inline := &telebot.ReplyMarkup{}
+		inline.InlineKeyboard = [][]telebot.InlineButton{
+			{joinBtn},
+		}
+
+		msgText := fmt.Sprintf(`🎉 @%s, ти ще не в грі! Натисни на кнопку щоб приєднатися і повертайся до завдання.`, c.Sender().Username)
+		msgJoinGamerReminder, err := bot.Send(c.Chat(), msgText, inline)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "SendJoinGameReminder",
+				"group": c.Chat().Title,
+				"group_id": c.Chat().ID,
+				"user_id": c.Sender().ID,
+				"username": c.Sender().Username,
+			}).Errorf("Failed to send join game reminder: %v", err)
+		}
+
+		JoinBtnHandler(bot, joinBtn)
+
+		time.AfterFunc(cfg.Durations.TimeDeleteMsgJoinGamerReminder, func() {
+			if msgJoinGamerReminder != nil {
+				err := bot.Delete(msgJoinGamerReminder)
+				if err != nil {
+					if strings.Contains(err.Error(), "message to delete not found") {
+						utils.Logger.WithFields(logrus.Fields{
+							"source": "SendJoinGameReminder",
+							"group": c.Chat().Title,
+							"group_id": c.Chat().ID,
+							"user_id": c.Sender().ID,
+							"username": c.Sender().Username,
+						}).Info("Message was already deleted earlier, skip deleting")
+					} else {
+						utils.Logger.WithFields(logrus.Fields{
+							"source": "SendJoinGameReminder",
+							"group": c.Chat().Title,
+							"group_id": c.Chat().ID,
+							"user_id": c.Sender().ID,
+							"username": c.Sender().Username,
+						}).Errorf("Failed to delete join game reminder message: %v", err)
+					}
+				}
+			}
 		})
 
 		return nil
@@ -422,7 +477,8 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 				utils.Logger.Errorf("Error sending warning message about start game in the chat: %v", err)
 			}
 
-			time.Sleep(30 * time.Second)
+			// Delay delete msg only admin can start game
+			time.Sleep(cfg.Durations.TimeDeleteMsgOnlyAdmniCanStartGame)
 			err = bot.Delete(warningMsgSend)
 			if err != nil {
 				utils.Logger.Errorf("Error deleting message warning message for user %s: %v", user.Username, err)
@@ -461,7 +517,8 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 				)
 			}
 
-			time.Sleep(1 * time.Minute)
+			// Delay delete msg you already srarted game
+			time.Sleep(cfg.Durations.TimeDeleteMsgYouAlreadyStartedGame)
 			err = bot.Delete(msg)
 			if err != nil {
 				utils.Logger.Errorf(
@@ -491,7 +548,8 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
 
-		time.Sleep(1 * time.Minute)
+		// Delay pause before sending tasks
+		time.Sleep(cfg.Durations.TimePauseBeforeStartSendingTask)
 
 		// Start sending tasks
 		return SendTasks(bot, chat.ID)(c)
@@ -515,7 +573,8 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 			// Register the album and set it to clear after 2 minutes
 			processedAlbums[msg.AlbumID] = time.Now()
 
-			time.AfterFunc(2 * time.Minute, func() {
+			// Delay delete album ID for group media msg
+			time.AfterFunc(cfg.Durations.TimeDeleteAlbumId, func() {
 				delete(processedAlbums, msg.AlbumID)
 			})
 		}
@@ -566,23 +625,6 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, userTaskID))
 
 			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
-
-		// Feature: придумать как сюда передать TaskID, на который хочет ответить игрое
-		// if statusUser == models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID) {
-		// 	playerResponse := &models.PlayerResponse{
-		// 		PlayerID:   user.ID,
-		// 		GameID: 	game.ID,
-		// 		TaskID:		game.CurrentTaskID,
-		// 		HasResponse: true,
-		// 		Skipped: false,
-		// 	}
-
-		// 	storage_db.AddPlayerResponse(playerResponse)
-
-		// 	bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, game.CurrentTaskID))
-
-		// 	storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
-		// }
 
 		return nil
 	}
@@ -639,7 +681,8 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
         }
 
 		if i < len(tasks)-1 {
-			time.Sleep(3 * time.Minute) // await some minutes or hours before sending the next task
+			// Delay pause between sending tasks
+			time.Sleep(cfg.Durations.TimePauseBetweenSendingTasks) // await some minutes or hours before sending the next task
 		}
 
     }
@@ -721,33 +764,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
-			if err != nil {
-				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
-				return nil
-			}
-			chatID := utils.CleanChatID(chat.ID)
+			SendJoinGameReminder(bot)(c)
 
-			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
-
-			msg, err := bot.Send(chat, fmt.Sprintf(
-				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
-				user.Username, msgJoinLink),
-				&telebot.SendOptions{
-					ParseMode: telebot.ModeHTML,
-				})
-
-			if err != nil {
-				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
-				return nil
-			}
-
-			time.Sleep(30 * time.Second)
-			err = bot.Delete(msg)
-			if err != nil {
-				utils.Logger.Errorf("Error deleting message for user %s: %v", user.Username, err)
-				return nil
-			}
 			return nil
 		}
 
@@ -764,20 +782,40 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch {
 		case status.AlreadyAnswered:
-			return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
+			textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
+			msgYouAlreadyAnswered, err := bot.Send(chat, textYouAlreadyAnswered)
+			if err != nil {
+				utils.Logger.Errorf("Error sending message that user %s already answered task %d: %v", user.Username, idTask, err)
+			}
+
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAlreadyAnswered, func() {
+				err = bot.Delete(msgYouAlreadyAnswered)
+				if err != nil {
+					utils.Logger.WithFields(logrus.Fields{
+						"source": "OnAnswerTaskBtnHandler",
+						"username": user.Username,
+						"group": chat.Title,
+						"data_button": dataButton,
+						"task_id": idTask,
+					}).Errorf("Error deleting message that user %s already answered task %d: %v", user.Username, idTask, err)
+				}
+			})
+
+			//return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
 		case status.AlreadySkipped:
 			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустила 😅", user.Username))
 		}
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
-		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання", user.Username)
+		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
 		awaitingAnswerMsg, err := bot.Send(chat, msg)
 		if err != nil {
 			utils.Logger.Errorf("Error sending message: %v", err)
 		}
 
-		time.AfterFunc(3 * time.Second, func() {
+		// Delay delete msg awaiting answer
+		time.AfterFunc(cfg.Durations.TimeDeleteMsgAwaitingAnswer, func() {
 			err = bot.Delete(awaitingAnswerMsg)
 			if err != nil {
 				utils.Logger.WithFields(logrus.Fields{
@@ -824,33 +862,8 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 		if !userIsInGame {
-			msgJoinID, err := storage_db.GetMsgJoinID(game.ID)
-			if err != nil {
-				utils.Logger.Errorf("Error getting join message ID for game %d: %v", game.ID, err)
-				return nil
-			}
-			chatID := utils.CleanChatID(chat.ID)
+			SendJoinGameReminder(bot)(c)
 
-			msgJoinLink := fmt.Sprintf("https://t.me/c/%s/%d", chatID, msgJoinID)
-
-			msg, err := bot.Send(chat, fmt.Sprintf(
-				`🎉 @%s, ти ще не в грі! Натисни <a href="%s">приєднатися до гри</a>, щоб приєднатися і повертайся до завдання.`,
-				user.Username, msgJoinLink),
-				&telebot.SendOptions{
-					ParseMode: telebot.ModeHTML,
-				})
-
-			if err != nil {
-				utils.Logger.Errorf("Error sending join message  with link to user %s: %v", user.Username, err)
-				return nil
-			}
-
-			time.Sleep(30 * time.Second)
-			err = bot.Delete(msg)
-			if err != nil {
-				utils.Logger.Errorf("Error deleting message for user %s: %v", user.Username, err)
-				return nil
-			}
 			return nil
 		}
 
@@ -868,8 +881,8 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.SkipLimitReached:
 			msg, _ := bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
 			
-			// Delete the message after 5 seconds
-			time.AfterFunc(5 * time.Second, func() {
+			// Delay delete the message max skip tasks
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgMaxSkipTasks, func() {
 				err = bot.Delete(msg)
 				if err != nil {
 					utils.Logger.Errorf("Error deleting skip limit reached message for user %s: %v", user.Username, err)
