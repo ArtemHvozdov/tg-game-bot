@@ -51,15 +51,20 @@ func main() {
 		log.Fatalf("Failed to create a new bot: %v", err)
 	}
 
-	err = bot.SetCommands([]telebot.Command{
-		{Text: "start", Description: "Запустити бота"},
-		{Text: "help", Description: "Хелп мі"},
-		//{Text: "check_admin_bot", Description: "Перевірити права бота"},
-	})
+	err = bot.SetCommands([]telebot.Command{})
 	if err != nil {
-		utils.Logger.Error("Failed to set bot commands")
-		//log.Printf("Failed to set bot commands: %v", err)
+		utils.Logger.Errorf("Failed to clear commands: %v", err)
 	}
+
+	// err = bot.SetCommands([]telebot.Command{
+	// 	{Text: "start", Description: "Запустити бота"},
+	// 	{Text: "help", Description: "Хелп мі"},
+	// 	//{Text: "check_admin_bot", Description: "Перевірити права бота"},
+	// })
+	// if err != nil {
+	// 	utils.Logger.Error("Failed to set bot commands")
+	// 	//log.Printf("Failed to set bot commands: %v", err)
+	// }
 
 	// Create buttons
 	//btnCreateGame := telebot.Btn{Text: "Створити гру"}
@@ -84,6 +89,8 @@ func main() {
 	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
 	
 	bot.Handle(telebot.OnAddedToGroup, handlers.HandleAddedToGroup(bot))
+
+	handlers.RegisterCallbackHandlers(bot)
 	
 
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))

@@ -49,6 +49,36 @@ var processedAlbums = make(map[string]time.Time) // processedAlbums keeps track 
 
 var cfg = config.LoadConfig()
 
+var (
+	
+	menuIntro *telebot.ReplyMarkup
+	menuExit  *telebot.ReplyMarkup
+
+	introBtnHelp     telebot.Btn
+	introBtnSupport  telebot.Btn
+	introBtnExit     telebot.Btn
+	btnExactlyExit   telebot.Btn
+	btnReturnToGame  telebot.Btn
+
+	msgStartGame *telebot.Message
+)
+
+func InitButtons(gameID int) {
+	menuIntro = &telebot.ReplyMarkup{}
+	menuExit = &telebot.ReplyMarkup{}
+
+	introBtnHelp = menuIntro.Data("🕹️ Хелп", "help_menu")
+	introBtnSupport = menuIntro.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+	introBtnExit = menuIntro.Data("🕹️ Вийти з гри", fmt.Sprintf("exit_%d", gameID))
+
+	btnExactlyExit = menuExit.Data("Вийти з гри", fmt.Sprintf("exit_game_%d", gameID))
+	btnReturnToGame = menuExit.Data(" << Повернутися до гри", "return_to_game")
+
+	menuIntro.Inline(menuIntro.Row(introBtnHelp))
+	menuExit.Inline(menuExit.Row(btnExactlyExit), menuExit.Row(btnReturnToGame))
+}
+
+
 func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
@@ -351,7 +381,7 @@ func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
 				}
 			}
 
-			joinedMessages, err := utils.LoadJoinMessagges("internal_data/hello_messages/hello_messages.json")
+			joinedMessages, err := utils.LoadJoinMessagges("internal/data/messages/group/hello_messages/hello_messages.json")
 			if err != nil {
 				utils.Logger.Errorf("Failed to load join messages: %v", err)
 				return nil
@@ -530,7 +560,9 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 		}
 
-		startGameMsg := `ПРИВІТ, мене звати Фібі 😊, і наступні три тижні я буду вашим провідником у грі ✨ Грі, з якої вийдуть переможницями всі, якщо поділяться одна з одною своїм особливим скарбом – увагою. Від вас вимагається трошки часу і готове до досліджень серденько, від мене – цікава пригода, яку я загорнула у розроблені спеціально для вас спільні завдання.
+		InitButtons(game.ID)
+
+		msgTextStartGame := `ПРИВІТ, мене звати Фібі 😊, і наступні три тижні я буду вашим провідником у грі ✨ Грі, з якої вийдуть переможницями всі, якщо поділяться одна з одною своїм особливим скарбом – увагою. Від вас вимагається трошки часу і готове до досліджень серденько, від мене – цікава пригода, яку я загорнула у розроблені спеціально для вас спільні завдання.
 
 Кожна дружба - неповторна, як булочка, повна родзинок 🍇 Ми будемо відщипувати шматочок за шматочком, виконуючи завдання. На кожне у вас буде 48 годин і незліченна кількість підтримки ваших бесті. Якщо якась родзинка вам не до смаку, ви можете пропустити це завдання. Але таких пропусків за всю гру кожній учасниці дозволяється лише 3.
 
@@ -538,15 +570,183 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 
 Вже зовсім скоро я надішлю вам перше завдання, де прийняття і чесність ми помножимо на спогади і гумор. А поки що тримайте в голові найважливіші правила гри – хев фан - і насолоджуйтеся часом, проведеним разом!`
 
+		
+		// menuIntro := &telebot.ReplyMarkup{}
+		// menuExit := &telebot.ReplyMarkup{}
+
+		// introBtnHelp := menuIntro.Data("🕹️ Хелп", "help_menu")
+		// introBtnSupport := menuIntro.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+		// introBtnExit := menuIntro.Data("🕹️ Вийти з гри", fmt.Sprintf("exit_%d", game.ID))
+
+		// btnExactlyExit := menuIntro.Data("Вийти з гри", fmt.Sprintf("exit_game_%d", game.ID))
+		// btnReturnToGame := menuIntro.Data(" << Повернутися до гри", "return_to_game")
+
 		time.Sleep(600 * time.Millisecond) // Wait for 2 seconds before sending the next message
-		removeKeyboard := &telebot.ReplyMarkup{RemoveKeyboard: true}
-		_, err = bot.Send(chat, startGameMsg, removeKeyboard)
+		//removeKeyboard := &telebot.ReplyMarkup{RemoveKeyboard: true}
+		menuIntro.Inline(
+			menuIntro.Row(introBtnHelp),
+		)
+		 
+		msgStartGame, err = bot.Send(chat, msgTextStartGame, menuIntro)
 		if err != nil {
 			utils.Logger.Errorf("Error sending welcome start game message go the chat %s: %v", chat.Title, err)
 			
 		}
 
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGamePlaying)
+
+		// bot.Handle(&introBtnHelp, func(c telebot.Context) error {
+		// 	menuIntro.Inline(
+		// 		menuIntro.Row(introBtnSupport),
+		// 		menuIntro.Row(introBtnExit),
+		// 	)
+		// 	bot.EditReplyMarkup(c.Callback().Message, menuIntro)
+
+		// 	return nil
+		// })
+
+		// bot.Handle(&introBtnExit, func(c telebot.Context) error {
+		// 	user := c.Sender()
+		// 	data := c.Callback().Data
+
+		// 	if strings.HasPrefix(data, "exit_") {
+		// 		gameIDStr := strings.TrimPrefix(data, "exit_")
+		// 		gameID, err := strconv.Atoi(gameIDStr)
+		// 		if err != nil {
+		// 			return nil
+		// 		}
+
+		// 		isUserInGame , err := storage_db.IsUserInGame(user.ID, gameID)
+		// 		if err != nil {
+		// 			utils.Logger.Errorf("Error checking if user %s is in game: %v", user.Username, err)
+		// 			return nil
+		// 		}
+
+		// 		if !isUserInGame {
+		// 			msgTextUserIsNotInGame := fmt.Sprintf("Ти не в грі, @%s. Тому не можеш вийти з неї 🤷‍♂️", user.Username)
+		// 			msgUserIsNotInGame, err := bot.Send(chat, msgTextUserIsNotInGame)
+		// 			if err != nil {
+		// 				utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
+		// 			}
+
+		// 			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAreNotInGame, func() {
+		// 				err := bot.Delete(msgUserIsNotInGame)
+		// 				if err != nil {
+		// 					utils.Logger.WithFields(logrus.Fields{
+		// 							"source": "StartGameHandlerFoo",
+		// 							"group": chat.Title,
+		// 							"group_id": chat.ID,
+		// 							"user_id": user.ID,
+		// 							"username": user.Username,
+		// 						}).Errorf("Failed to delete message that user is not in game: %v", err)
+		// 				}
+		// 			})
+
+		// 			return nil
+		// 		}
+
+		// 		msgTextExtit := fmt.Sprintf("Точно вийти, @%s?", user.Username)
+				
+		// 		menuExit.Inline(
+		// 			menuExit.Row(btnExactlyExit),
+		// 			menuExit.Row(btnReturnToGame),
+		// 		)
+
+		// 		_, err = bot.Send(chat, msgTextExtit, menuExit)
+		// 		if err != nil {
+		// 			utils.Logger.Errorf("Error sending exit game message to the chat %s: %v", chat.Title, err)
+		// 		}
+
+		// 		// и тут вся логика выхода из игры с этим gameID
+		// 	}
+			
+		// 	return nil
+		// })
+
+		// bot.Handle(&btnExactlyExit, func(c telebot.Context) error {
+		// 	user := c.Sender()
+		// 	data := c.Callback().Data
+
+		// 	if strings.HasPrefix(data, "exit_game_") {
+		// 		gameIDStr := strings.TrimPrefix(data, "exit_game_")
+		// 		gameID, err := strconv.Atoi(gameIDStr)
+		// 		if err != nil {
+		// 			return nil
+		// 		}
+
+		// 		storage_db.DeletePlayerFromGame(user.ID, gameID)
+
+		// 		bot.Delete(c.Callback().Message)
+
+		// 		msgTextExit := fmt.Sprintf("@%s Видалися сам (ой, як шкода, ну ж що бувай….)", user.Username)
+		// 		msgExit, err := bot.Send(chat, msgTextExit)
+		// 		if err != nil {
+		// 			utils.Logger.Errorf("Error sending exit message to the chat %s: %v", chat.Title, err)
+		// 		}
+
+		// 		time.AfterFunc(cfg.Durations.TimeDeleteMsgExitGame, func() {
+		// 			err := bot.Delete(msgExit)
+		// 			if err != nil {
+		// 				utils.Logger.WithFields(logrus.Fields{
+		// 						"source": "StartGameHandlerFoo",
+		// 						"group": chat.Title,
+		// 						"group_id": chat.ID,
+		// 						"user_id": user.ID,
+		// 						"username": user.Username,		
+		// 					}).Info("Message was already deleted earlier, skip deleting")
+		// 			}
+		// 		})
+
+		// 		menuIntro.Inline(
+		// 			menuIntro.Row(introBtnHelp),
+		// 		)
+
+		// 		bot.EditReplyMarkup(msgStartGame, menuIntro)
+
+		// 	}
+			
+		// 	return nil
+		// })
+
+		// bot.Handle(&btnReturnToGame, func(c telebot.Context) error {
+		// 	bot.Delete(c.Callback().Message)
+		// 	msgTextReturnToGame := fmt.Sprintf("@%s Вау, правильне рішення", user.Username)
+		// 	msgReturnToGame, err := bot.Send(chat, msgTextReturnToGame)
+		// 	if err != nil {
+		// 		utils.Logger.Errorf("Error sending return to game message to the chat %s: %v", chat.Title, err)
+		// 	}
+
+		// 	time.AfterFunc(cfg.Durations.TimeDeleteMsgReturnToGame, func() {
+		// 		err := bot.Delete(msgReturnToGame)
+		// 		if err != nil {
+		// 			if strings.Contains(err.Error(), "message to delete not found") {
+		// 				utils.Logger.WithFields(logrus.Fields{
+		// 					"source": "StartGameHandlerFoo",
+		// 					"group": chat.Title,
+		// 					"group_id": chat.ID,
+		// 					"user_id": user.ID,
+		// 					"username": user.Username,
+		// 				}).Info("Message was already deleted earlier, skip deleting")
+		// 			} else {
+		// 				utils.Logger.WithFields(logrus.Fields{		
+		// 					"source": "StartGameHandlerFoo",
+		// 					"group": chat.Title,
+		// 					"group_id": chat.ID,
+		// 					"user_id": user.ID,
+		// 					"username": user.Username,
+		// 				}).Errorf("Failed to delete return to game message: %v", err)
+		// 			}
+		// 		}
+		// 	})
+		// 	menuIntro.Inline(
+		// 		menuIntro.Row(introBtnHelp),
+		// 	)
+
+		// 	bot.EditReplyMarkup(msgStartGame, menuIntro)
+			
+		// 	return nil
+		// })
+
 
 		// Delay pause before sending tasks
 		time.Sleep(cfg.Durations.TimePauseBeforeStartSendingTask)
@@ -556,6 +756,349 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		//return utils.SafeHandlerWithMessage(FinishGameHandler(bot))(c)
 
 	}
+}
+
+func handleHelpMenu(bot *telebot.Bot, c telebot.Context) error {
+	user := c.Sender()
+	chat := c.Chat()
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "handleHelpMenu",
+		"user_id": user.ID,
+		"username": user.Username,
+		"group": chat.Title,
+	}).Info("Help menu button was pressed")
+
+	menuIntro.Inline(
+		menuIntro.Row(introBtnSupport),
+		menuIntro.Row(introBtnExit),
+	)
+	bot.EditReplyMarkup(c.Callback().Message, menuIntro)
+
+	time.Sleep(5 * time.Second) // Delay to allow user to read the message
+
+		menuIntro.Inline(
+			menuIntro.Row(introBtnHelp),
+		)
+
+		_, err := bot.EditReplyMarkup(msgStartGame, menuIntro)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "StartGameHhandleHelpMenuandlerFoo",
+				"group": chat.Title,
+				"group_id": chat.ID,
+				"user_id": user.ID,
+				"username": user.Username,
+			}).Errorf("Failed to edit reply markup after exit game: %v", err)
+		}
+
+	return nil
+}
+
+func handleExitConfirm(bot *telebot.Bot, c telebot.Context) error {
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "handleExitConfirm",
+		"user_id": c.Sender().ID,
+		"username": c.Sender().Username,
+		"group": c.Chat().Title,
+	}).Info("Exit confirm button was pressed")
+
+	user := c.Sender()
+	chat := c.Chat()
+	data := c.Callback().Data
+
+	if strings.HasPrefix(data, "\fexit_") {
+		gameIDStr := strings.TrimPrefix(data, "\fexit_")
+		gameID, err := strconv.Atoi(gameIDStr)
+		if err != nil {
+			return nil
+		}
+
+		isUserInGame , err := storage_db.IsUserInGame(user.ID, gameID)
+		if err != nil {
+			utils.Logger.Errorf("Error checking if user %s is in game: %v", user.Username, err)
+			return nil
+		}
+
+		if !isUserInGame {
+			msgTextUserIsNotInGame := fmt.Sprintf("Ти не в грі, @%s. Тому не можеш вийти з неї 🤷‍♂️", user.Username)
+			msgUserIsNotInGame, err := bot.Send(chat, msgTextUserIsNotInGame)
+			if err != nil {
+				utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
+			}
+
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAreNotInGame, func() {
+				err := bot.Delete(msgUserIsNotInGame)
+				if err != nil {
+					utils.Logger.WithFields(logrus.Fields{
+							"source": "StartGameHandlerFoo",
+							"group": chat.Title,
+							"group_id": chat.ID,
+							"user_id": user.ID,
+							"username": user.Username,
+						}).Errorf("Failed to delete message that user is not in game: %v", err)
+				}
+			})
+
+			menuIntro.Inline(
+				menuIntro.Row(introBtnHelp),
+			)
+
+			_, err = bot.EditReplyMarkup(msgStartGame, menuIntro)
+			if err != nil {
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "StartGameHandlerFoo",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,
+				}).Errorf("Failed to edit reply markup after exit game: %v", err)
+			}
+
+			return nil
+		}
+
+		roleUserInGame, err := storage_db.GetPlayerRoleByUserIDAndGameID(user.ID, gameID)
+		if err != nil {
+			utils.Logger.Errorf("Error getting player role for user %s in game %d: %v", user.Username, gameID, err)
+			return nil
+		}
+
+		if roleUserInGame == "admin" {
+			msgTextAdminExit := fmt.Sprintf("@%s гей ти чого? Ти ж адмін гри, лишайся тут.", user.Username)
+			msgAdminExit, err := bot.Send(chat, msgTextAdminExit)
+			if err != nil {
+				utils.Logger.Errorf("Error sending message that admin %s cannot exit game: %v", user.Username, err)
+			}	
+
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgAdminExit, func() {
+				err := bot.Delete(msgAdminExit)
+				if err != nil {
+					utils.Logger.WithFields(logrus.Fields{
+							"source": "StartGameHandlerFoo",
+							"group": chat.Title,
+							"group_id": chat.ID,
+							"user_id": user.ID,
+							"username": user.Username,		
+						}).Errorf("Failed to delete message that admin cannot exit game: %v", err)
+				}
+			})
+			
+			menuIntro.Inline(
+				menuIntro.Row(introBtnHelp),
+			)
+
+			_, err = bot.EditReplyMarkup(msgStartGame, menuIntro)
+			if err != nil {
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "StartGameHandlerFoo",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,
+				}).Errorf("Failed to edit reply markup after admin exit game: %v", err)
+			}
+			return nil
+		}
+
+		msgTextExtit := fmt.Sprintf("Точно вийти, @%s?", user.Username)
+				
+		menuExit.Inline(
+			menuExit.Row(btnExactlyExit),
+			menuExit.Row(btnReturnToGame),
+		)
+
+		_, err = bot.Send(chat, msgTextExtit, menuExit)
+		if err != nil {
+			utils.Logger.Errorf("Error sending exit game message to the chat %s: %v", chat.Title, err)
+		}
+
+		menuIntro.Inline(
+			menuIntro.Row(introBtnHelp),
+		)
+
+		_, err = bot.EditReplyMarkup(msgStartGame, menuIntro)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "StartGameHandlerFoo",
+				"group": chat.Title,
+				"group_id": chat.ID,
+				"user_id": user.ID,
+				"username": user.Username,
+			}).Errorf("Failed to edit reply markup after exit game: %v", err)
+		}
+
+		// и тут вся логика выхода из игры с этим gameID
+	}
+			
+	return nil
+		
+}
+
+func handleExitGame(bot *telebot.Bot, c telebot.Context) error {
+	user := c.Sender()
+	chat := c.Chat()
+	data := c.Callback().Data
+
+	if strings.HasPrefix(data, "\fexit_game_") {
+		gameIDStr := strings.TrimPrefix(data, "\fexit_game_")
+		gameID, err := strconv.Atoi(gameIDStr)
+		if err != nil {
+			return nil
+		}
+
+		isUserInGame , err := storage_db.IsUserInGame(user.ID, gameID)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "handleExitGame",
+				"group": chat.Title,
+				"group_id": chat.ID,
+				"user_id": user.ID,
+				"username": user.Username,
+			}).Errorf("Error checking if user %s is in game: %v", user.Username, err)
+		}
+		
+		if !isUserInGame {
+			msgTextUserIsNotInGame := fmt.Sprintf("@%s ти ж вже вийшла з гри 🤷‍♂️", chat.Username)
+			msgUserIsNotInGame, err := bot.Send(chat, msgTextUserIsNotInGame)
+			if err != nil {
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "handleExitGame",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,
+				}).Errorf("Error sending message that user %s is not in game: %v", chat.Username, err)
+			}
+
+			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAreNotInGame, func() {
+				err := bot.Delete(msgUserIsNotInGame)
+				if err != nil {
+					utils.Logger.WithFields(logrus.Fields{
+						"source": "handleExitGame",
+						"group": chat.Title,
+						"group_id": chat.ID,
+						"user_id": user.ID,
+						"username": user.Username,
+					}).Errorf("Failed to delete message that user is not in game: %v", err)
+				}
+			})
+		}
+
+		storage_db.DeletePlayerFromGame(user.ID, gameID)
+
+		err = bot.Delete(c.Callback().Message)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+					"source": "handleExitGame",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,		
+				}).Errorf("Failed to delete message with exit confirmation: %v", err)
+			return nil
+		}
+
+		msgTextExit := fmt.Sprintf("@%s Видалися сам (ой, як шкода, ну ж що бувай….)", user.Username)
+		_, err = bot.Send(chat, msgTextExit)
+		if err != nil {
+			utils.Logger.Errorf("Error sending exit message to the chat %s: %v", chat.Title, err)
+		}
+
+		// time.AfterFunc(cfg.Durations.TimeDeleteMsgExitGame, func() {
+		// 	err := bot.Delete(msgExit)
+		// 	if err != nil {
+		// 		utils.Logger.WithFields(logrus.Fields{
+		// 				"source": "handleExitGame",
+		// 				"group": chat.Title,
+		// 				"group_id": chat.ID,
+		// 				"user_id": user.ID,
+		// 				"username": user.Username,		
+		// 			}).Info("Message was already deleted earlier, skip deleting")
+		// 	}
+		// })
+
+		// menuIntro.Inline(
+		// 	menuIntro.Row(introBtnHelp),
+		// )
+
+		// _, err = bot.EditReplyMarkup(msgStartGame, menuIntro)
+		// if err != nil {
+		// 	utils.Logger.WithFields(logrus.Fields{
+		// 		"source": "handleExitGame",
+		// 		"group": chat.Title,
+		// 		"group_id": chat.ID,
+		// 		"user_id": user.ID,
+		// 		"username": user.Username,
+		// 	}).Errorf("Failed to edit reply markup after exit game: %v", err)
+		// 	return nil
+		// }
+
+	}
+			
+	return nil
+}
+
+func handleReturnToGame(bot *telebot.Bot, c telebot.Context) error {
+	user := c.Sender()
+	chat := c.Chat()
+
+	err := bot.Delete(c.Callback().Message)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "handleReturnToGame",
+			"group": chat.Title,
+			"group_id": chat.ID,
+			"user_id": user.ID,
+			"username": user.Username,
+		}).Errorf("Failed to delete return to game message: %v", err)
+		return nil
+	}
+
+	msgTextReturnToGame := fmt.Sprintf("@%s Вау, правильне рішення", user.Username)
+	msgReturnToGame, err := bot.Send(chat, msgTextReturnToGame)
+	if err != nil {
+		utils.Logger.Errorf("Error sending return to game message to the chat %s: %v", chat.Title, err)
+	}
+
+	time.AfterFunc(cfg.Durations.TimeDeleteMsgReturnToGame, func() {
+		err := bot.Delete(msgReturnToGame)
+		if err != nil {
+			if strings.Contains(err.Error(), "message to delete not found") {
+				utils.Logger.WithFields(logrus.Fields{
+					"source": "handleReturnToGame",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,
+				}).Info("Message was already deleted earlier, skip deleting")
+			} else {
+				utils.Logger.WithFields(logrus.Fields{		
+					"source": "handleReturnToGame",
+					"group": chat.Title,
+					"group_id": chat.ID,
+					"user_id": user.ID,
+					"username": user.Username,
+				}).Errorf("Failed to delete return to game message: %v", err)
+			}
+		}
+	})
+	// menuIntro.Inline(
+	// 	menuIntro.Row(introBtnHelp),
+	// )
+
+	// _, err = bot.EditReplyMarkup(msgStartGame, menuIntro)
+	// if err != nil {
+	// 	utils.Logger.WithFields(logrus.Fields{
+	// 		"source": "handleReturnToGame",
+	// 		"group": chat.Title,
+	// 		"group_id": chat.ID,
+	// 		"user_id": user.ID,
+	// 		"username": user.Username,
+	// 	}).Errorf("Failed to edit reply markup after return to game: %v", err)
+	// 	return nil
+	// }
+			
+	return nil
 }
 
 func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
@@ -644,7 +1187,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 		return err
 	}
 
-    tasks, err := utils.LoadTasks("internal_data/tasks/tasks.json")
+    tasks, err := utils.LoadTasks("internal/data/tasks/tasks.json")
     if err != nil {
 		    utils.Logger.Errorf("SendTasks logs: Error loading tasks: %v", err)
         return err
@@ -894,4 +1437,33 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		return nil
 	}
+}
+
+func RegisterCallbackHandlers(bot *telebot.Bot) {
+	bot.Handle(telebot.OnCallback, func(c telebot.Context) error {
+		data := c.Callback().Data
+
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "RegisterCallbackHandlers",
+			"data": data,
+			"user_id": c.Sender().ID,
+			"username": c.Sender().Username,
+			"group": c.Chat().Title,
+		}).Info("Callback handler called")
+
+		switch {
+		case strings.HasPrefix(data, "\fexit_game_"):
+			return handleExitGame(bot, c)
+		case strings.HasPrefix(data, "\fexit_"):
+			return handleExitConfirm(bot, c)
+		// case data == "support_menu":
+		// 	return handleSupportMenu(bot, c)
+		case data == "\fhelp_menu":
+			return handleHelpMenu(bot, c)
+		case data == "\freturn_to_game":
+			return handleReturnToGame(bot, c)
+		default:
+			return nil
+		}
+	})
 }
