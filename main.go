@@ -72,12 +72,11 @@ func main() {
 	//btnJoinGame := telebot.Btn{Text: "Доєднатися до гри"}
 	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
-	// Handlers for buttons
-	//bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
-	//bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
+	// Button handlers
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "answer_task"}, handlers.OnAnswerTaskBtnHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
+	//bot.Handle(&telebot.Btn{Unique: "join_game_btn"}, handlers.JoinGameHandler(bot))
 	
 	//bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
 	//bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
@@ -88,7 +87,7 @@ func main() {
 	bot.Handle(telebot.OnVoice, handlers.HandlerPlayerResponse(bot))
 	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
 	
-	bot.Handle(telebot.OnAddedToGroup, handlers.HandleAddedToGroup(bot))
+	bot.Handle(telebot.OnAddedToGroup, handlers.HandleBotAddedToGroup(bot))
 
 	handlers.RegisterCallbackHandlers(bot)
 	

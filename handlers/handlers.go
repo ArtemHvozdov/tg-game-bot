@@ -160,7 +160,7 @@ func CreateGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	}
 }
 
-func HandleAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
+func HandleBotAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
@@ -175,7 +175,7 @@ func HandleAddedToGroup(bot *telebot.Bot) func(c telebot.Context) error {
 		
 		// btnStartGame := telebot.Btn{Text: "Почати гру"}
 
-		CheckAdminBotHandler(bot)(c)
+		SetupGameHandler(bot)(c)
 
 		return nil
 	}
@@ -227,14 +227,14 @@ func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
 	}
 }
 
-// CheckAdminBotHandler handles the /check_admin_bot command
-func CheckAdminBotHandler(bot *telebot.Bot) func(c telebot.Context) error {
+// SetupGameHandler handles the /check_admin_bot command
+func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "CheckAdminBotHandler",
+			"source": "SetupGameHandler",
 			"user_id": user.ID,
 			"username": user.Username,
 			"group": chat.Title,

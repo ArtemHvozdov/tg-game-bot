@@ -13,6 +13,10 @@ import (
 
 var db *sql.DB // Global variable for database connection
 
+type Database struct {
+	*sql.DB
+}
+
 // InitDB initializate database SQLite with path dbPath
 func InitDB(dbPath string) (*sql.DB, error) {
 	var err error
