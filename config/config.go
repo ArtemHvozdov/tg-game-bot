@@ -22,6 +22,9 @@ type TimeDurations struct {
 	TimeDeleteMsgYouAreNotInGame 			time.Duration // Pause before delete message you are not in game
 	TimeDeleteMsgAwaitingAnswer 			time.Duration // Pause before delete message awaiting answer
 	TimeDeleteMsgMaxSkipTasks 				time.Duration // Pause before delete message skip max tasks
+	TimeDeleteMsgReturnToGame 				time.Duration // Pause before delete message return to game
+	TimeDeleteMsgExitGame 					time.Duration // Pause before delete message exit game
+	TimeDeleteMsgAdminExit 			time.Duration // Pause before delete message admin exit game
 }
 
 var (
@@ -35,16 +38,19 @@ var devDurations = TimeDurations{
 	TimeDeleteMsgYouAlreadyStartedGame:	   5 * time.Minute,	 // 1 minute 		
 	TimePauseBeforeStartSendingTask:	   1 * time.Minute,  // 1 minute				
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
-	TimePauseBetweenSendingTasks:		   3 * time.Minute,  // 3 minutes
+	TimePauseBetweenSendingTasks:		   10 * time.Minute,  // 3 minutes
 	TimeDeleteMsgJoinGamerReminder:		   5 * time.Second,  // 5 seconds
 	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
-	TimeDeleteMsgYouAreNotInGame: 		   30 * time.Second, // 30 seconds			
+	TimeDeleteMsgYouAreNotInGame: 		   5 * time.Second, // 5 seconds			
 	TimeDeleteMsgAwaitingAnswer:		   5 * time.Second,  // 3 seconds 			
-	TimeDeleteMsgMaxSkipTasks:			   5 * time.Second,  // 5 minutes				 
+	TimeDeleteMsgMaxSkipTasks:			   5 * time.Second,  // 5 minutes
+	TimeDeleteMsgReturnToGame:             5 * time.Second,  // 5 seconds	
+	TimeDeleteMsgExitGame:                 5 * time.Second,  // 5 seconds
+	TimeDeleteMsgAdminExit:         	   5 * time.Second,  // 5 seconds			 
 }
 
 var prodDurations = TimeDurations{
-	TimePauseMsgStartGameAndMsgJoinGame:  5 * time.Second,  // 5 seconds
+	TimePauseMsgStartGameAndMsgJoinGame:   5 * time.Second,  // 5 seconds
 	TimeDeleteMsgUserIsAlreadyInGame:      30 * time.Second, // 30 seconds Feature: change time to 5 seconds
 	TimeDeleteMsgOnlyAdmniCanStartGame:	   30 * time.Second, // 30 seconds
 	TimeDeleteMsgYouAlreadyStartedGame:	   1 * time.Minute,	 // 1 minute 		
@@ -53,9 +59,12 @@ var prodDurations = TimeDurations{
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
 	TimePauseBetweenSendingTasks:		   3 * time.Minute,  // 3 minutes
 	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
-	TimeDeleteMsgYouAreNotInGame: 		   30 * time.Second, // 30 seconds			
+	TimeDeleteMsgYouAreNotInGame: 		   5 * time.Second, // 5 seconds			
 	TimeDeleteMsgAwaitingAnswer:		   3 * time.Second,  // 3 seconds 			
-	TimeDeleteMsgMaxSkipTasks:			   5 * time.Second,  // 5 minutes				 
+	TimeDeleteMsgMaxSkipTasks:			   5 * time.Second,  // 5 minutes		
+	TimeDeleteMsgReturnToGame:             5 * time.Second,  // 5 seconds	
+	TimeDeleteMsgExitGame:                 5 * time.Second,  // 5 seconds
+	TimeDeleteMsgAdminExit:           	   5 * time.Second,  // 5 seconds	 
 }
 
 

@@ -51,15 +51,20 @@ func main() {
 		log.Fatalf("Failed to create a new bot: %v", err)
 	}
 
-	err = bot.SetCommands([]telebot.Command{
-		{Text: "start", Description: "Запустити бота"},
-		{Text: "help", Description: "Хелп мі"},
-		//{Text: "check_admin_bot", Description: "Перевірити права бота"},
-	})
+	err = bot.SetCommands([]telebot.Command{})
 	if err != nil {
-		utils.Logger.Error("Failed to set bot commands")
-		//log.Printf("Failed to set bot commands: %v", err)
+		utils.Logger.Errorf("Failed to clear commands: %v", err)
 	}
+
+	// err = bot.SetCommands([]telebot.Command{
+	// 	{Text: "start", Description: "Запустити бота"},
+	// 	{Text: "help", Description: "Хелп мі"},
+	// 	//{Text: "check_admin_bot", Description: "Перевірити права бота"},
+	// })
+	// if err != nil {
+	// 	utils.Logger.Error("Failed to set bot commands")
+	// 	//log.Printf("Failed to set bot commands: %v", err)
+	// }
 
 	// Create buttons
 	//btnCreateGame := telebot.Btn{Text: "Створити гру"}
@@ -67,12 +72,11 @@ func main() {
 	//btnJoinGame := telebot.Btn{Text: "Доєднатися до гри"}
 	btnHelpMe := telebot.Btn{Text: "Help me!"}
 
-	// Handlers for buttons
-	//bot.Handle(&btnCreateGame, handlers.CreateGameHandler(bot))
-	//bot.Handle(&btnStartGame, handlers.StartGameHandlerFoo(bot))
+	// Button handlers
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "answer_task"}, handlers.OnAnswerTaskBtnHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
+	//bot.Handle(&telebot.Btn{Unique: "join_game_btn"}, handlers.JoinGameHandler(bot))
 	
 	//bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
 	//bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))
@@ -83,7 +87,9 @@ func main() {
 	bot.Handle(telebot.OnVoice, handlers.HandlerPlayerResponse(bot))
 	bot.Handle(telebot.OnVideoNote, handlers.HandlerPlayerResponse(bot))
 	
-	bot.Handle(telebot.OnAddedToGroup, handlers.HandleAddedToGroup(bot))
+	bot.Handle(telebot.OnAddedToGroup, handlers.HandleBotAddedToGroup(bot))
+
+	handlers.RegisterCallbackHandlers(bot)
 	
 
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))

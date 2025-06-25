@@ -13,6 +13,10 @@ import (
 
 var db *sql.DB // Global variable for database connection
 
+type Database struct {
+	*sql.DB
+}
+
 // InitDB initializate database SQLite with path dbPath
 func InitDB(dbPath string) (*sql.DB, error) {
 	var err error
@@ -359,6 +363,29 @@ func AddPlayerToGame(player *models.Player) error {
 	return nil
 }
 
+// DeletePlayerFromGame delete player from game
+func DeletePlayerFromGame(playerID int64, gameID int) error {
+	query := `DELETE FROM players WHERE id = ? AND game_id = ?`
+	_, err := db.Exec(query, playerID, gameID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "DB: DeletePlayerFromGame",
+			"player_id": playerID,
+			"game_id": gameID,
+			"error": err,
+		}).Error("Failed to delete player from game")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "DB: DeletePlayerFromGame",
+		"player_id": playerID,
+		"game_id": gameID,
+	}).Info("Player has been deleted from game successfully")
+
+	return nil
+}
+
 func GetPlayerCount(gameId int) (int, error) {
 	query := `SELECT COUNT(*) FROM players WHERE game_id = ?`
 	row := db.QueryRow(query, gameId)
@@ -469,6 +496,33 @@ func GetStatusPlayer(playerID int64) (string, error) {
 	}).Info("Player status get successfully")
 
 	return status, nil
+}
+
+// Get player role by ID in game using player ID and game ID
+func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) {
+	query := `SELECT role FROM players WHERE id = ? AND game_id = ?`
+	row := db.QueryRow(query, playerID, gameID)
+
+	var role string
+	err := row.Scan(&role)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "DB: GetPlayerRole",
+			"player_id": playerID,
+			"game_id": gameID,
+			"error": err,
+		}).Error("Failed to get player role")
+		return "", err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source": "DB: GetPlayerRole",
+		"player_id": playerID,
+		"game_id": gameID,
+		"role": role,
+	}).Info("Player role retrieved successfully")
+
+	return role, nil
 }
 
 // AddPlayerAnswer add player answer to DB
