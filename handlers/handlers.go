@@ -301,15 +301,15 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
 				
-		JoinBtnHandler(bot, joinBtn)
+		//JoinBtnHandler(bot, joinBtn)
 
 		return nil
 	}
 }
 
-func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
-	bot.Handle(&btn, func(c telebot.Context) error {
-			user := c.Sender()
+func JoinBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+	return  func(c telebot.Context) error {
+		user := c.Sender()
 			chat := c.Chat()
 
 			utils.Logger.Info("Join btn handler was called. New funcion")
@@ -395,7 +395,7 @@ func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
 			}
 
 			return c.Respond(&telebot.CallbackResponse{Text: "Ти в грі! 🎉"})
-		})
+	}
 }
 
 func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
@@ -421,7 +421,7 @@ func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
 			}).Errorf("Failed to send join game reminder: %v", err)
 		}
 
-		JoinBtnHandler(bot, joinBtn)
+		//JoinBtnHandler(bot, joinBtn)
 
 		time.AfterFunc(cfg.Durations.TimeDeleteMsgJoinGamerReminder, func() {
 			if msgJoinGamerReminder != nil {
