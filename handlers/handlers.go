@@ -274,34 +274,22 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		//msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
 		bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
-		//joinMsgId := msgJoin.ID
-		//storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
-		
+				
 		// Delay pause between start game msg and join msg 
 		time.Sleep(cfg.Durations.TimePauseMsgStartGameAndMsgJoinGame)
-
-		// Version with Markup Button
-		// menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
-		// btnStartGame := telebot.Btn{Text: "Почати гру"}
-		// row1 := menu.Row(btnStartGame)
-		// menu.Reply(row1)
 
 		// Version with Inline Button
 		menu := &telebot.ReplyMarkup{}
 		btnStartGame := menu.Data("Почати гру", "start_game")
 		menu.Inline(menu.Row(btnStartGame))
 
-		bot.Handle(&btnStartGame, func(c telebot.Context) error {
-			StartGameHandlerFoo(bot)(c)
+		// bot.Handle(&btnStartGame, func(c telebot.Context) error {
+		// 	StartGameHandlerFoo(bot)(c)
 
-			return nil
-		})
-
-		//time.Sleep(700 * time.Millisecond)	
+		// 	return nil
+		// })
 
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
-				
-		//JoinBtnHandler(bot, joinBtn)
 
 		return nil
 	}
