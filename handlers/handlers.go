@@ -232,7 +232,7 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
-
+	
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "SetupGameHandler",
 			"user_id": user.ID,
@@ -242,7 +242,7 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		}).Infof("Start creating game in the group (%d | %s)", chat.ID, chat.Title)
 		
 		gameName := chat.Title
-		
+	
 		game, err := storage_db.CreateGame(gameName, chat.ID)
 		if err != nil {
 			utils.Logger.Errorf("Error creating game %s in the group %s: %v", gameName, chat.Title, err)
