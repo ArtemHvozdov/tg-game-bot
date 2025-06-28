@@ -76,7 +76,8 @@ func main() {
 	bot.Handle(&btnHelpMe, handlers.HelpMeHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "answer_task"}, handlers.OnAnswerTaskBtnHandler(bot))
 	bot.Handle(&telebot.Btn{Unique: "skip_task"}, handlers.OnSkipTaskBtnHandler(bot))
-	//bot.Handle(&telebot.Btn{Unique: "join_game_btn"}, handlers.JoinGameHandler(bot))
+	bot.Handle(&telebot.Btn{Unique: "join_game_btn"}, handlers.JoinBtnHandler(bot))
+	bot.Handle(&telebot.Btn{Unique: "start_game"}, handlers.StartGameHandlerFoo(bot))
 	
 	//bot.Handle(telebot.OnUserJoined, handlers.HandleUserJoined(bot))
 	//bot.Handle(telebot.OnText, handlers.OnTextMsgHandler(bot))

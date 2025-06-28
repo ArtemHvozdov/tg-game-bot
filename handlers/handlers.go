@@ -232,7 +232,7 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
-
+	
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "SetupGameHandler",
 			"user_id": user.ID,
@@ -242,7 +242,7 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		}).Infof("Start creating game in the group (%d | %s)", chat.ID, chat.Title)
 		
 		gameName := chat.Title
-		
+	
 		game, err := storage_db.CreateGame(gameName, chat.ID)
 		if err != nil {
 			utils.Logger.Errorf("Error creating game %s in the group %s: %v", gameName, chat.Title, err)
@@ -274,42 +274,30 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		//msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
 		bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
-		//joinMsgId := msgJoin.ID
-		//storage_db.UpdateMsgJoinID(game.ID, joinMsgId)
-		
+				
 		// Delay pause between start game msg and join msg 
 		time.Sleep(cfg.Durations.TimePauseMsgStartGameAndMsgJoinGame)
-
-		// Version with Markup Button
-		// menu := &telebot.ReplyMarkup{ResizeKeyboard: true}
-		// btnStartGame := telebot.Btn{Text: "Почати гру"}
-		// row1 := menu.Row(btnStartGame)
-		// menu.Reply(row1)
 
 		// Version with Inline Button
 		menu := &telebot.ReplyMarkup{}
 		btnStartGame := menu.Data("Почати гру", "start_game")
 		menu.Inline(menu.Row(btnStartGame))
 
-		bot.Handle(&btnStartGame, func(c telebot.Context) error {
-			StartGameHandlerFoo(bot)(c)
+		// bot.Handle(&btnStartGame, func(c telebot.Context) error {
+		// 	StartGameHandlerFoo(bot)(c)
 
-			return nil
-		})
-
-		//time.Sleep(700 * time.Millisecond)	
+		// 	return nil
+		// })
 
 		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
-				
-		JoinBtnHandler(bot, joinBtn)
 
 		return nil
 	}
 }
 
-func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
-	bot.Handle(&btn, func(c telebot.Context) error {
-			user := c.Sender()
+func JoinBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+	return  func(c telebot.Context) error {
+		user := c.Sender()
 			chat := c.Chat()
 
 			utils.Logger.Info("Join btn handler was called. New funcion")
@@ -395,7 +383,7 @@ func JoinBtnHandler(bot *telebot.Bot, btn telebot.InlineButton) {
 			}
 
 			return c.Respond(&telebot.CallbackResponse{Text: "Ти в грі! 🎉"})
-		})
+	}
 }
 
 func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
@@ -421,7 +409,7 @@ func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
 			}).Errorf("Failed to send join game reminder: %v", err)
 		}
 
-		JoinBtnHandler(bot, joinBtn)
+		//JoinBtnHandler(bot, joinBtn)
 
 		time.AfterFunc(cfg.Durations.TimeDeleteMsgJoinGamerReminder, func() {
 			if msgJoinGamerReminder != nil {

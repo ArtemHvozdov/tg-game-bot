@@ -11,24 +11,20 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
-var db *sql.DB // Global variable for database connection
+var Db *sql.DB // Global variable for database connection
 
-type Database struct {
-	*sql.DB
-}
-
-// InitDB initializate database SQLite with path dbPath
-func InitDB(dbPath string) (*sql.DB, error) {
+// InitDb initializate database SQLite with path DbPath
+func InitDB(DbPath string) (*sql.DB, error) {
 	var err error
 	// Connect to database
-	db, err = sql.Open("sqlite3", dbPath)
+	Db, err = sql.Open("sqlite3", DbPath)
 	if err != nil {
 		utils.Logger.Fatalf("Error connection database: %v", err)
 		return nil, err
 	}
 
 	// Check connection
-	if err := db.Ping(); err != nil {
+	if err := Db.Ping(); err != nil {
 		utils.Logger.Fatalf("Error checking connect to database: %v", err)
 		return nil, err
 	}
@@ -40,13 +36,13 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return Db, nil
 }
 
-// CloseDB close connect to database
-func CloseDB(db *sql.DB) {
-	if db != nil {
-		if err := db.Close(); err != nil {
+// CloseDb close connect to database
+func CloseDB(Db *sql.DB) {
+	if Db != nil {
+		if err := Db.Close(); err != nil {
 			utils.Logger.Errorf("Error closing database connection: %v", err)
 		} else {
 			utils.Logger.Info("The database connection was closed successfully.")
@@ -130,11 +126,11 @@ func createTables() error {
 	}
 
 	for _, q := range queries {
-		if _, err := db.Exec(q.query); err != nil {
+		if _, err := Db.Exec(q.query); err != nil {
 			return err
 		}
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: createTables",
+			"source": "Db: createTables",
 			"table": q.tableName,
 		}).Info("Table has been created or already exists.")
 	}
@@ -155,14 +151,14 @@ func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error) {
 	}
 
 	query := `INSERT INTO games (name, game_chat_id, status ) VALUES (?, ?, ?)`
-	res, err := db.Exec(query, game.Name, game.GameChatID , game.Status)
+	res, err := Db.Exec(query, game.Name, game.GameChatID , game.Status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: CreateGame",
+			"source": "Db: CreateGame",
 			"game": game.Name,
 			"game_id": game.ID,
 			"error": err,
-		}).Error("Failed to add game to DB")
+		}).Error("Failed to add game to Db")
 		return nil, err
 	}
 
@@ -176,7 +172,7 @@ func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error) {
 	game.ID = int(gameID)
 	
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: CreateGame",
+		"source": "Db: CreateGame",
 		"game": game.Name,
 		"game_id": game.ID,
 		"group_id": game.GameChatID,
@@ -185,13 +181,13 @@ func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error) {
 	return game, nil
 }
 
-// UpdateGameStatus update status game in DB
+// UpdateGameStatus update status game in Db
 func UpdateGameStatus(gameID int64, status string) error {
 	query := `UPDATE games SET status = ? WHERE id = ?`
-	_, err := db.Exec(query, status, gameID)
+	_, err := Db.Exec(query, status, gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: UpdateGameStatus",
+			"source": "Db: UpdateGameStatus",
 			"game_id": gameID,
 			"error": err,
 		}).Error("Failed to update game status")
@@ -199,7 +195,7 @@ func UpdateGameStatus(gameID int64, status string) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: UpdateGameStatus",
+		"source": "Db: UpdateGameStatus",
 		"game_id": gameID,
 		"status": status,
 	}).Info("Game status has been updated successfully")
@@ -209,10 +205,10 @@ func UpdateGameStatus(gameID int64, status string) error {
 // Update MsgJoinID in game
 // func UpdateMsgJoinID(gameID int, msgJoinID int) error {
 // 	query := `UPDATE games SET msg_join_id = ? WHERE id = ?`
-// 	_, err := db.Exec(query, msgJoinID, gameID)
+// 	_, err := Db.Exec(query, msgJoinID, gameID)
 // 	if err != nil {
 // 		utils.Logger.WithFields(logrus.Fields{
-// 			"source": "DB: UpdateMsgJointID",
+// 			"source": "Db: UpdateMsgJointID",
 // 			"game_id": gameID,
 // 			"msg_joint_id": msgJoinID,
 // 			"error": err,
@@ -221,7 +217,7 @@ func UpdateGameStatus(gameID int64, status string) error {
 // 	}
 
 // 	utils.Logger.WithFields(logrus.Fields{
-// 		"source": "DB: UpdateMsgJointID",
+// 		"source": "Db: UpdateMsgJointID",
 // 		"game_id": gameID,
 // 		"msg_joint_id": msgJoinID,
 // 	}).Info("MsgJointID has been updated successfully")
@@ -231,13 +227,13 @@ func UpdateGameStatus(gameID int64, status string) error {
 // Get MsgJointID by game ID
 // func GetMsgJoinID(gameID int) (int, error) {
 // 	query := `SELECT msg_join_id FROM games WHERE id = ?`
-// 	row := db.QueryRow(query, gameID)
+// 	row := Db.QueryRow(query, gameID)
 
 // 	var msgJoinID int
 // 	err := row.Scan(&msgJoinID)
 // 	if err != nil {
 // 		utils.Logger.WithFields(logrus.Fields{
-// 			"source": "DB: GetMsgJointID",
+// 			"source": "Db: GetMsgJointID",
 // 			"game_id": gameID,
 // 			"error": err,
 // 		}).Error("Failed to get MsgJointID by game ID")
@@ -245,7 +241,7 @@ func UpdateGameStatus(gameID int64, status string) error {
 // 	}
 
 // 	utils.Logger.WithFields(logrus.Fields{
-// 		"source": "DB: GetMsgJointID",
+// 		"source": "Db: GetMsgJointID",
 // 		"game_id": gameID,
 // 		"msg_joint_id": msgJoinID,
 // 	}).Info("MsgJointID has been retrieved successfully")
@@ -256,13 +252,13 @@ func UpdateGameStatus(gameID int64, status string) error {
 // GetCurrentGameStatus gett current status game by ID
 func GetCurrentGameStatus(gameID int) (string, error) {
 	query := `SELECT status FROM games WHERE id = ?`
-	row := db.QueryRow(query, gameID)
+	row := Db.QueryRow(query, gameID)
 
 	var status string
 	err := row.Scan(&status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetCurrentGameStatus",
+			"source": "Db: GetCurrentGameStatus",
 			"game_id": gameID,
 			"error": err,
 		}).Error("Failed to get current game status")
@@ -270,7 +266,7 @@ func GetCurrentGameStatus(gameID int) (string, error) {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: GetCurrentGameStatus",
+		"source": "Db: GetCurrentGameStatus",
 		"game_id": gameID,
 		"status": status,
 	}).Info("Current game status has been retrieved successfully")
@@ -278,35 +274,35 @@ func GetCurrentGameStatus(gameID int) (string, error) {
 	return status, nil
 }
 
-// CreateTask add a new task (question | answer) to DB
+// CreateTask add a new task (question | answer) to Db
 // func CreateTask(task models.Task) error {
 // 	query := `INSERT INTO tasks (game_id, question, answer) VALUES (?, ?, ?)`
-// 	_, err := db.Exec(query, task.GameID, task.Question, task.Answer)
+// 	_, err := Db.Exec(query, task.GameID, task.Question, task.Answer)
 // 	if err != nil {
 // 		utils.Logger.WithFields(logrus.Fields{
-// 			"source": "DB: CreateTask",
+// 			"source": "Db: CreateTask",
 // 			"game_id": task.GameID,
 // 			"task_id": task.ID,
 // 			"error": err,
-// 		}).Error("Failed to add task to DB")
+// 		}).Error("Failed to add task to Db")
 // 		return err
 // 	}
 
-// 	utils.Logger.Infof("DB: CreateTask: Task для GameID %d добавлен: '%s' -> '%s'", task.GameID, task.Question, task.Answer)
+// 	utils.Logger.Infof("Db: CreateTask: Task для GameID %d добавлен: '%s' -> '%s'", task.GameID, task.Question, task.Answer)
 // 	return nil
 // }
 
 // GetGameById getting a game by ID
 func GetGameById(gameID int) (*models.Game, error) {
 	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE id = ?`
-	row := db.QueryRow(query, gameID)
+	row := Db.QueryRow(query, gameID)
 
 	game := &models.Game{}
 
 	err := row.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetGameById",
+			"source": "Db: GetGameById",
 			"game_id": gameID,
 			"error": err,
 		}).Error("Failed to get game by ID")
@@ -319,14 +315,14 @@ func GetGameById(gameID int) (*models.Game, error) {
 // GetGameByChatId getting a game by chat ID
 func GetGameByChatId(chatID int64) (*models.Game, error) {
 	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE game_chat_id = ?`
-	row := db.QueryRow(query, chatID)
+	row := Db.QueryRow(query, chatID)
 
 	game := &models.Game{}
 
 	err := row.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetGameByChatId",
+			"source": "Db: GetGameByChatId",
 			"chat_id": chatID,
 			"error": err,
 		}).Error("Failed to get game by chat ID")
@@ -340,10 +336,10 @@ func GetGameByChatId(chatID int64) (*models.Game, error) {
 func AddPlayerToGame(player *models.Player) error {
 	query := `INSERT INTO players (id, username, name, game_id, status,
 				skipped, role) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	_, err := db.Exec(query, player.ID, player.UserName, player.Name, player.GameID, player.Status, player.Skipped, player.Role)
+	_, err := Db.Exec(query, player.ID, player.UserName, player.Name, player.GameID, player.Status, player.Skipped, player.Role)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: AddPlayerToGame",
+			"source": "Db: AddPlayerToGame",
 			"player": player.UserName,
 			"player_id": player.ID,
 			"game_id": player.GameID,
@@ -353,7 +349,7 @@ func AddPlayerToGame(player *models.Player) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: AddPlayerToGame",
+		"source": "Db: AddPlayerToGame",
 		"player": player.UserName,
 		"player_id": player.ID,
 		"role": player.Role,
@@ -366,10 +362,10 @@ func AddPlayerToGame(player *models.Player) error {
 // DeletePlayerFromGame delete player from game
 func DeletePlayerFromGame(playerID int64, gameID int) error {
 	query := `DELETE FROM players WHERE id = ? AND game_id = ?`
-	_, err := db.Exec(query, playerID, gameID)
+	_, err := Db.Exec(query, playerID, gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: DeletePlayerFromGame",
+			"source": "Db: DeletePlayerFromGame",
 			"player_id": playerID,
 			"game_id": gameID,
 			"error": err,
@@ -378,7 +374,7 @@ func DeletePlayerFromGame(playerID int64, gameID int) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: DeletePlayerFromGame",
+		"source": "Db: DeletePlayerFromGame",
 		"player_id": playerID,
 		"game_id": gameID,
 	}).Info("Player has been deleted from game successfully")
@@ -388,13 +384,13 @@ func DeletePlayerFromGame(playerID int64, gameID int) error {
 
 func GetPlayerCount(gameId int) (int, error) {
 	query := `SELECT COUNT(*) FROM players WHERE game_id = ?`
-	row := db.QueryRow(query, gameId)
+	row := Db.QueryRow(query, gameId)
 
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetPlayerCount",
+			"source": "Db: GetPlayerCount",
 			"game_id": gameId,
 			"error": err,
 		}).Error("Failed to get player count")
@@ -406,10 +402,10 @@ func GetPlayerCount(gameId int) (int, error) {
 
 func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
 	query := `SELECT id, username, name, game_id, passes, role FROM players WHERE game_id = ?`
-	rows, err := db.Query(query, gameId)
+	rows, err := Db.Query(query, gameId)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetAllPlayersByGameID",
+			"source": "Db: GetAllPlayersByGameID",
 			"game_id": gameId,
 			"err": err,
 		}).Error("Failed to get all players by game ID")
@@ -433,13 +429,13 @@ func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
 
 func GetCountTasksByGameID(gameId int) (int, error) {
 	query := `SELECT COUNT(*) FROM tasks WHERE game_id = ?`
-	row := db.QueryRow(query, gameId)
+	row := Db.QueryRow(query, gameId)
 
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetCountTasksByGameID",
+			"source": "Db: GetCountTasksByGameID",
 			"game_id": gameId,
 			"error": err,
 		}).Error("Error fetching task count")
@@ -449,13 +445,13 @@ func GetCountTasksByGameID(gameId int) (int, error) {
 	return count, nil
 }
 
-// UpdatePlayerStatus update player status in DB
+// UpdatePlayerStatus update player status in Db
 func UpdatePlayerStatus(playerID int64, status string) error {
 	query := `UPDATE players SET status = ? WHERE id = ?`
-	_, err := db.Exec(query, status, playerID)
+	_, err := Db.Exec(query, status, playerID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: UpdatePlayerStatus",
+			"source": "Db: UpdatePlayerStatus",
 			"player_id": playerID,
 			"status": status,
 			"err": err,
@@ -464,7 +460,7 @@ func UpdatePlayerStatus(playerID int64, status string) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: UpdatePlayerStatus",
+		"source": "Db: UpdatePlayerStatus",
 		"player_id": playerID,
 		"status": status,
 	}).Info("Player status updated successfully")
@@ -475,13 +471,13 @@ func UpdatePlayerStatus(playerID int64, status string) error {
 // GetPlayerStatus get player status by ID
 func GetStatusPlayer(playerID int64) (string, error) {
 	query := `SELECT status FROM players WHERE id = ?`
-	row := db.QueryRow(query, playerID)
+	row := Db.QueryRow(query, playerID)
 
 	var status string
 	err := row.Scan(&status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetStatusPlayer",
+			"source": "Db: GetStatusPlayer",
 			"player_id": playerID,
 			"error": err,
 		}).Error("Failed to get player status")
@@ -490,7 +486,7 @@ func GetStatusPlayer(playerID int64) (string, error) {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: GetStatusPlayer",
+		"source": "Db: GetStatusPlayer",
 		"player_id": playerID,
 		"status": status,
 	}).Info("Player status get successfully")
@@ -501,13 +497,13 @@ func GetStatusPlayer(playerID int64) (string, error) {
 // Get player role by ID in game using player ID and game ID
 func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) {
 	query := `SELECT role FROM players WHERE id = ? AND game_id = ?`
-	row := db.QueryRow(query, playerID, gameID)
+	row := Db.QueryRow(query, playerID, gameID)
 
 	var role string
 	err := row.Scan(&role)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: GetPlayerRole",
+			"source": "Db: GetPlayerRole",
 			"player_id": playerID,
 			"game_id": gameID,
 			"error": err,
@@ -516,7 +512,7 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: GetPlayerRole",
+		"source": "Db: GetPlayerRole",
 		"player_id": playerID,
 		"game_id": gameID,
 		"role": role,
@@ -525,20 +521,20 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	return role, nil
 }
 
-// AddPlayerAnswer add player answer to DB
+// AddPlayerAnswer add player answer to Db
 func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: AddPlayerResponse",
+		"source": "Db: AddPlayerResponse",
 		"player_id": playerResponse.PlayerID,
 		"game_id": playerResponse.GameID,
 		"task_id": playerResponse.TaskID,
-	}).Info("DB: AddPlayerResponse - AddPlayerResponse was called")
+	}).Info("Db: AddPlayerResponse - AddPlayerResponse was called")
 	
 	query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped) VALUES (?, ?, ?, ?, ?)`
-	_, err := db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped)
+	_, err := Db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: AddPlayerResponse",
+			"source": "Db: AddPlayerResponse",
 			"player_id": playerResponse.PlayerID,
 			"game_id": playerResponse.GameID,
 			"task_id": playerResponse.TaskID,
@@ -549,7 +545,7 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: AddPlayerResponse",
+		"source": "Db: AddPlayerResponse",
 		"player_id": playerResponse.PlayerID,
 		"game_id": playerResponse.GameID,
 		"task_id": playerResponse.TaskID,
@@ -561,7 +557,7 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 func CheckPlayerResponseStatus(playerID int64, gameID int, taskID int) (*models.AddResponseResult, error) {
 	var hasAnswer, skipped bool
 
-	err := db.QueryRow(`
+	err := Db.QueryRow(`
 		SELECT has_answer, skipped FROM player_responses 
 		WHERE player_id = ? AND game_id = ? AND task_id = ?
 	`, playerID, gameID, taskID).Scan(&hasAnswer, &skipped)
@@ -585,10 +581,10 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 
 	// Check how many times player has already skipped tasks
 	var skipCount int
-	err := db.QueryRow(`SELECT COUNT(*) FROM player_responses WHERE player_id = ? AND game_id = ? AND skipped = 1`, playerID, gameID  ).Scan(&skipCount)
+	err := Db.QueryRow(`SELECT COUNT(*) FROM player_responses WHERE player_id = ? AND game_id = ? AND skipped = 1`, playerID, gameID  ).Scan(&skipCount)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: SkipPlayerResponse",
+			"source": "Db: SkipPlayerResponse",
 			"player_id": playerID,
 			"game_id": gameID,
 			"task_id": taskID,
@@ -602,7 +598,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		status.SkipLimitReached = true
 		status.RemainingSkips = 0
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: SkipPlayerResponse",
+			"source": "Db: SkipPlayerResponse",
 			"player_id": playerID,
 			"game_id": gameID,
 			"task_id": taskID,
@@ -615,7 +611,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 	// Check if a response exists for this player and task
 	var hasAnswer bool
 	var skipped bool
-	err = db.QueryRow(`
+	err = Db.QueryRow(`
 		SELECT has_answer, skipped FROM player_responses 
 		WHERE player_id = ? AND game_id = ? AND task_id = ?
 	`, playerID, gameID, taskID).Scan(&hasAnswer, &skipped)
@@ -623,13 +619,13 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 	switch {
 	case err == sql.ErrNoRows:
 		// No response yet — insert a new skipped record
-		_, err := db.Exec(`
+		_, err := Db.Exec(`
 			INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped)
 			VALUES (?, ?, ?, 0, 1)
 		`, playerID, gameID, taskID)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
-				"source": "DB: SkipPlayerResponse",
+				"source": "Db: SkipPlayerResponse",
 				"player_id": playerID,
 				"game_id": gameID,
 				"task_id": taskID,
@@ -640,7 +636,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		}
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: SkipPlayerResponse",
+			"source": "Db: SkipPlayerResponse",
 			"player_id": playerID,
 			"game_id": gameID,
 			"task_id": taskID,
@@ -649,9 +645,9 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		
 
 	case err != nil:
-		// Any other DB error
+		// Any other Db error
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: SkipPlayerResponse",
+			"source": "Db: SkipPlayerResponse",
 			"player_id": playerID,
 			"game_id": gameID,
 			"task_id": taskID,
@@ -665,7 +661,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		if hasAnswer {
 			status.AlreadyAnswered = true
 			utils.Logger.WithFields(logrus.Fields{
-				"source": "DB: SkipPlayerResponse",
+				"source": "Db: SkipPlayerResponse",
 				"player_id": playerID,
 				"game_id": gameID,
 				"task_id": taskID,
@@ -678,7 +674,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		if skipped {
 			status.AlreadySkipped = true
 			utils.Logger.WithFields(logrus.Fields{
-				"source": "DB: SkipPlayerResponse",
+				"source": "Db: SkipPlayerResponse",
 				"player_id": playerID,
 				"game_id": gameID,
 				"task_id": taskID,
@@ -690,10 +686,10 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		}
 
 		// Update existing entry to mark as skipped
-		_, err := db.Exec(`UPDATE player_responses SET skipped = 1 WHERE player_id = ? AND game_id = ? AND task_id = ?`, playerID, gameID, taskID)
+		_, err := Db.Exec(`UPDATE player_responses SET skipped = 1 WHERE player_id = ? AND game_id = ? AND task_id = ?`, playerID, gameID, taskID)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
-				"source": "DB: SkipPlayerResponse",
+				"source": "Db: SkipPlayerResponse",
 				"player_id": playerID,
 				"game_id": gameID,
 				"task_id": taskID,
@@ -712,10 +708,10 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 // Update current task ID in game
 func UpdateCurrentTaskID(gameID int, taskID int) error {
 	query := `UPDATE games SET current_task_id = ? WHERE id = ?`
-	_, err := db.Exec(query, taskID, gameID)
+	_, err := Db.Exec(query, taskID, gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: UpdateCurrentTaskID",
+			"source": "Db: UpdateCurrentTaskID",
 			"game_id": gameID,
 			"task_id": taskID,
 			"error": err,
@@ -725,7 +721,7 @@ func UpdateCurrentTaskID(gameID int, taskID int) error {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "DB: UpdateCurrentTaskID",
+		"source": "Db: UpdateCurrentTaskID",
 		"game_id": gameID,
 		"task_id": taskID,
 	}).Info("Current task ID for game updated successfully")
@@ -736,13 +732,13 @@ func UpdateCurrentTaskID(gameID int, taskID int) error {
 // Check user is in the game by ID
 func IsUserInGame(playerID int64, gameID int) (bool, error) {
 	query := `SELECT COUNT(*) FROM players WHERE id = ? AND game_id = ?`
-	row := db.QueryRow(query, playerID, gameID)
+	row := Db.QueryRow(query, playerID, gameID)
 
 	var count int
 	err := row.Scan(&count)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "DB: IsUserInGame",
+			"source": "Db: IsUserInGame",
 			"player_id": playerID,
 			"game_id": gameID,
 			"error": err,
