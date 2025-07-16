@@ -8,6 +8,7 @@ import (
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
+	"github.com/ArtemHvozdov/tg-game-bot.git/internal/msgmanager"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -51,6 +52,9 @@ func main() {
 		log.Fatalf("Failed to create a new bot: %v", err)
 	}
 
+	//handlers.InitMessageManager(bot)
+	msgmanager.Init(bot)
+
 	err = bot.SetCommands([]telebot.Command{})
 	if err != nil {
 		utils.Logger.Errorf("Failed to clear commands: %v", err)
@@ -90,6 +94,24 @@ func main() {
 	
 	bot.Handle(telebot.OnAddedToGroup, handlers.HandleBotAddedToGroup(bot))
 
+	// Команда для создания опроса
+	//bot.Handle("/color", handlers.SendColorQuestion(bot))
+	bot.Handle("/test", handlers.TestRunHandler(bot))
+	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
+	//bot.Handle("/create", handlers.CreateCollageFromResultsImage(bot))
+
+	// bot.Handle(&telebot.InlineButton{Data: "color_answer_1"}, handlers.HandleColorAnswer(bot))
+    // bot.Handle(&telebot.InlineButton{Data: "color_answer_2"}, handlers.HandleColorAnswer(bot))
+    // bot.Handle(&telebot.InlineButton{Data: "color_answer_3"}, handlers.HandleColorAnswer(bot))
+    // bot.Handle(&telebot.InlineButton{Data: "color_answer_4"}, handlers.HandleColorAnswer(bot))
+
+	// bot.Handle(&telebot.InlineButton{Data: "photo_task_start"}, handlers.HandlePhotoTaskStart(bot))
+    //bot.Handle(&telebot.InlineButton{Data: "photo_task_skip"}, handlers.HandlePhotoTaskSkip(bot))
+    
+	// bot.Handle("\fphoto_task_start", handlers.HandlePhotoTaskStart(bot))
+	// bot.Handle("\fphoto_task_skip", handlers.HandlePhotoTaskSkip(bot))
+	// bot.Handle("\fphoto_choice_", handlers.HandlePhotoChoice(bot))
+	
 	handlers.RegisterCallbackHandlers(bot)
 	
 
@@ -118,4 +140,3 @@ func main() {
 		utils.Logger.Info("Prod mode — DB dir not removed.")
 	}
 }
-
