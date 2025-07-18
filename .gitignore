@@ -1,11 +1,13 @@
 .env
 models_struct_db.txt
 bot
-data
 tg-game-bot
 tg-game-bot-inline-button
 tg-game-bot-markup-button
 bot.log
 templates
 results
+prompts
+tasks
 test_data
+buttons
