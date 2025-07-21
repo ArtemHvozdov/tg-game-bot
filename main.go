@@ -118,6 +118,8 @@ func main() {
 	// bot.Handle("\fphoto_choice_", handlers.HandlePhotoChoice(bot))
 	
 	handlers.RegisterCallbackHandlers(bot)
+
+	handlers.InitLoaderMessages()
 	
 
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))

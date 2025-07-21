@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	//"log"
-	"math/rand"
-
 	//"image"
 
 	//"image/color"
@@ -74,7 +72,27 @@ var (
 	introBtnExit     telebot.Btn
 	btnExactlyExit   telebot.Btn
 	btnReturnToGame  telebot.Btn
+
+	joinedMessages []string
+	wantAnswerMessages []string
 )
+
+func InitLoaderMessages() {
+	var err error
+	joinedMessages, err = utils.LoadTextMessagges("internal/data/messages/group/hello_msgs/hello_msgs.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load join messages: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d join messages joinedMessages", len(joinedMessages))	
+	}
+
+	wantAnswerMessages, err = utils.LoadTextMessagges("internal/data/messages/group/want_answer_msgs/want_answer_msgs.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load want answer messages: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d want answer messages wantAnswerMessages", len(wantAnswerMessages))	
+	}
+}
 
 func InitButtons(gameID int) {
 	menuIntro = &telebot.ReplyMarkup{}
@@ -396,14 +414,14 @@ func JoinBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			// 	}
 			// }
 
-			joinedMessages, err := utils.LoadJoinMessagges("internal/data/messages/group/hello_messages/hello_messages.json")
-			if err != nil {
-				utils.Logger.Errorf("Failed to load join messages: %v", err)
-				return nil
-			}
+			// joinedMessages1, err := utils.LoadTextMessagges("internal/data/messages/group/hello_messages/hello_messages.json")
+			// if err != nil {
+			// 	utils.Logger.Errorf("Failed to load join messages: %v", err)
+			// 	return nil
+			// }
 
 			//msg, err := bot.Send(chat, fmt.Sprintf("✨ @%s приєднався до гри!", user.Username))
-			_, err = bot.Send(chat, fmt.Sprintf(joinedMessages[rand.Intn(len(joinedMessages))], user.Username))
+			_, err = bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(joinedMessages), user.Username))
 			if err != nil {
 				utils.Logger.Errorf("Failed to send join message for user %s: %v", user.Username, err)
 				return nil
@@ -1135,8 +1153,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
-		msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
-		awaitingAnswerMsg, err := bot.Send(chat, msg)
+		//msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
+		awaitingAnswerMsg, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(wantAnswerMessages), user.Username))
 		if err != nil {
 			utils.Logger.Errorf("Error sending message: %v", err)
 		}
