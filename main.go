@@ -9,6 +9,7 @@ import (
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
 	"github.com/ArtemHvozdov/tg-game-bot.git/internal/msgmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -54,6 +55,10 @@ func main() {
 
 	//handlers.InitMessageManager(bot)
 	msgmanager.Init(bot)
+
+	if err := btnmanager.Init("internal/data/buttons/buttons.json"); err != nil {
+		log.Fatalf("Failed to initialize button manager: %v", err)
+	}
 
 	err = bot.SetCommands([]telebot.Command{})
 	if err != nil {

@@ -69,4 +69,50 @@ const (
 
 	StatusPlayerWaiting   = "waiting_"
 	StatusPlayerNoWaiting = "no_waiting"
+
+	// Unique buttons
+	UniqueHelp = "help_menu"
+	UniqueSupport = "support"
+	UniqueExitGame = "exit_game"
+	UniqueExactlyExit = "exit_confirm"
+	UniqueReturnToGame = "return_to_game"
+	UniqueJoinGameBtn = "join_game_btn"
+	UniqueStartGame = "start_game"
+	UniqueAnswerTask = "answer_task"
+	UniqueSkipTask = "skip_task"
 )
+
+
+	// menuIntro = &telebot.ReplyMarkup{}
+	// menuExit = &telebot.ReplyMarkup{}
+
+	// introBtnHelp = menuIntro.Data("Хелп", "help_menu")
+	// introBtnSupport = menuIntro.URL("Техпідтримка", "https://t.me/Jay_jayss")
+	// introBtnExit = menuIntro.Data("Вийти з гри", fmt.Sprintf("exit_%d", gameID))
+
+	// btnExactlyExit = menuExit.Data("Вийти з гри", fmt.Sprintf("exit_game_%d", gameID))
+	// btnReturnToGame = menuExit.Data(" << Повернутися до гри", "return_to_game")
+
+	// startMenu := &telebot.ReplyMarkup{}
+	// startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+
+	// menu := &telebot.ReplyMarkup{}
+	// btnStartGame := menu.Data("Почати гру", "start_game")
+
+	// joinBtn := telebot.InlineButton{
+	// 		Unique: "join_game_btn",
+	// 		Text:   "🎲 Приєднатися до гри",
+	// 	}
+	// 	inline := &telebot.ReplyMarkup{}
+	// 	inline.InlineKeyboard = [][]telebot.InlineButton{
+	// 		{joinBtn},
+	// 	}
+
+	// inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
+
+	// 	answerBtn := inlineKeys.Data("Хочу відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
+	// 	skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
+
+	// 	inlineKeys.Inline(
+	// 		inlineKeys.Row(answerBtn, skipBtn),
+	// 	)	

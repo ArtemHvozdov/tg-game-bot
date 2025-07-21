@@ -29,25 +29,30 @@ func ExtractGameRoomID(link string) string {
 }
 
 func GetWaitingTaskID(status string) (int, error) {
-	if !strings.HasPrefix(status, "waiting_") {
-		return 0, fmt.Errorf("status does not start with 'waiting_'")
-	}
-
-	parts := strings.Split(status, "_")
-	if len(parts) != 2 {
-		return 0, fmt.Errorf("invalid status format")
-	}
-
-	id, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return 0, fmt.Errorf("invalid task ID: %v", err)
-	}
-
-	return id, nil
+    // Убираем префикс \f если он есть
+    cleanStatus := strings.TrimPrefix(status, "\f")
+    
+    // Проверяем, что статус начинается с "waiting_"
+    if !strings.HasPrefix(cleanStatus, "waiting_") {
+        return 535, fmt.Errorf("status does not start with 'waiting_'")
+    }
+    
+    // Разделяем по "_"
+    parts := strings.Split(cleanStatus, "_")
+    if len(parts) != 2 {
+        return 545, fmt.Errorf("invalid status format")
+    }
+    
+    // Конвертируем ID в число
+    id, err := strconv.Atoi(parts[1])
+    if err != nil {
+        return 555, fmt.Errorf("invalid task ID: %v", err)
+    }
+    
+    return id, nil
 }
-
 func GetSkipTaskID(status string) (int, error) {
-	if !strings.HasPrefix(status, "skip_") {
+	if !strings.HasPrefix(status, "\fskip_") {
 		return 0, fmt.Errorf("status does not start with 'skip_'")
 	}
 

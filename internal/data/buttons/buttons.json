@@ -1,0 +1,56 @@
+[
+    {
+        "text": "Хелп",
+        "unique": "help_menu",
+        "data": "",
+        "url": ""
+    },
+    {
+        "text": "Техпідтримка",
+        "unique": "support",
+        "data": "",
+        "url": "https://t.me/Jay_jayss"
+    },
+    {
+        "text": "Вийти з гри",
+        "unique": "exit_game",
+        "data": "exit_%d",
+        "url": ""
+    },
+    {
+        "text": "Точно вийти",
+        "unique": "exit_confirm",
+        "data": "exit_game_%d",
+        "url": ""
+    },
+    {
+        "text": "Назад в гру",
+        "unique": "return_to_game",
+        "data": "",
+        "url": ""
+    },
+    {
+        "text": "👉 Приєднатися до гри",
+        "unique": "join_game_btn",
+        "data": "",
+        "url": ""
+    },
+    {
+        "text": "Почати гру",
+        "unique": "start_game",
+        "data": "",
+        "url": ""
+    },
+    {
+        "text": "Хочу відповісти",
+        "unique": "answer_task",
+        "data": "waiting_%d",
+        "url": ""
+    },
+    {
+        "text": "Пропустити",
+        "unique": "skip_task",
+        "data": "skip_%d",
+        "url": ""
+    }
+]

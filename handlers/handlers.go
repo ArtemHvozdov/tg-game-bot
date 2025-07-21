@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	//"log"
 	"math/rand"
 
@@ -16,7 +17,6 @@ import (
 	//"math"
 	//"os"
 	//"path/filepath"
-	"sync"
 
 	//"log"
 	//"os"
@@ -26,9 +26,10 @@ import (
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
-	"github.com/ArtemHvozdov/tg-game-bot.git/models"
-	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/internal/msgmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/models"
+	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
 	//"github.com/fogleman/gg"
@@ -50,11 +51,11 @@ type PhotoTaskSession struct {
 }
 
 // Photo questions
-var photoQuestions = []string{
-    "📸 Надішли фото місця, де ти найчастіше проводиш час з подругами",
-    "🌅 Покажи фото, яке передає настрій вашої дружби",
-    "💝 Надішли фото речі, яка нагадує тобі про найкращі моменти з подругами",
-}
+// var photoQuestions = []string{
+//     "📸 Надішли фото місця, де ти найчастіше проводиш час з подругами",
+//     "🌅 Покажи фото, яке передає настрій вашої дружби",
+//     "💝 Надішли фото речі, яка нагадує тобі про найкращі моменти з подругами",
+// }
 
 var processedAlbums = make(map[string]time.Time) // processedAlbums keeps track of AlbumIDs that were already handled,
 												 // to prevent sending multiple acknowledgments for a single album.
@@ -62,10 +63,8 @@ var processedAlbums = make(map[string]time.Time) // processedAlbums keeps track 
 var cfg = config.LoadConfig()
 
 var (
-	joinReminderMessages = make(map[int64]int)
-	
-
-	joinReminderMutex = sync.Mutex{}
+	//joinReminderMessages = make(map[int64]int)
+	//joinReminderMutex = sync.Mutex{}
 
 	menuIntro *telebot.ReplyMarkup
 	menuExit  *telebot.ReplyMarkup
@@ -82,11 +81,15 @@ func InitButtons(gameID int) {
 	menuExit = &telebot.ReplyMarkup{}
 
 	introBtnHelp = menuIntro.Data("Хелп", "help_menu")
-	introBtnSupport = menuIntro.URL("Техпідтримка", "https://t.me/Jay_jayss")
-	introBtnExit = menuIntro.Data("Вийти з гри", fmt.Sprintf("exit_%d", gameID))
+	//introBtnSupport = menuIntro.URL("Техпідтримка", "https://t.me/Jay_jayss")
+	introBtnSupport = btnmanager.Get(menuIntro, models.UniqueSupport)
+	//introBtnExit = menuIntro.Data("Вийти з гри", fmt.Sprintf("exit_%d", gameID))
+	introBtnExit = btnmanager.Get(menuIntro, models.UniqueExitGame, gameID)
 
-	btnExactlyExit = menuExit.Data("Вийти з гри", fmt.Sprintf("exit_game_%d", gameID))
-	btnReturnToGame = menuExit.Data(" << Повернутися до гри", "return_to_game")
+	//btnExactlyExit = menuExit.Data("Точно вийти", fmt.Sprintf("exit_game_%d", gameID))
+	btnExactlyExit = btnmanager.Get(menuExit, models.UniqueExactlyExit, gameID)
+	//btnReturnToGame = menuExit.Data(" << Повернутися до гри", "return_to_game")
+	btnReturnToGame = btnmanager.Get(menuExit, models.UniqueReturnToGame)
 
 	menuIntro.Inline(menuIntro.Row(introBtnHelp))
 	menuExit.Inline(menuExit.Row(btnExactlyExit), menuExit.Row(btnReturnToGame))
@@ -125,7 +128,9 @@ func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
 ps  Маєше труднощі? Тоді пиши сюди`
 
 		startMenu := &telebot.ReplyMarkup{}
-		startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+		//startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+
+		startBtnSupport := btnmanager.Get(startMenu, models.UniqueSupport)
 
 		startMenu.Inline(
 			startMenu.Row(startBtnSupport),
@@ -275,7 +280,8 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		// 	Text:   "🎲 Приєднатися до гри",
 		// }
 
-		joinBtn := menuIntro.Data("🎲 Приєднатися до гри", "join_game_btn")
+		//joinBtn := menuIntro.Data("🎲 Приєднатися до гри", "join_game_btn")
+		joinBtn := btnmanager.Get(menuIntro, models.UniqueJoinGameBtn)
 		
 		//inline := &telebot.ReplyMarkup{}
 		// inline.InlineKeyboard = [][]telebot.InlineButton{
@@ -300,7 +306,8 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		// Version with Inline Button
 		menu := &telebot.ReplyMarkup{}
-		btnStartGame := menu.Data("Почати гру", "start_game")
+		//btnStartGame := menu.Data("Почати гру", "start_game")
+		btnStartGame := btnmanager.Get(menu, models.UniqueStartGame)
 		menu.Inline(menu.Row(btnStartGame))
 
 		// bot.Handle(&btnStartGame, func(c telebot.Context) error {
@@ -380,14 +387,14 @@ func JoinBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				return c.Respond(&telebot.CallbackResponse{Text: "Не вдалося приєднатися 😢"})
 			}
 
-			statusGame := game.Status
-			if statusGame == models.StatusGamePlaying {
-				err := bot.Delete(c.Callback().Message)
-				if err != nil {
-					utils.Logger.Errorf("Failed to delete message with join button: %v", err)
-					return nil
-				}
-			}
+			// statusGame := game.Status
+			// if statusGame == models.StatusGamePlaying {
+			// 	err := bot.Delete(c.Callback().Message)
+			// 	if err != nil {
+			// 		utils.Logger.Errorf("Failed to delete message with join button: %v", err)
+			// 		return nil
+			// 	}
+			// }
 
 			joinedMessages, err := utils.LoadJoinMessagges("internal/data/messages/group/hello_messages/hello_messages.json")
 			if err != nil {
@@ -412,33 +419,33 @@ func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
 
-		joinReminderMutex.Lock()
-		defer joinReminderMutex.Unlock()
+		// joinReminderMutex.Lock()
+		// defer joinReminderMutex.Unlock()
 
-		// Checking to see if there has already been a message
-		if msgID, ok := joinReminderMessages[user.ID]; ok && msgID != 0 {
-			// Trying to get this message (or just not sending it again)
-			// In Telebot, you can't get a message by ID, so we'll check by trying to delete it
-			err := bot.Delete(&telebot.Message{ID: msgID, Chat: c.Chat()})
-			if err == nil {
-				// There was an old message - it's still alive, let's exit
-				utils.Logger.Infof("Join reminder message already exists for user %d", user.ID)
-				return nil
-			} else if !strings.Contains(err.Error(), "message to delete not found") {
-				utils.Logger.Warnf("Failed to delete existing join reminder: %v", err)
-				// In any case, we remove it from the map
-				delete(joinReminderMessages, user.ID)
-			}
-		}
+		// // Checking to see if there has already been a message
+		// if msgID, ok := joinReminderMessages[user.ID]; ok && msgID != 0 {
+		// 	// Trying to get this message (or just not sending it again)
+		// 	// In Telebot, you can't get a message by ID, so we'll check by trying to delete it
+		// 	err := bot.Delete(&telebot.Message{ID: msgID, Chat: c.Chat()})
+		// 	if err == nil {
+		// 		// There was an old message - it's still alive, let's exit
+		// 		utils.Logger.Infof("Join reminder message already exists for user %d", user.ID)
+		// 		return nil
+		// 	} else if !strings.Contains(err.Error(), "message to delete not found") {
+		// 		utils.Logger.Warnf("Failed to delete existing join reminder: %v", err)
+		// 		// In any case, we remove it from the map
+		// 		delete(joinReminderMessages, user.ID)
+		// 	}
+		// }
 
-		joinBtn := telebot.InlineButton{
-			Unique: "join_game_btn",
-			Text:   "🎲 Приєднатися до гри",
-		}
-		inline := &telebot.ReplyMarkup{}
-		inline.InlineKeyboard = [][]telebot.InlineButton{
-			{joinBtn},
-		}
+		// joinBtn := telebot.InlineButton{
+		// 	Unique: "join_game_btn",
+		// 	Text:   "🎲 Приєднатися до гри",
+		// }
+		// inline := &telebot.ReplyMarkup{}
+		// inline.InlineKeyboard = [][]telebot.InlineButton{
+		// 	{joinBtn},
+		// }
 
 		msgText := fmt.Sprintf(`🎉 @%s, ти ще не в грі! Натисни на кнопку щоб приєднатися і повертайся до завдання.`, c.Sender().Username)
 		_, err := msgmanager.SendTemporaryMessage(
@@ -449,7 +456,7 @@ func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
 			cfg.Durations.TimeDeleteMsgJoinGamerReminder,
 		)
 		if err != nil {
-			utils.Logger.Errorf("Error sending reminder joint to game msg for user %s in the chat (%d | %d)", user.Username, chat.ID, chat.Title)
+			utils.Logger.Errorf("Error sending reminder joint to game msg for user %s in the chat (%s | %d)", user.Username, chat.Title, chat.ID)
 		}
 
 		return nil
@@ -980,8 +987,10 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 		// create buttons Answer and Skip
 		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
 
-		answerBtn := inlineKeys.Data("Хочу відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
-		skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
+		//answerBtn := inlineKeys.Data("Хочу відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
+		//skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
+		answerBtn := btnmanager.Get(inlineKeys, models.UniqueAnswerTask, task.ID)
+		skipBtn := btnmanager.Get(inlineKeys, models.UniqueSkipTask, task.ID)
 
 		inlineKeys.Inline(
 			inlineKeys.Row(answerBtn, skipBtn),
@@ -1118,7 +1127,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				}
 			})
 
-			//return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
+			// return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
+			return nil
 		case status.AlreadySkipped:
 			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустила 😅", user.Username))
 		}
@@ -1238,6 +1248,10 @@ func RegisterCallbackHandlers(bot *telebot.Bot) {
 			return handleReturnToGame(bot, c)
 		// case strings.HasPrefix(data, "\fphoto_choice_"):
 		// 	return HandlePhotoChoice(bot)(c)
+		case strings.HasPrefix(data,"\fwaiting_" ):
+			return OnAnswerTaskBtnHandler(bot)(c)
+		case strings.HasPrefix(data,"\fskip_"):
+			return OnSkipTaskBtnHandler(bot)(c)
 		default:
 			return nil
 		}
