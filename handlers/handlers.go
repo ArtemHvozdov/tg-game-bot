@@ -75,6 +75,7 @@ var (
 
 	joinedMessages []string
 	wantAnswerMessages []string
+	alreadyAnswerMessages []string
 )
 
 func InitLoaderMessages() {
@@ -91,6 +92,13 @@ func InitLoaderMessages() {
 		utils.Logger.Errorf("Failed to load want answer messages: %v", err)
 	} else {
 		utils.Logger.Infof("Loaded %d want answer messages wantAnswerMessages", len(wantAnswerMessages))	
+	}
+
+	alreadyAnswerMessages, err = utils.LoadTextMessagges("internal/data/messages/group/already_answer_msgs/already_answer_msgs.json")	
+	if err != nil {
+		utils.Logger.Errorf("Failed to load already answer messages: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d already answer messages alreadyAnswerMessages", len(alreadyAnswerMessages))	
 	}
 }
 
@@ -951,6 +959,18 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 				"status_uer_from_DB": statusUser,
 				"status_user_in_blocK_if": models.StatusPlayerWaiting+strconv.Itoa(game.CurrentTaskID),
 			}).Info("Info about player and his status")
+
+		if statusUser == models.StatusPlayerNoWaiting {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "HandlerPlayerResponse",
+				"user_id": user.ID,
+				"username": user.Username,		
+				"group": chat.Title,
+			}).Warnf("User %s is not waiting for task %d, current status: %s", user.Username, game.CurrentTaskID, statusUser)
+			
+			// Skip message of user he already answered
+			return nil
+		}
 		
 		userTaskID, _ := utils.GetWaitingTaskID(statusUser)
 
@@ -1126,8 +1146,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch {
 		case status.AlreadyAnswered:
-			textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
-			msgYouAlreadyAnswered, err := bot.Send(chat, textYouAlreadyAnswered)
+			//textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
+			msgYouAlreadyAnswered, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
 			if err != nil {
 				utils.Logger.Errorf("Error sending message that user %s already answered task %d: %v", user.Username, idTask, err)
 			}
