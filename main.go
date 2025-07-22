@@ -102,6 +102,7 @@ func main() {
 	// Команда для создания опроса
 	//bot.Handle("/color", handlers.SendColorQuestion(bot))
 	bot.Handle("/test", handlers.TestRunHandler(bot))
+	bot.Handle("/test_finish", handlers.FinishTestHandler(bot))
 	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
 	//bot.Handle("/create", handlers.CreateCollageFromResultsImage(bot))
 
