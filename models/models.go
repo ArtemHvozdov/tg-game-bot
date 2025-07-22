@@ -80,39 +80,29 @@ const (
 	UniqueStartGame = "start_game"
 	UniqueAnswerTask = "answer_task"
 	UniqueSkipTask = "skip_task"
+
+	// Static messages
+	MsgInviteToJoinGame          = "invite_to_join_game" // +
+	MsgAdminWantToJoinGame       = "admin_want_to_join_game" // +
+	MsgUsaulPlayerWantToJoinGame = "usual_player_want_to_join_game" // +
+	MsgPlayerExitGame            = "player_exit_game" // +
+	MsgAdminExitGame             = "admin_exit_game" // +
+	MsgExactlyExitGame           = "exactly_exit_game" // +
+	MsgReturnToGame              = "return_to_game" // +
+	MsgOnlyAdminCanStartGame     = "only_admin_can_start_game" // +
+	MsgPlayerGameeAlreadyStarted = "player_gamee_already_started" // msg no need
+	MsgAdminGameAlreadyStarted   = "admin_game_already_started" // +
+	MsgUserIsNotInGame 			 = "user_is_not_in_game" // +
+	MsgAdminStartGameBtn 	  	 = "admin_start_game_btn" // +
+
+	MsgSkipFirstTime          	 = "skip_first_time"
+	MsgSkipSecondTime         	 = "skip_second_time"
+	MsgSkipThirdTime          	 = "skip_third_time"
+	MsgSkipLimitReached       	 = "skip_limit"
 )
 
-
-	// menuIntro = &telebot.ReplyMarkup{}
-	// menuExit = &telebot.ReplyMarkup{}
-
-	// introBtnHelp = menuIntro.Data("Хелп", "help_menu")
-	// introBtnSupport = menuIntro.URL("Техпідтримка", "https://t.me/Jay_jayss")
-	// introBtnExit = menuIntro.Data("Вийти з гри", fmt.Sprintf("exit_%d", gameID))
-
-	// btnExactlyExit = menuExit.Data("Вийти з гри", fmt.Sprintf("exit_game_%d", gameID))
-	// btnReturnToGame = menuExit.Data(" << Повернутися до гри", "return_to_game")
-
-	// startMenu := &telebot.ReplyMarkup{}
-	// startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
-
-	// menu := &telebot.ReplyMarkup{}
-	// btnStartGame := menu.Data("Почати гру", "start_game")
-
-	// joinBtn := telebot.InlineButton{
-	// 		Unique: "join_game_btn",
-	// 		Text:   "🎲 Приєднатися до гри",
-	// 	}
-	// 	inline := &telebot.ReplyMarkup{}
-	// 	inline.InlineKeyboard = [][]telebot.InlineButton{
-	// 		{joinBtn},
-	// 	}
-
-	// inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
-
-	// 	answerBtn := inlineKeys.Data("Хочу відповісти", "answer_task", fmt.Sprintf("waiting_%d", task.ID))
-	// 	skipBtn := inlineKeys.Data("Пропустити", "skip_task", fmt.Sprintf("skip_%d", task.ID))
-
-	// 	inlineKeys.Inline(
-	// 		inlineKeys.Row(answerBtn, skipBtn),
-	// 	)	
+    
+	// Коли учасник натискаэ "Приэднатися до гри", але він уде в грі - "🎉 @%s, ти вже в грі! Не нервуйся" ++
+	// Коли бот приймаэ відповідь учасника - "🎉 @%s, ти вже в грі! Не нервуйся",
+	// Коли учасник настискає "Хочу відповісти", але цей учасника вже виконав завдання - "📝 @%s, ти вже виконала це завдання."
+	// Коли учасник натискає "Пропустити", але цей учасника вже пропустив це завдання - "⏭️ @%s, ти вже пропустила це завдання."

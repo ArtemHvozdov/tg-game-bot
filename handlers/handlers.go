@@ -76,6 +76,8 @@ var (
 	joinedMessages []string
 	wantAnswerMessages []string
 	alreadyAnswerMessages []string
+	staticMessages map[string]string
+	skipMessages map[string]string
 )
 
 func InitLoaderMessages() {
@@ -99,6 +101,20 @@ func InitLoaderMessages() {
 		utils.Logger.Errorf("Failed to load already answer messages: %v", err)
 	} else {
 		utils.Logger.Infof("Loaded %d already answer messages alreadyAnswerMessages", len(alreadyAnswerMessages))	
+	}
+
+	staticMessages, err = utils.LoadMessageMap("internal/data/messages/group/static_msgs/static_msgs.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load static messages: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d static messages", len(staticMessages))
+	}
+
+	skipMessages, err = utils.LoadMessageMap("internal/data/messages/group/skip_msgs/skip_msgs.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load skip messages: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d skip messages", len(skipMessages))
 	}
 }
 
@@ -246,23 +262,6 @@ func HelpMeHandler(bot *telebot.Bot) func (c telebot.Context) error {
 	}
 }
 
-func notifyPlayerJoined(bot *telebot.Bot, gameID int, player models.Player) {
-	// Notify all players in the game that a new player has joined
-	allPlayers, err := storage_db.GetAllPlayersByGameID(gameID)
-	if err != nil {
-		utils.Logger.Errorf("Failed to get players for game %d: %v", gameID, err)
-		return
-	}
-
-	for _, p := range allPlayers {
-		if p.ID != player.ID { // Don't notify the new player
-			msg := fmt.Sprintf("🎉 Гравець %s приєднався до гри!", player.UserName)
-			bot.Send(&telebot.Chat{ID: p.ID}, msg)
-		}
-
-	}
-}
-
 // SetupGameHandler handles the /check_admin_bot command
 func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
@@ -325,7 +324,8 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		//msgJoin, _ := bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
 		//bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", inline)
 
-		bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", menuIntro)
+		//bot.Send(chat, "Хочеш приєднатися до гри? 🏠 Тицяй кнопку", menuIntro)
+		bot.Send(chat, utils.GetStaticMessage(staticMessages, models.MsgInviteToJoinGame), menuIntro)
 				
 		// Delay pause between start game msg and join msg 
 		time.Sleep(cfg.Durations.TimePauseMsgStartGameAndMsgJoinGame)
@@ -342,7 +342,7 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		// 	return nil
 		// })
 
-		bot.Send(chat, "Тепер натисни кнопку нижче, коли будеш готовий почати гру! 🎮", menu)
+		bot.Send(chat, utils.GetStaticMessage(staticMessages, models.MsgAdminStartGameBtn), menu)
 
 		return nil
 	}
@@ -376,21 +376,62 @@ func JoinBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			}
 
 			if userIsInGame {
-				msg, err := bot.Send(chat, fmt.Sprintf("🎉 @%s, ти вже в грі! Не нервуйся", user.Username))
+				roleUserInGame, err := storage_db.GetPlayerRoleByUserIDAndGameID(user.ID, game.ID)
 				if err != nil {
-					utils.Logger.Errorf("Failed to send message for user %s: %v", user.Username, err)
+					utils.Logger.Errorf("Failed to get player role for user %s in game %d: %v", user.Username, game.ID, err)
 					return nil
 				}
 
-				// Delay delete msg user is in game aready. Future: change time to 5 cseconds
-				time.Sleep(cfg.Durations.TimeDeleteMsgUserIsAlreadyInGame)
+				switch roleUserInGame {
+				case "admin":
+					msg, err := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgAdminWantToJoinGame), user.Username))
+					if err != nil {
+						utils.Logger.Errorf("Failed to send message for user %s: %v", user.Username, err)
+						return nil
+					}
 
-				err = bot.Delete(msg)
-				if err != nil {
-					utils.Logger.Errorf("Failed to delete message for user %s: %v", user.Username, err)
+					// Delay delete msg user is in game aready. Future: change time to 5 cseconds
+					time.Sleep(cfg.Durations.TimeDeleteMsgUserIsAlreadyInGame)
+
+					err = bot.Delete(msg)
+					if err != nil {
+						utils.Logger.Errorf("Failed to delete message for user %s: %v", user.Username, err)
+						return nil
+					}
+					return nil
+				case "player":
+					msg, err := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUsaulPlayerWantToJoinGame), user.Username))
+					if err != nil {
+						utils.Logger.Errorf("Failed to send message for user %s: %v", user.Username, err)
+						return nil
+					}
+
+					// Delay delete msg user is in game aready. Future: change time to 5 cseconds
+					time.Sleep(cfg.Durations.TimeDeleteMsgUserIsAlreadyInGame)
+
+					err = bot.Delete(msg)
+					if err != nil {
+						utils.Logger.Errorf("Failed to delete message for user %s: %v", user.Username, err)
+						return nil
+					}
 					return nil
 				}
-				return nil
+
+				// msg, err := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUsaulPlayerWantToJoinGame), user.Username))
+				// if err != nil {
+				// 	utils.Logger.Errorf("Failed to send message for user %s: %v", user.Username, err)
+				// 	return nil
+				// }
+
+				// // Delay delete msg user is in game aready. Future: change time to 5 cseconds
+				// time.Sleep(cfg.Durations.TimeDeleteMsgUserIsAlreadyInGame)
+
+				// err = bot.Delete(msg)
+				// if err != nil {
+				// 	utils.Logger.Errorf("Failed to delete message for user %s: %v", user.Username, err)
+				// 	return nil
+				// }
+				// return nil
 			}
 
 			player := &models.Player{
@@ -473,7 +514,7 @@ func SendJoinGameReminder(bot *telebot.Bot) func (c telebot.Context) error {
 		// 	{joinBtn},
 		// }
 
-		msgText := fmt.Sprintf(`🎉 @%s, ти ще не в грі! Натисни на кнопку щоб приєднатися і повертайся до завдання.`, c.Sender().Username)
+		msgText := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserIsNotInGame), user.Username)
 		_, err := msgmanager.SendTemporaryMessage(
 			chat.ID, 
 			user.ID, 
@@ -530,7 +571,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		memberUser, _ := bot.ChatMemberOf(chat, user)
 
 		if memberUser.Role != telebot.Administrator && memberUser.Role != telebot.Creator {
-			warningMsgText := fmt.Sprintf("@%s, розпочати гру може тільки адмін групи. Трохи терпіння і почнемо.", user.Username)
+			warningMsgText := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgOnlyAdminCanStartGame), user.Username)
 			
 			utils.Logger.WithFields(logrus.Fields{
 				"user_id": user.ID,
@@ -575,7 +616,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		if game.Status == models.StatusGamePlaying {
-			msgText := fmt.Sprintf("@%s, ти вже розпочав гру!", user.Username)
+			msgText := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgAdminGameAlreadyStarted), user.Username)
 			msg, err := bot.Send(chat, msgText)
 			if err != nil {
 				utils.Logger.Errorf(
@@ -727,7 +768,7 @@ func handleExitConfirm(bot *telebot.Bot, c telebot.Context) error {
 		}
 
 		if roleUserInGame == "admin" {
-			msgTextAdminExit := fmt.Sprintf("@%s гей ти чого? Ти ж адмін гри, лишайся тут.", user.Username)
+			msgTextAdminExit := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgAdminExitGame), user.Username)
 			
 			// Using MessageManager to Send with Anti-Duplicate Protection
 			_, err := msgmanager.SendTemporaryMessage(
@@ -746,7 +787,7 @@ func handleExitConfirm(bot *telebot.Bot, c telebot.Context) error {
 			return nil
 		}
 
-		msgTextExtit := fmt.Sprintf("Точно вийти, @%s?", user.Username)
+		msgTextExtit := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgPlayerExitGame), user.Username)
 
 						
 		menuExit.Inline(
@@ -834,7 +875,7 @@ func handleExitGame(bot *telebot.Bot, c telebot.Context) error {
 			return nil
 		}
 
-		msgTextExit := fmt.Sprintf("@%s Видалися сам (ой, як шкода, ну ж що бувай….)", user.Username)
+		msgTextExit := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgExactlyExitGame), user.Username)
 		_, err = bot.Send(chat, msgTextExit)
 		if err != nil {
 			utils.Logger.Errorf("Error sending exit message to the chat %s: %v", chat.Title, err)
@@ -861,7 +902,7 @@ func handleReturnToGame(bot *telebot.Bot, c telebot.Context) error {
 		return nil
 	}
 
-	msgTextReturnToGame := fmt.Sprintf("@%s Вау, правильне рішення", user.Username)
+	msgTextReturnToGame := fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgReturnToGame), user.Username)
 	msgReturnToGame, err := bot.Send(chat, msgTextReturnToGame)
 	if err != nil {
 		utils.Logger.Errorf("Error sending return to game message to the chat %s: %v", chat.Title, err)
@@ -1244,7 +1285,7 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.AlreadySkipped:
 			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
 		case status.SkipLimitReached:
-			msg, _ := bot.Send(chat, fmt.Sprintf("🚫 @%s, ти вже пропустила максимальну дозволену кількість завдань.", user.Username))
+			msg, _ := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipLimitReached), user.Username))
 			
 			// Delay delete the message max skip tasks
 			time.AfterFunc(cfg.Durations.TimeDeleteMsgMaxSkipTasks, func() {
@@ -1254,7 +1295,16 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				}
 			})
 		default:
-			bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
+			switch status.RemainingSkips-1 {
+			case 0:
+				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipThirdTime), user.Username))
+			case 1:
+				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipSecondTime), user.Username))
+			case 2:
+				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipFirstTime), user.Username))
+			}
+			// Skip messages
+			//bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
 		}
 
 		return nil

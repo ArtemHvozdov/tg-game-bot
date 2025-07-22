@@ -503,7 +503,7 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	err := row.Scan(&role)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "Db: GetPlayerRole",
+			"source": "Db: GetPlayerRoleByUserIDAndGameID",
 			"player_id": playerID,
 			"game_id": gameID,
 			"error": err,
@@ -512,7 +512,7 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "Db: GetPlayerRole",
+		"source": "Db: GetPlayerGetPlayerRoleByUserIDAndGameIDRole",
 		"player_id": playerID,
 		"game_id": gameID,
 		"role": role,
