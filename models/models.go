@@ -94,6 +94,8 @@ const (
 	MsgAdminGameAlreadyStarted   = "admin_game_already_started" // +
 	MsgUserIsNotInGame 			 = "user_is_not_in_game" // +
 	MsgAdminStartGameBtn 	  	 = "admin_start_game_btn" // +
+	MsgUserAlreadySkipTask 		 = "user_already_skip_task" // +
+	MsgUserAnswerAccepted 		 = "user_answer_accepted" 
 
 	MsgSkipFirstTime          	 = "skip_first_time"
 	MsgSkipSecondTime         	 = "skip_second_time"

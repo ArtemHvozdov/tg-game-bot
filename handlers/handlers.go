@@ -1062,7 +1062,7 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 
 			storage_db.AddPlayerResponse(playerResponse)
 
-			bot.Send(chat, fmt.Sprintf("Дякую, @%s! Твоя відповідь на завдання %d прийнята.", user.Username, userTaskID))
+			bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAnswerAccepted), user.Username, userTaskID))
 
 			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
 
@@ -1268,12 +1268,11 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			// return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
 			return nil
 		case status.AlreadySkipped:
-			return c.Send(fmt.Sprintf("@%s, це завдання ти вже пропустила 😅", user.Username))
+			return c.Send(fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
 		}
 
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
-		//msg := fmt.Sprintf("@%s, чекаю від тебе відповідь на завдання %d", user.Username, idTask)
 		awaitingAnswerMsg, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(wantAnswerMessages), user.Username))
 		if err != nil {
 			utils.Logger.Errorf("Error sending message: %v", err)
@@ -1342,7 +1341,7 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.AlreadyAnswered:
 			bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
 		case status.AlreadySkipped:
-			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
+			bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
 		case status.SkipLimitReached:
 			msg, _ := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipLimitReached), user.Username))
 			
