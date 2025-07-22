@@ -1281,7 +1281,7 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch {
 		case status.AlreadyAnswered:
-			bot.Send(chat, fmt.Sprintf("📝 @%s, ти вже виконала це завдання.", user.Username))
+			bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
 		case status.AlreadySkipped:
 			bot.Send(chat, fmt.Sprintf("⏭️ @%s, ти вже пропустила це завдання.", user.Username))
 		case status.SkipLimitReached:
