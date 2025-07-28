@@ -101,6 +101,9 @@ const (
 	MsgSkipSecondTime         	 = "skip_second_time"
 	MsgSkipThirdTime          	 = "skip_third_time"
 	MsgSkipLimitReached       	 = "skip_limit"
+
+	LinkInstagram        		 = "instagram"
+	LinkTikTok            		 = "tiktok"
 )
 
     

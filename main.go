@@ -102,7 +102,12 @@ func main() {
 	// Команда для создания опроса
 	//bot.Handle("/color", handlers.SendColorQuestion(bot))
 	bot.Handle("/test", handlers.TestRunHandler(bot))
+	bot.Handle("/test_start", handlers.SendStartGameMessages(bot))
 	bot.Handle("/test_finish", handlers.FinishTestHandler(bot))
+	bot.Handle("/test_referal", handlers.SendReferalMsg(bot))
+	bot.Handle("/test_feedback", handlers.SendFeedbackMsg(bot))
+	bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
+	//bot.Handle("/test_ref_link", handlers.GetReferalLinkHandler(bot))
 	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
 	//bot.Handle("/create", handlers.CreateCollageFromResultsImage(bot))
 

@@ -75,6 +75,10 @@ var (
 
 	joinedMessages []string
 	finishMessage string
+	buyMeCoffeeMsg string
+	feedbackMsg string
+	referalMsg string
+	socialMediaLinks map[string]string
 	wantAnswerMessages []string
 	alreadyAnswerMessages []string
 	staticMessages map[string]string
@@ -131,6 +135,34 @@ func InitLoaderMessages() {
 		utils.Logger.Errorf("Failed to load finish message: %v", err)
 	} else {
 		utils.Logger.Info("Loaded finish message: succes")
+	}
+
+	buyMeCoffeeMsg, err = utils.LoadSingleMessage("internal/data/messages/group/buy_me_coffee_msg.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load buy me coffee message: %v", err)
+	} else {
+		utils.Logger.Info("Loaded buy me coffee message: succes")
+	}
+
+	feedbackMsg, err = utils.LoadSingleMessage("internal/data/messages/group/feedback_msg.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load feedback message: %v", err)
+	} else {
+		utils.Logger.Info("Loaded feedback message: succes")
+	}
+
+	referalMsg, err = utils.LoadSingleMessage("internal/data/messages/group/referal_msg.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load referal message: %v", err)
+	} else {
+		utils.Logger.Info("Loaded referal message: succes")
+	}
+
+	socialMediaLinks, err = utils.LoadMessageMap("internal/data/messages/group/social_media_links.json")
+	if err != nil {
+		utils.Logger.Errorf("Failed to load social media links: %v", err)
+	} else {
+		utils.Logger.Infof("Loaded %d social media links", len(socialMediaLinks))
 	}
 }
 
@@ -1135,6 +1167,161 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	
 }
 
+// func GetReferalLinkHandler(bot *telebot.Bot) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		chat := c.Chat()
+// 		game , err := storage_db.GetGameByChatId(chat.ID)
+// 		if err != nil {
+// 			utils.Logger.WithFields(logrus.Fields{
+// 				"source": "GetReferalLinkHandler",
+// 				"group": chat.Title,
+// 				"group_id": chat.ID,	
+// 				"user_id": c.Sender().ID,
+// 				"username": c.Sender().Username,
+// 			}).Errorf("Error getting game by chat ID: %v", err)
+// 			return nil
+// 		}
+
+// 		userAdminGame, err := storage_db.GetAdminPlayerByGameID(game.ID)
+// 		if err != nil {
+// 			utils.Logger.WithFields(logrus.Fields{
+// 				"source": "GetReferalLinkHandler",
+// 				"group": chat.Title,
+// 				"group_id": chat.ID,
+// 				"user_id": c.Sender().ID,
+// 				"username": c.Sender().Username,
+// 			}).Errorf("Error getting admin player by game ID: %v", err)
+// 		}
+
+// 		refLink1 := utils.GenerateInviteLink(int(userAdminGame.ID))
+
+// 		bot.Send(&telebot.Chat{ID: chat.ID}, 
+// 		fmt.Sprintf("Твоє реферальне посилання: <a href=\"%s\">%s</a>", refLink1, refLink1),
+// 		&telebot.SendOptions{
+// 			ParseMode: telebot.ModeHTML,
+// 			DisableWebPagePreview: true,
+// 		},
+// )
+
+// 		return nil
+// 	}
+// }
+
+func SendReferalMsg(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		chat := c.Chat()
+		userCalled := c.Sender()
+
+		var refLink string
+
+		// Пробуем получить игру
+		game, err := storage_db.GetGameByChatId(chat.ID)
+		if err != nil {
+			// Логируем ошибку, но НЕ выходим из функции
+			utils.Logger.WithFields(logrus.Fields{
+				"source":   "SendReferalMsg",
+				"group":    chat.Title,
+				"group_id": chat.ID,
+				"user_id":  userCalled.ID,
+				"username": userCalled.Username,
+			}).Warnf("Game not found or error occurred: %v", err)
+
+			// Используем ссылку на вызывающего пользователя
+			refLink = utils.GenerateInviteLink(int(userCalled.ID))
+		} else {
+			// Игра найдена, пробуем получить админа
+			adminPlayer, err := storage_db.GetAdminPlayerByGameID(game.ID)
+			if err != nil {
+				utils.Logger.WithFields(logrus.Fields{
+					"source":   "SendReferalMsg",
+					"group":    chat.Title,
+					"group_id": chat.ID,
+					"user_id":  userCalled.ID,
+					"username": userCalled.Username,
+				}).Warnf("Admin not found, fallback to sender: %v", err)
+
+				refLink = utils.GenerateInviteLink(int(userCalled.ID))
+			} else {
+				refLink = utils.GenerateInviteLink(int(adminPlayer.ID))
+			}
+		}
+
+		// Подготовка HTML-сообщения
+		msg := referalMsg
+		msg = strings.ReplaceAll(msg, "Instagram", fmt.Sprintf(`<a href="%s">Instagram</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkInstagram)))
+		msg = strings.ReplaceAll(msg, "TikTok", fmt.Sprintf(`<a href="%s">TikTok</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkTikTok)))
+		msg = strings.ReplaceAll(
+			msg,
+			"Ось твоє Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру BESTIEVERSE",
+			fmt.Sprintf(`<a href="%s">Ось твоє Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру BESTIEVERSE</a>`, refLink),
+		)
+
+		// Отправка
+		_, err = bot.Send(chat, msg, &telebot.SendOptions{
+			ParseMode:             telebot.ModeHTML,
+			DisableWebPagePreview: true,
+		})
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source":   "SendReferalMsg",
+				"group":    chat.Title,
+				"group_id": chat.ID,
+				"err":      err,
+			}).Error("Error sending referral message to the group")
+			return err
+		}
+
+		utils.Logger.WithFields(logrus.Fields{
+			"group": chat.Title,
+			"user":  userCalled.Username,
+			"link":  refLink,
+		}).Info("Referral message sent successfully")
+
+		return nil
+	}
+}
+
+// SendFeedbackMsg sends a feedback message to the users
+func SendFeedbackMsg(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		chat := c.Chat()
+
+		_, err := bot.Send(chat, feedbackMsg)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "SendFeedbackMsg",
+				"group": chat.Title,
+				"err": err,
+			}).Error("Error sending feedback message to the group")
+			return err
+		}
+
+		utils.Logger.Info("Feedback message sent successfully")
+
+		return nil
+	}
+}
+
+func SendBuyMeCoffeeMsg(bot *telebot.Bot) func(c telebot.Context) error {
+	return func(c telebot.Context) error {
+		chat := c.Chat()
+
+		_, err := bot.Send(chat, buyMeCoffeeMsg, telebot.ModeMarkdown)
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "SendBuyMeCoffeeMsg",
+				"group": chat.Title,
+				"err": err,
+			}).Error("Error sending Buy Me Coffee message to the group")
+			return err
+		}
+
+		utils.Logger.Info("Buy Me Coffee message sent successfully")
+
+		return nil
+	}
+}
+
 func FinishGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
@@ -1183,6 +1370,18 @@ func FinishGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
         // )
 
 		storage_db.UpdateGameStatus(int64(game.ID), models.StatusGameFinished)
+
+		time.Sleep(5 * time.Second)
+
+		SendReferalMsg(bot)(c)
+
+		time.Sleep(5 * time.Second)
+
+		SendFeedbackMsg(bot)(c)
+
+		time.Sleep(5 * time.Second)
+
+		SendBuyMeCoffeeMsg(bot)(c)
 
 		return nil
 	}
