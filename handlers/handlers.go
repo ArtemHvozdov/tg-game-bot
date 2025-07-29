@@ -610,11 +610,11 @@ func SendStartGameMessages(bot *telebot.Bot) func(c telebot.Context) error {
 		msg1 := startGameMessages[0]
 		msg2 := startGameMessages[1]
 
-		if _, err := bot.Send(chat, msg1); err != nil {
+		if _, err := bot.Send(chat, msg1, telebot.ModeMarkdown); err != nil {
 			return err
 		}
 
-		if _, err := bot.Send(chat, msg2); err != nil {
+		if _, err := bot.Send(chat, msg2, telebot.ModeMarkdown); err != nil {
 			return err
 		}
 
@@ -1286,7 +1286,18 @@ func SendFeedbackMsg(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		chat := c.Chat()
 
-		_, err := bot.Send(chat, feedbackMsg)
+		feedbackMenu := &telebot.ReplyMarkup{}
+
+		feedbackBtn := btnmanager.Get(feedbackMenu, models.UniqueFeedback)
+
+		feedbackMenu.Inline(
+			feedbackMenu.Row(feedbackBtn),
+		)
+
+		// startMenu.Inline(
+		// 	startMenu.Row(startBtnSupport),
+		// )
+		_, err := bot.Send(chat, feedbackMsg, feedbackMenu)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
 				"source": "SendFeedbackMsg",

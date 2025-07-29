@@ -52,5 +52,11 @@
         "unique": "skip_task",
         "data": "skip_%d",
         "url": ""
+    },
+    {
+        "text": "Залишити відгук",
+        "unique": "feedback",
+        "data": "",
+        "url": "https://google.com/"
     }
 ]

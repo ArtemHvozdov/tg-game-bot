@@ -80,6 +80,7 @@ const (
 	UniqueStartGame = "start_game"
 	UniqueAnswerTask = "answer_task"
 	UniqueSkipTask = "skip_task"
+	UniqueFeedback = "feedback"
 
 	// Static messages
 	MsgInviteToJoinGame          = "invite_to_join_game" // +
