@@ -9,6 +9,7 @@ import (
 	"github.com/ArtemHvozdov/tg-game-bot.git/config"
 	"github.com/ArtemHvozdov/tg-game-bot.git/handlers"
 	"github.com/ArtemHvozdov/tg-game-bot.git/internal/msgmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -55,6 +56,10 @@ func main() {
 	//handlers.InitMessageManager(bot)
 	msgmanager.Init(bot)
 
+	if err := btnmanager.Init("internal/data/buttons/buttons.json"); err != nil {
+		log.Fatalf("Failed to initialize button manager: %v", err)
+	}
+
 	err = bot.SetCommands([]telebot.Command{})
 	if err != nil {
 		utils.Logger.Errorf("Failed to clear commands: %v", err)
@@ -97,6 +102,12 @@ func main() {
 	// Команда для создания опроса
 	//bot.Handle("/color", handlers.SendColorQuestion(bot))
 	bot.Handle("/test", handlers.TestRunHandler(bot))
+	bot.Handle("/test_start", handlers.SendStartGameMessages(bot))
+	bot.Handle("/test_finish", handlers.FinishTestHandler(bot))
+	bot.Handle("/test_referal", handlers.SendReferalMsg(bot))
+	bot.Handle("/test_feedback", handlers.SendFeedbackMsg(bot))
+	bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
+	//bot.Handle("/test_ref_link", handlers.GetReferalLinkHandler(bot))
 	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
 	//bot.Handle("/create", handlers.CreateCollageFromResultsImage(bot))
 
@@ -113,6 +124,8 @@ func main() {
 	// bot.Handle("\fphoto_choice_", handlers.HandlePhotoChoice(bot))
 	
 	handlers.RegisterCallbackHandlers(bot)
+
+	handlers.InitLoaderMessages()
 	
 
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))

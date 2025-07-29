@@ -503,7 +503,7 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	err := row.Scan(&role)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source": "Db: GetPlayerRole",
+			"source": "Db: GetPlayerRoleByUserIDAndGameID",
 			"player_id": playerID,
 			"game_id": gameID,
 			"error": err,
@@ -512,13 +512,33 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source": "Db: GetPlayerRole",
+		"source": "Db: GetPlayerGetPlayerRoleByUserIDAndGameIDRole",
 		"player_id": playerID,
 		"game_id": gameID,
 		"role": role,
 	}).Info("Player role retrieved successfully")
 
 	return role, nil
+}
+
+// GetAdminPlayerByGameID get admin player by game ID
+func GetAdminPlayerByGameID(gameID int) (*models.Player, error) {
+	query := `SELECT id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ? AND role = 'admin'`
+	row := Db.QueryRow(query, gameID)
+
+	player := &models.Player{}
+
+	err := row.Scan(&player.ID, &player.UserName, &player.Name, &player.GameID, &player.Status, &player.Skipped, &player.Role)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "Db: GetAdminPlayerByGameID",
+			"game_id": gameID,
+			"error": err,
+		}).Error("Failed to get admin player by game ID")
+		return nil, err
+	}
+
+	return player, nil
 }
 
 // AddPlayerAnswer add player answer to Db
