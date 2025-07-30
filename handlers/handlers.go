@@ -1130,8 +1130,10 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
     for i, task := range tasks {
         //task := tasks[i]
 		storage_db.UpdateCurrentTaskID(game.ID, task.ID)
-        msg := "🌟 *" + task.Tittle + "*\n" + task.Description
+        // msg := "🌟 *" + task.Tittle + "*\n" + task.Description
 
+		msg := task.Tittle + "\n\n" + task.Description
+		
 		// create buttons Answer and Skip
 		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
 
