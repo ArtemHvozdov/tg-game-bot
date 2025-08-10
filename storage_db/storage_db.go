@@ -806,3 +806,61 @@ func AddSubtaskAnswer(answer *models.SubtaskAnswer) error {
 	
 	return nil
 }
+
+// Get subtask results from database
+func GetSubtaskResults(gameID, taskID int) (map[int]map[string]int, error) {
+    query := `
+        SELECT question_index, selected_username, COUNT(*) as vote_count
+        FROM subtask_answers 
+        WHERE game_id = ? AND task_id = ?
+        GROUP BY question_index, selected_username
+        ORDER BY question_index, vote_count DESC
+    `
+    
+    rows, err := Db.Query(query, gameID, taskID)
+    if err != nil {
+        utils.Logger.WithFields(logrus.Fields{
+            "source":  "Db: GetSubtaskResults",
+            "game_id": gameID,
+            "task_id": taskID,
+            "error":   err,
+        }).Error("Failed to query subtask results")
+        return nil, err
+    }
+    defer rows.Close()
+    
+    // results[questionIndex][username] = voteCount
+    results := make(map[int]map[string]int)
+    
+    for rows.Next() {
+        var questionIndex int
+        var selectedUsername string
+        var voteCount int
+        
+        err := rows.Scan(&questionIndex, &selectedUsername, &voteCount)
+        if err != nil {
+            utils.Logger.WithFields(logrus.Fields{
+                "source":  "Db: GetSubtaskResults",
+                "game_id": gameID,
+                "task_id": taskID,
+                "error":   err,
+            }).Error("Error scanning subtask result row")
+            continue
+        }
+        
+        if results[questionIndex] == nil {
+            results[questionIndex] = make(map[string]int)
+        }
+        
+        results[questionIndex][selectedUsername] = voteCount
+    }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source":           "Db: GetSubtaskResults",
+        "game_id":          gameID,
+        "task_id":          taskID,
+        "questions_found":  len(results),
+    }).Info("Subtask results retrieved successfully")
+    
+    return results, rows.Err()
+}
