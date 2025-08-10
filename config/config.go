@@ -36,9 +36,9 @@ var devDurations = TimeDurations{
 	TimeDeleteMsgUserIsAlreadyInGame:      5 * time.Second, // 30 seconds Feature: change time to 5 seconds
 	TimeDeleteMsgOnlyAdmniCanStartGame:	   5 * time.Second, // 30 seconds
 	TimeDeleteMsgYouAlreadyStartedGame:	   5 * time.Minute,	 // 1 minute 		
-	TimePauseBeforeStartSendingTask:	   1 * time.Minute,  // 1 minute				
+	TimePauseBeforeStartSendingTask:	   1 * time.Second,  // 1 minute				
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
-	TimePauseBetweenSendingTasks:		   3 * time.Minute,  // 3 minutes
+	TimePauseBetweenSendingTasks:		   3 * time.Second,  // 3 minutes
 	TimeDeleteMsgJoinGamerReminder:		   5 * time.Second,  // 5 seconds
 	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
 	TimeDeleteMsgYouAreNotInGame: 		   5 * time.Second, // 5 seconds			

@@ -61,6 +61,20 @@ type Task struct {
 	Description string `json:"description"`
 }
 
+// type SubTask struct {
+// 	subtasks []string
+// }
+
+type SubtaskAnswer struct {
+	ID 			  int    `json:"id"`
+	GameID       int    `json:"game_id"`
+	TaskID       int    `json:"task_id"`
+	QuestionIndex uint    `json:"question_index"`
+	AnswererUserID int64  `json:"answerer_user_id"` // кто отвечал
+	SelectedUserID int64  `json:"selected_user_id"` // кого выбрали
+	SelectedUsername string `json:"selected_username"` // username выбранного (для быстрого доступа)
+}
+
 // Const of state
 const (
 	StatusGameWaiting  = "waiting"

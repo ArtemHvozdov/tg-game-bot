@@ -109,7 +109,9 @@ func main() {
 	bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
 	//bot.Handle("/test_ref_link", handlers.GetReferalLinkHandler(bot))
 	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
-	//bot.Handle("/create", handlers.CreateCollageFromResultsImage(bot))
+	bot.Handle("/create", handlers.CreateCollageFromResultsImageNine(bot))
+	// Register handler for showing results
+	bot.Handle("/subtask_results", handlers.SendSubtaskResultsToChat(bot))
 
 	// bot.Handle(&telebot.InlineButton{Data: "color_answer_1"}, handlers.HandleColorAnswer(bot))
     // bot.Handle(&telebot.InlineButton{Data: "color_answer_2"}, handlers.HandleColorAnswer(bot))

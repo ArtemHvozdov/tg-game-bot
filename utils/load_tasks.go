@@ -21,3 +21,18 @@ func LoadTasks(path string) ([]models.Task, error) {
 
     return tasks, nil
 }
+
+func LoadSubTasks(path string) ([]string, error) {
+    file, err := os.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+
+    var subtasks []string
+    err = json.Unmarshal(file, &subtasks)
+    if err != nil {
+        return nil, err
+    }
+
+    return subtasks, nil
+}
