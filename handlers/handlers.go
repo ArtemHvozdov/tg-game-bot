@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	
+
 	//"log"
 	//"image"
 
@@ -25,6 +25,7 @@ import (
 	"github.com/ArtemHvozdov/tg-game-bot.git/internal/subtasks"
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/voting"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 
@@ -1151,6 +1152,18 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 			inlineKeys.Row(answerBtn, skipBtn),
 		)
 
+		if i == 4 {
+			err := voting.StartSubtask5VotingDirect(bot, chatID, msg, inlineKeys)
+			if err != nil {
+				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+				// Можете решить, продолжать ли выполнение или вернуть ошибку
+			} else {
+				utils.Logger.Info("Successfully started subtask 5 voting")
+			}
+
+			return nil
+		}
+
         _, err := bot.Send(
             &telebot.Chat{ID: chatID},
             msg,
@@ -1162,7 +1175,8 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
         }
 
 		if i < len(tasks)-1 {
-			if i == 2 {
+			// i == 2 || i == 4
+			if i == 4 {
 				time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			}
 			// Delay pause between sending tasks
