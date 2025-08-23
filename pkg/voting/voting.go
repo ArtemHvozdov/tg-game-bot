@@ -330,7 +330,7 @@ func (pm *PollManager) ProcessPollResultsWithBot(bot *telebot.Bot, gameID int) (
 // cleanupMessages - удаляет сообщения основного задания и голосования
 func (pm *PollManager) cleanupMessages(bot *telebot.Bot, session *PollSession) {
 	// Небольшая задержка, чтобы пользователи успели прочитать результат
-	time.Sleep(3 * time.Second)
+	time.Sleep(60 * time.Second)
 
 	// Удаляем сообщение с основным заданием
 	if session.MainTaskMsg != nil {

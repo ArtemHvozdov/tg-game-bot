@@ -1161,22 +1161,32 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 				utils.Logger.Info("Successfully started subtask 5 voting")
 			}
 
-			return nil
+			//return nil
+		} else {
+			_, err := bot.Send(
+				&telebot.Chat{ID: chatID},
+				msg,
+				inlineKeys,
+				telebot.ModeMarkdown,
+			)
+			if err != nil {
+				return err
+        	}
 		}
 
-        _, err := bot.Send(
-            &telebot.Chat{ID: chatID},
-            msg,
-			inlineKeys,
-            telebot.ModeMarkdown,
-        )
-        if err != nil {
-            return err
-        }
+        // _, err := bot.Send(
+        //     &telebot.Chat{ID: chatID},
+        //     msg,
+		// 	inlineKeys,
+        //     telebot.ModeMarkdown,
+        // )
+        // if err != nil {
+        //     return err
+        // }
 
 		if i < len(tasks)-1 {
 			// i == 2 || i == 4
-			if i == 4 {
+			if i == 2 || i == 4 {
 				time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			}
 			// Delay pause between sending tasks
