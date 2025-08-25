@@ -107,54 +107,6 @@ func (sm *SessionManager) CompleteSession(gameID int) map[int]string {
     return answers
 }
 
-// func WhoIsUsSubTasl(bot *telebot.Bot) func(c telebot.Context) error {
-// 	return  func(c telebot.Context) error {
-// 		user := c.Sender()
-// 		chat := c.Chat()
-
-// 		game, err := storage_db.GetGameByChatId(chat.ID)
-// 		if err != nil {
-// 			utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chat.ID, err)
-// 		}
-
-// 		// load subtasks from JSON file
-// 		subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_3.json")
-// 		if err != nil {
-// 			utils.Logger.Errorf("Failed to load subtasks: %v", err)
-// 		} else {
-// 			utils.Logger.Infof("Loaded subtasks for task 3: %d", len(subtasks))
-// 		}
-
-// 		// Get all users from game
-// 		allPlayerGame, err := storage_db.GetAllPlayersByGameID(game.ID)
-// 		if err != nil {
-// 			utils.Logger.Errorf("Failed to get players for geme %d: %v", game.ID, err)
-// 		}
-
-// 		// Filter out the current user from the list of players
-// 		otherPlayers := filterOutCurrentUser(allPlayerGame, user.ID)
-
-// 		for elem, player := range otherPlayers {
-// 			if elem == 0 {
-// 				utils.Logger.Infof("List of players in game %d: \n%s", game.ID, player.UserName)
-// 			}
-// 			utils.Logger.Infof("%s", player.UserName)
-// 		}
-
-// 		// Create keyboard with players (2 buttons per row)
-//         taskID := 3
-//         questionIndex := 0 // First question
-//         keyboard := createPlayersKeyboard(otherPlayers, taskID, questionIndex)
-
-// 		messageText := subtasks[0]
-
-// 		bot.Send(chat, messageText, keyboard)
-		
-// 		return nil
-// 	}
-	
-// }
-
 func filterOutCurrentUser(players []models.Player, currentUserID int64) []models.Player {
 	filtered := make([]models.Player, 0, len(players)-1)
 	for _, player := range players {
