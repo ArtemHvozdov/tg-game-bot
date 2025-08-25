@@ -1186,7 +1186,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 
 		if i < len(tasks)-1 {
 			// i == 2 || i == 4
-			if i == 2 || i == 4 {
+			if i == 4 {
 				time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			}
 			// Delay pause between sending tasks

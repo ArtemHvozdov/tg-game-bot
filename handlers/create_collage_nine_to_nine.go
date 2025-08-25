@@ -67,7 +67,7 @@ func CreateCollageWithGGNine() error {
     fmt.Println("=== START CREATE COLLAGE ===")
     
     // Find all images in results folder
-    imagePaths, err := filepath.Glob("results_3/*.jpg")
+    imagePaths, err := filepath.Glob("results_4/*.jpg")
     if err != nil {
         return fmt.Errorf("error reading results folder: %w", err)
     }

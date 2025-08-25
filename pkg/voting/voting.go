@@ -20,25 +20,13 @@ type Subtask struct {
 	Description string `json:"description"`
 }
 
-// PollSession manages native Telegram poll voting for subtasks
-// type PollSession struct {
-// 	GameID      int
-// 	Subtasks    []Subtask
-// 	PollID      string        // ID созданного poll'а
-// 	PollMessage *telebot.Message // Сообщение с poll'ом
-// 	StartTime   time.Time
-// 	IsActive    bool
-// 	IsCompleted bool
-// 	mutex       sync.RWMutex
-// }
-
 // Update PollSession version
 type PollSession struct {
 	GameID        int
 	Subtasks      []Subtask
 	PollID        string
 	PollMessage   *telebot.Message
-	MainTaskMsg   *telebot.Message // Добавлено: сообщение с основным текстом задания
+	MainTaskMsg   *telebot.Message // Added: message with the main task text
 	StartTime     time.Time
 	IsActive      bool
 	IsCompleted   bool
@@ -48,7 +36,7 @@ type PollSession struct {
 // PollManager manages poll sessions
 type PollManager struct {
 	sessions map[int]*PollSession    // gameID -> session
-	pollGame map[string]int          // pollID -> gameID (для быстрого поиска)
+	pollGame map[string]int          // pollID -> gameID (for quick lookup)
 	mutex    sync.RWMutex
 }
 
@@ -57,40 +45,33 @@ var GlobalPollManager = &PollManager{
 	pollGame: make(map[string]int),
 }
 
-// youtubeLinks := map[int]string{
-// 		1: "https://www.youtube.com/shorts/Cb5ljmm3820?si=qWu3oIgz890cV0xo", // Lady Gaga - Paparazzi
-// 		2: "https://www.youtube.com/watch?v=Mkuw7vdi-VA", // Phoebe Buffay - Smelly Cat
-// 		3: "", // Для мемов YouTube не нужен
-// 	}
-
-
 func processTaskDescription(subtaskID int, description string) string {
-	// Карта соответствий ID сабтаски к YouTube ссылкам
+	// Map of subtask ID to YouTube links
 	youtubeLinks := map[int]string{
 		1: "https://www.youtube.com/shorts/Cb5ljmm3820?si=qWu3oIgz890cV0xo", // Lady Gaga - Paparazzi
 		2: "https://www.youtube.com/watch?v=Mkuw7vdi-VA", // Phoebe Buffay - Smelly Cat
-		3: "", // Для мемов YouTube не нужен
+		3: "", // YouTube is not needed for memes
 	}
 
-	// Обрабатываем каждую сабтаску индивидуально
+	// Processing each subtask individually
 	switch subtaskID {
-	case 1: // Танцы под Lady Gaga
+	case 1: // Dancing to Lady Gaga
 		processed := description
 		if link, exists := youtubeLinks[subtaskID]; exists && link != "" {
-			// Заменяем "цього" на ссылку
+			// Replacing "цього" with a link
 			processed = strings.Replace(processed, "цього", `<a href="https://www.youtube.com/shorts/Cb5ljmm3820?si=qWu3oIgz890cV0xo">цього</a>`, 1)
 		}
 		return processed
 
-	case 2: // Пение Smelly Cat
+	case 2: // Singing Smelly Cat
 		processed := description
 		if link, exists := youtubeLinks[subtaskID]; exists && link != "" {
-			// Заменяем "тут" на ссылку
+			// Replacing "тут" with a link
 			processed = strings.Replace(processed, "тут", `<a href="https://www.youtube.com/watch?v=Mkuw7vdi-VA">тут</a>`, 1)
 		}
 
-		// Ищем текст песни после эмодзи и двоеточия
-		// Пробуем разные варианты поиска
+		// Searching for song text after emoji and colon
+		// Trying different search options
 		patterns := []string{"🥹:\\n", "🥹:\n", "🥹:"}
 		songTextStart := -1
 		patternLength := 0
@@ -106,19 +87,19 @@ func processTaskDescription(subtaskID int, description string) string {
 		songTextEnd := strings.Index(processed, "\n\nПотренуйтеся")
 		
 		if songTextStart != -1 && songTextEnd != -1 && songTextEnd > songTextStart {
-			// Разделяем текст
-			beforeSong := processed[:songTextStart+len("🥹:")] // только эмодзи и двоеточие
+			// Splitting the text
+			beforeSong := processed[:songTextStart+len("🥹:")] // only emoji and colon
 			songText := processed[songTextStart+patternLength:songTextEnd]
 			afterSong := processed[songTextEnd:]
 
-			// Очищаем начало текста песни от лишних символов
+			// Cleaning the beginning of the song text from unnecessary characters
 			songText = strings.TrimLeft(songText, "\\n\n ")
 
-			// Разбиваем текст песни на строки
+			// Splitting the song text into lines
 			songLines := strings.Split(songText, "\n")
 			var formattedLines []string
 			
-			// Добавляем пустую строку
+			// Adding an empty line
 			formattedLines = append(formattedLines, "")
 			
 			for _, line := range songLines {
@@ -128,14 +109,14 @@ func processTaskDescription(subtaskID int, description string) string {
 				}
 			}
 
-			// Собираем обратно
+			// Putting it back together
 			formattedSongText := strings.Join(formattedLines, "\n")
 			processed = beforeSong + "\n" +formattedSongText + afterSong
 		}
 		
 		return processed
 
-	case 3: // Мемы - YouTube не нужен
+	case 3: // Memes - YouTube is not needed
 		return description
 
 	default:
@@ -159,18 +140,17 @@ func loadSubtask5() ([]Subtask, error) {
 	return subtasks, nil
 }
 
-// StartPollVoting - начинает голосование с использованием Telegram Poll
-// StartPollVoting - обновленная версия с инициализацией новых полей
+// StartPollVoting - starts voting using Telegram Poll
 func (pm *PollManager) StartPollVoting(gameID int) (*PollSession, error) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
 
-	// Проверяем, есть ли активное голосование
+	// Checking if there is an active vote
 	if session, exists := pm.sessions[gameID]; exists && session.IsActive {
 		return nil, fmt.Errorf("voting already active for game %d", gameID)
 	}
 
-	// Загружаем варианты для голосования
+	// Loading options for voting
 	subtasks, err := loadSubtask5()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load subtasks: %v", err)
@@ -180,15 +160,15 @@ func (pm *PollManager) StartPollVoting(gameID int) (*PollSession, error) {
 		return nil, fmt.Errorf("no subtasks found")
 	}
 
-	// Создаем новую сессию с обнуленными полями для сообщений
+	// Creating a new session with nulled fields for messages
 	session := &PollSession{
 		GameID:      gameID,
 		Subtasks:    subtasks,
 		StartTime:   time.Now(),
 		IsActive:    true,
 		IsCompleted: false,
-		MainTaskMsg: nil, // Будет установлено в CreateTelegramPoll
-		PollMessage: nil, // Будет установлено в CreateTelegramPoll
+		MainTaskMsg: nil, // Will be set in CreateTelegramPoll
+		PollMessage: nil, // Will be set in CreateTelegramPoll
 	}
 
 	pm.sessions[gameID] = session
@@ -197,9 +177,9 @@ func (pm *PollManager) StartPollVoting(gameID int) (*PollSession, error) {
 	return session, nil
 }
 
-// CreateTelegramPoll - создает Telegram poll и отправляет его
+// CreateTelegramPoll - creates a Telegram poll and sends it
 func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, session *PollSession, mainTaskText string, keyboard *telebot.ReplyMarkup) error {
-	// Подготавливаем варианты ответов из titles
+	// Preparing options from titles
 	var options []string
 	for _, subtask := range session.Subtasks {
 		options = append(options, subtask.Title)
@@ -207,7 +187,7 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 
 	question := "🗳️ Оберіть завдання для виконання:"
 	
-	// Создаем poll через метод Raw
+	// Creating a poll using the Raw method
 	data := map[string]interface{}{
 		"chat_id":                chatID,
 		"question":               question,
@@ -217,14 +197,14 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 		"allows_multiple_answers": false,
 	}
 
-	// Отправляем основное сообщение с заданием и СОХРАНЯЕМ его
+	// Sending the main task message and SAVING it
 	chat := &telebot.Chat{ID: chatID}
 	mainTaskMsg, err := bot.Send(chat, mainTaskText, telebot.ModeMarkdown)
 	if err != nil {
 		return fmt.Errorf("failed to send main task message: %v", err)
 	}
 
-	// Сохраняем сообщение основного задания в сессии
+	// Saving the main task message in the session
 	session.MainTaskMsg = mainTaskMsg
 
 	time.Sleep(200 * time.Millisecond)
@@ -234,7 +214,7 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 		return fmt.Errorf("failed to send poll via Raw API: %v", err)
 	}
 
-	// Обрабатываем ответ
+	// Processing the response
 	var result struct {
 		Ok     bool `json:"ok"`
 		Result struct {
@@ -258,7 +238,7 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 		return fmt.Errorf("API returned not ok")
 	}
 
-	// Создаем объект Message для poll'а
+	// Creating a Message object for the poll
 	pollMsg := &telebot.Message{
 		ID: result.Result.MessageID,
 		Chat: &telebot.Chat{ID: chatID},
@@ -268,7 +248,7 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 		},
 	}
 
-	// Сохраняем информацию о poll'е
+	// Saving information about the poll
 	pm.mutex.Lock()
 	session.PollID = pollMsg.Poll.ID
 	session.PollMessage = pollMsg
@@ -277,31 +257,29 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 
 	utils.Logger.Infof("Created Telegram poll %s for game %d", pollMsg.Poll.ID, session.GameID)
 
-	// Запускаем таймер на 30 секунд
+	// Starting a timer
 	go pm.startPollTimer(bot, chatID, session, keyboard)
 
 	return nil
 }
 
 
-// startPollTimer - запускает таймер на 30 секунд и завершает голосование
-// startPollTimer - обновленная версия с передачей bot для API запросов
-// startPollTimer - обновленная версия с передачей bot для API запросов
+// startPollTimer - starts the timer and ends the voting
 func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *PollSession, keyboard *telebot.ReplyMarkup) {
 	// time.Sleep(15 * time.Second)
 	time.Sleep(1 * time.Minute)
 
-	// НЕ вызываем bot.StopPoll здесь, так как это делается в ProcessPollResults
+	// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
 	utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
 
-	// Обрабатываем результаты (stopPoll будет вызван внутри)
+	// Processing the results (stopPoll will be called inside)
 	winner, err := pm.ProcessPollResultsWithBot(bot, session.GameID)
 	if err != nil {
 		utils.Logger.Errorf("Failed to process poll results: %v", err)
 		return
 	}
 
-	// Остальной код остается тот же...
+	// The rest of the code remains the same...
 	processedDescription := processTaskDescription(winner.ID, winner.Description)
 	
 	utils.Logger.Infof("Processing subtask ID %d, original description length: %d, processed length: %d", 
@@ -316,46 +294,16 @@ func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *P
 		utils.Logger.Errorf("Failed to send winner message: %v", err)
 	}
 
-	go pm.cleanupMessages(bot, session)
-
 	utils.Logger.Infof("Poll voting completed for game %d, selected subtask ID: %d", session.GameID, winner.ID)
 }
 
-// ProcessPollResultsWithBot - версия с доступом к bot для API запросов
+// ProcessPollResultsWithBot - version with access to bot for API requests
 func (pm *PollManager) ProcessPollResultsWithBot(bot *telebot.Bot, gameID int) (*Subtask, error) {
-	// Просто вызываем существующую функцию, но теперь у нас есть доступ к bot
+	// Just calling the existing function, but now we have access to the bot
 	return pm.ProcessPollResults(bot, gameID)
 }
 
-// cleanupMessages - удаляет сообщения основного задания и голосования
-func (pm *PollManager) cleanupMessages(bot *telebot.Bot, session *PollSession) {
-	// Небольшая задержка, чтобы пользователи успели прочитать результат
-	time.Sleep(60 * time.Second)
-
-	// Удаляем сообщение с основным заданием
-	if session.MainTaskMsg != nil {
-		err := bot.Delete(session.MainTaskMsg)
-		if err != nil {
-			utils.Logger.Errorf("Failed to delete main task message: %v", err)
-		} else {
-			utils.Logger.Infof("Deleted main task message for game %d", session.GameID)
-		}
-	}
-
-	// Удаляем сообщение с голосованием
-	if session.PollMessage != nil {
-		err := bot.Delete(session.PollMessage)
-		if err != nil {
-			utils.Logger.Errorf("Failed to delete poll message: %v", err)
-		} else {
-			utils.Logger.Infof("Deleted poll message for game %d", session.GameID)
-		}
-	}
-}
-
-// ProcessPollResults - обрабатывает результаты голосования и выбирает победителя
-// ProcessPollResults - обрабатывает результаты голосования и выбирает победителя
-// ProcessPollResults - обрабатывает результаты голосования и выбирает победителя
+// ProcessPollResults - processes the voting results and selects a winner
 func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtask, error) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -373,7 +321,7 @@ func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtas
 
 	utils.Logger.Infof("=== POLL RESULTS FOR GAME %d ===", gameID)
 
-	// Получаем результаты через stopPoll response
+	// Getting results via stopPoll response
 	stopPollData := map[string]interface{}{
 		"chat_id":    session.PollMessage.Chat.ID,
 		"message_id": session.PollMessage.ID,
@@ -412,7 +360,7 @@ func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtas
 	maxVotes := 0
 	var winningIndexes []int
 
-	// Анализируем результаты голосования
+	// Analyzing the voting results
 	for i, option := range pollResult.Result.Options {
 		voteCount := option.VoterCount
 		if i < len(session.Subtasks) {
@@ -427,13 +375,13 @@ func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtas
 		}
 	}
 
-	// Выбираем победителя (при равенстве - с наименьшим ID)
+	// Selecting a winner (in case of a tie - with the smallest ID)
 	var winner Subtask
 	if len(winningIndexes) > 0 {
 		winnerIndex := winningIndexes[0]
 		winner = session.Subtasks[winnerIndex]
 
-		// При равенстве выбираем с наименьшим ID
+		// In case of a tie, we choose the one with the smallest ID
 		for _, index := range winningIndexes[1:] {
 			if session.Subtasks[index].ID < winner.ID {
 				winner = session.Subtasks[index]
@@ -444,7 +392,7 @@ func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtas
 		utils.Logger.Infof("Winner: Option %d - Subtask %d ('%s') with %d votes",
 			winnerIndex, winner.ID, winner.Title, maxVotes)
 	} else {
-		// Если никто не голосовал, выбираем первый вариант
+		// If no one voted, we select the first option
 		winner = session.Subtasks[0]
 		utils.Logger.Infof("No votes received, selecting first option: Subtask %d ('%s')",
 			winner.ID, winner.Title)
@@ -453,23 +401,23 @@ func (pm *PollManager) ProcessPollResults(bot *telebot.Bot, gameID int) (*Subtas
 	utils.Logger.Infof("Total votes in poll: %d", pollResult.Result.TotalVoterCount)
 	utils.Logger.Infof("=== END POLL RESULTS ===")
 
-	// Очищаем сессию
+	// Cleaning up the session
 	delete(pm.pollGame, session.PollID)
 	delete(pm.sessions, gameID)
 
 	return &winner, nil
 }
 
-// fallbackProcessResults - резервный метод обработки результатов
+// fallbackProcessResults - fallback method for processing results
 func (pm *PollManager) fallbackProcessResults(session *PollSession, gameID int) (*Subtask, error) {
 	utils.Logger.Infof("Using fallback method for poll results processing")
 	
-	// Если не можем получить результаты, возвращаем первый вариант
+	// If we can't get the results, we return the first option
 	if len(session.Subtasks) > 0 {
 		winner := session.Subtasks[0]
 		utils.Logger.Infof("Fallback: selecting first option: Subtask %d ('%s')", winner.ID, winner.Title)
 		
-		// Очищаем сессию
+		// Cleaning up the session
 		delete(pm.pollGame, session.PollID)
 		delete(pm.sessions, gameID)
 		
@@ -479,7 +427,7 @@ func (pm *PollManager) fallbackProcessResults(session *PollSession, gameID int) 
 	return nil, fmt.Errorf("no subtasks available for fallback")
 }
 
-// GetSessionByPollID - получает сессию по ID poll'а
+// GetSessionByPollID - gets the session by the poll ID
 func (pm *PollManager) GetSessionByPollID(pollID string) (*PollSession, bool) {
 	pm.mutex.RLock()
 	defer pm.mutex.RUnlock()
@@ -492,7 +440,7 @@ func (pm *PollManager) GetSessionByPollID(pollID string) (*PollSession, bool) {
 	return nil, false
 }
 
-// IsActive - проверяет, активно ли голосование для игры
+// IsActive - checks if the vote is active for the game
 func (pm *PollManager) IsActive(gameID int) bool {
 	pm.mutex.RLock()
 	defer pm.mutex.RUnlock()
@@ -501,27 +449,23 @@ func (pm *PollManager) IsActive(gameID int) bool {
 	return exists && session.IsActive
 }
 
-// ==========================================
-// ПУБЛИЧНЫЕ ФУНКЦИИ ДЛЯ ИНТЕГРАЦИИ
-// ==========================================
-
-// StartSubtask5VotingDirect - запускает голосование напрямую (для вызова из SendTasks)
+// StartSubtask5VotingDirect -  starts voting directly (for calling from SendTasks)
 func StartSubtask5VotingDirect(bot *telebot.Bot, chatID int64, mainTaskText string, keyboard *telebot.ReplyMarkup) error {
-	// Получаем игру из базы данных
+	// Getting the game from the database
 	game, err := storage_db.GetGameByChatId(chatID)
 	if err != nil {
 		utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chatID, err)
 		return fmt.Errorf("помилка отримання гри: %v", err)
 	}
 
-	// Создаем сессию голосования
+	// Creating a voting session
 	session, err := GlobalPollManager.StartPollVoting(game.ID)
 	if err != nil {
 		utils.Logger.Errorf("Failed to start poll voting: %v", err)
 		return fmt.Errorf("помилка запуску голосування: %v", err)
 	}
 
-	// Создаем и отправляем Telegram poll
+	// Creating and sending a Telegram poll
 	err = GlobalPollManager.CreateTelegramPoll(bot, chatID, session, mainTaskText, keyboard)
 	if err != nil {
 		utils.Logger.Errorf("Failed to create Telegram poll: %v", err)
@@ -532,10 +476,10 @@ func StartSubtask5VotingDirect(bot *telebot.Bot, chatID int64, mainTaskText stri
 	return nil
 }
 
-// HandlePollAnswer - обработчик ответов на poll (если нужна дополнительная логика)
+// HandlePollAnswer - poll answer handler (if additional logic is needed)
 func HandlePollAnswer(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		// Простое логирование без детальной обработки
+		// Simple logging without detailed processing
 		utils.Logger.Info("Poll answer received")
 		return nil
 	}
