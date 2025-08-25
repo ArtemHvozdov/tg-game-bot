@@ -752,7 +752,7 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 	}
 }
 
-func handleHelpMenu(bot *telebot.Bot, c telebot.Context) error {
+func handleHelpMenu(c telebot.Context) error {
 	user := c.Sender()
 	chat := c.Chat()
 	utils.Logger.WithFields(logrus.Fields{
@@ -788,7 +788,7 @@ func handleHelpMenu(bot *telebot.Bot, c telebot.Context) error {
 	return nil
 }
 
-func handleExitConfirm(bot *telebot.Bot, c telebot.Context) error {
+func handleExitConfirm(c telebot.Context) error {
 	utils.Logger.WithFields(logrus.Fields{
 		"source": "handleExitConfirm",
 		"user_id": c.Sender().ID,
@@ -1186,7 +1186,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 
 		if i < len(tasks)-1 {
 			// i == 2 || i == 4
-			if i == 4 {
+			if i == 2 || i == 4 {
 				time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			}
 			// Delay pause between sending tasks
