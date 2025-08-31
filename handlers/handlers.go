@@ -1186,7 +1186,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 
 		if i < len(tasks)-1 {
 			// i == 2 || i == 4
-			if i == 4 {
+			if i == 9 {
 				time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			}
 			// Delay pause between sending tasks
@@ -1447,191 +1447,191 @@ func FinishTestHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	}
 }
 
-// Handler for answering a task
-func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
-	return func(c telebot.Context) error {
-		user := c.Sender()
-		chat := c.Chat()
-		dataButton := c.Data()
-		game, err := storage_db.GetGameByChatId(chat.ID)
-		if err != nil {
-			utils.Logger.Errorf("Error getting game by chat ID (%d): %v", chat.ID, err)
-			return nil
-		}
+// // Handler for answering a task
+// func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		user := c.Sender()
+// 		chat := c.Chat()
+// 		dataButton := c.Data()
+// 		game, err := storage_db.GetGameByChatId(chat.ID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error getting game by chat ID (%d): %v", chat.ID, err)
+// 			return nil
+// 		}
 
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "OnAnswerTaskBtnHandler",
-			"username": user.Username,
-			"group": chat.Title,
-			"data_button": dataButton,
-		}).Infof("User click to button WantAnswer to task %v", dataButton)
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"source": "OnAnswerTaskBtnHandler",
+// 			"username": user.Username,
+// 			"group": chat.Title,
+// 			"data_button": dataButton,
+// 		}).Infof("User click to button WantAnswer to task %v", dataButton)
 
-		userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
-		if err != nil {
-			utils.Logger.Errorf("Error checking if user is in game: %v", err)
-			return nil
-		}
-		if !userIsInGame {
-			SendJoinGameReminder(bot)(c)
+// 		userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error checking if user is in game: %v", err)
+// 			return nil
+// 		}
+// 		if !userIsInGame {
+// 			SendJoinGameReminder(bot)(c)
 
-			return nil
-		}
+// 			return nil
+// 		}
 
-		idTask, err := utils.GetWaitingTaskID(dataButton)
-		if err != nil {
-			utils.Logger.Errorf("Error getting task ID from data button: %v", err)
-		}
+// 		idTask, err := utils.GetWaitingTaskID(dataButton)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error getting task ID from data button: %v", err)
+// 		}
 
-		// switch idTask {
-		// case 3:
-		// 	subtasks.WhoIsUsSubTask(bot)(c)
-		// 	return nil
-		// case 7:
-		// 	// call function for subtask for task 7
-		// case 12:
-		// 	// call function for subtask for task 12
-		// }
+// 		// switch idTask {
+// 		// case 3:
+// 		// 	subtasks.WhoIsUsSubTask(bot)(c)
+// 		// 	return nil
+// 		// case 7:
+// 		// 	// call function for subtask for task 7
+// 		// case 12:
+// 		// 	// call function for subtask for task 12
+// 		// }
 
-		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, idTask)
-		if err != nil {
-			utils.Logger.Errorf("Error checking player response status: %v", err)
-			return nil
-		}
+// 		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, idTask)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error checking player response status: %v", err)
+// 			return nil
+// 		}
 
-		switch {
-		case status.AlreadyAnswered:
-			//textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
-			msgYouAlreadyAnswered, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
-			if err != nil {
-				utils.Logger.Errorf("Error sending message that user %s already answered task %d: %v", user.Username, idTask, err)
-			}
+// 		switch {
+// 		case status.AlreadyAnswered:
+// 			//textYouAlreadyAnswered := fmt.Sprintf("@%s, ти вже відповіла на це завдання 😅", user.Username)
+// 			msgYouAlreadyAnswered, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
+// 			if err != nil {
+// 				utils.Logger.Errorf("Error sending message that user %s already answered task %d: %v", user.Username, idTask, err)
+// 			}
 
-			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAlreadyAnswered, func() {
-				err = bot.Delete(msgYouAlreadyAnswered)
-				if err != nil {
-					utils.Logger.WithFields(logrus.Fields{
-						"source": "OnAnswerTaskBtnHandler",
-						"username": user.Username,
-						"group": chat.Title,
-						"data_button": dataButton,
-						"task_id": idTask,
-					}).Errorf("Error deleting message that user %s already answered task %d: %v", user.Username, idTask, err)
-				}
-			})
+// 			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAlreadyAnswered, func() {
+// 				err = bot.Delete(msgYouAlreadyAnswered)
+// 				if err != nil {
+// 					utils.Logger.WithFields(logrus.Fields{
+// 						"source": "OnAnswerTaskBtnHandler",
+// 						"username": user.Username,
+// 						"group": chat.Title,
+// 						"data_button": dataButton,
+// 						"task_id": idTask,
+// 					}).Errorf("Error deleting message that user %s already answered task %d: %v", user.Username, idTask, err)
+// 				}
+// 			})
 
-			// return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
-			return nil
-		case status.AlreadySkipped:
-			return c.Send(fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
-		}
+// 			// return c.Send(fmt.Sprintf("@%s, ти вже відповідала на це завдання 😉", user.Username))
+// 			return nil
+// 		case status.AlreadySkipped:
+// 			return c.Send(fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
+// 		}
 
-		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
+// 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
-		switch idTask {
-		case 3:
-			subtasks.WhoIsUsSubTask(bot)(c)
-			return nil
-		case 7:
-			// call function for subtask for task 7
-		case 12:
-			// call function for subtask for task 12
-		}
+// 		switch idTask {
+// 		case 3:
+// 			subtasks.WhoIsUsSubTask(bot)(c)
+// 			return nil
+// 		case 7:
+// 			// call function for subtask for task 7
+// 		case 12:
+// 			// call function for subtask for task 12
+// 		}
 
-		awaitingAnswerMsg, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(wantAnswerMessages), user.Username))
-		if err != nil {
-			utils.Logger.Errorf("Error sending message: %v", err)
-		}
+// 		awaitingAnswerMsg, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(wantAnswerMessages), user.Username))
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error sending message: %v", err)
+// 		}
 
-		// Delay delete msg awaiting answer
-		time.AfterFunc(cfg.Durations.TimeDeleteMsgAwaitingAnswer, func() {
-			err = bot.Delete(awaitingAnswerMsg)
-			if err != nil {
-				utils.Logger.WithFields(logrus.Fields{
-					"source": "OnAnswerTaskBtnHandler",
-					"username": user.Username,
-					"group": chat.Title,
-					"data_button": dataButton,
-					"task_id": idTask,
-				}).Errorf("Error deleting answer task message for user %s in the group %s: %v", chat.Username, chat.Title, err)
-			}
-		})
+// 		// Delay delete msg awaiting answer
+// 		time.AfterFunc(cfg.Durations.TimeDeleteMsgAwaitingAnswer, func() {
+// 			err = bot.Delete(awaitingAnswerMsg)
+// 			if err != nil {
+// 				utils.Logger.WithFields(logrus.Fields{
+// 					"source": "OnAnswerTaskBtnHandler",
+// 					"username": user.Username,
+// 					"group": chat.Title,
+// 					"data_button": dataButton,
+// 					"task_id": idTask,
+// 				}).Errorf("Error deleting answer task message for user %s in the group %s: %v", chat.Username, chat.Title, err)
+// 			}
+// 		})
 
-		return nil
-	}
-}
+// 		return nil
+// 	}
+// }
 
-// Handler for skipping a task
-func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
-	return func(c telebot.Context) error {
-		utils.Logger.Info("OnSkipTaskHandler called")
+// // Handler for skipping a task
+// func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		utils.Logger.Info("OnSkipTaskHandler called")
 
-		user := c.Sender()
-		chat := c.Chat()
-		dataButton := c.Data()
-		game, _ := storage_db.GetGameByChatId(chat.ID)
-		//statusUser, err := storage_db.GetStatusPlayer(user.ID)
-		userTaskID, err := utils.GetSkipTaskID(dataButton)
-		if err != nil {
-			utils.Logger.Errorf("Error getting skip task ID from data button: %v", err)
-			return nil
-		}
+// 		user := c.Sender()
+// 		chat := c.Chat()
+// 		dataButton := c.Data()
+// 		game, _ := storage_db.GetGameByChatId(chat.ID)
+// 		//statusUser, err := storage_db.GetStatusPlayer(user.ID)
+// 		userTaskID, err := utils.GetSkipTaskID(dataButton)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error getting skip task ID from data button: %v", err)
+// 			return nil
+// 		}
 
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "OnSkipTaskBtnHandler",
-			"user": user.Username,
-			"group": chat.Title,
-			"data_button": dataButton,
-			"skip_task_id": userTaskID,
-		}).Infof("User click to button SkipTask from tasl %v", dataButton)
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"source": "OnSkipTaskBtnHandler",
+// 			"user": user.Username,
+// 			"group": chat.Title,
+// 			"data_button": dataButton,
+// 			"skip_task_id": userTaskID,
+// 		}).Infof("User click to button SkipTask from tasl %v", dataButton)
 
-		userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
-		if err != nil {
-			utils.Logger.Errorf("Error checking if user is in game: %v", err)
-			return nil
-		}
-		if !userIsInGame {
-			SendJoinGameReminder(bot)(c)
+// 		userIsInGame, err := storage_db.IsUserInGame(user.ID, game.ID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error checking if user is in game: %v", err)
+// 			return nil
+// 		}
+// 		if !userIsInGame {
+// 			SendJoinGameReminder(bot)(c)
 
-			return nil
-		}
+// 			return nil
+// 		}
 
-		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, userTaskID)
-		if err != nil {
-			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", userTaskID, user.Username, err)
-			return nil
-		}
+// 		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, userTaskID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", userTaskID, user.Username, err)
+// 			return nil
+// 		}
 
-		switch {
-		case status.AlreadyAnswered:
-			bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
-		case status.AlreadySkipped:
-			bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
-		case status.SkipLimitReached:
-			msg, _ := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipLimitReached), user.Username))
+// 		switch {
+// 		case status.AlreadyAnswered:
+// 			bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
+// 		case status.AlreadySkipped:
+// 			bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
+// 		case status.SkipLimitReached:
+// 			msg, _ := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipLimitReached), user.Username))
 			
-			// Delay delete the message max skip tasks
-			time.AfterFunc(cfg.Durations.TimeDeleteMsgMaxSkipTasks, func() {
-				err = bot.Delete(msg)
-				if err != nil {
-					utils.Logger.Errorf("Error deleting skip limit reached message for user %s: %v", user.Username, err)
-				}
-			})
-		default:
-			switch status.RemainingSkips-1 {
-			case 0:
-				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipThirdTime), user.Username))
-			case 1:
-				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipSecondTime), user.Username))
-			case 2:
-				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipFirstTime), user.Username))
-			}
-			// Skip messages
-			//bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
-		}
+// 			// Delay delete the message max skip tasks
+// 			time.AfterFunc(cfg.Durations.TimeDeleteMsgMaxSkipTasks, func() {
+// 				err = bot.Delete(msg)
+// 				if err != nil {
+// 					utils.Logger.Errorf("Error deleting skip limit reached message for user %s: %v", user.Username, err)
+// 				}
+// 			})
+// 		default:
+// 			switch status.RemainingSkips-1 {
+// 			case 0:
+// 				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipThirdTime), user.Username))
+// 			case 1:
+// 				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipSecondTime), user.Username))
+// 			case 2:
+// 				bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipFirstTime), user.Username))
+// 			}
+// 			// Skip messages
+// 			//bot.Send(chat, fmt.Sprintf("✅ @%s, завдання пропущено! У тебе залишилось %d пропуск(ів).", user.Username, status.RemainingSkips-1))
+// 		}
 
-		return nil
-	}
-}
+// 		return nil
+// 	}
+// }
 
 
 func HandleSubTask3(bot *telebot.Bot) func(c telebot.Context) error {

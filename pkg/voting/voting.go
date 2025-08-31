@@ -266,35 +266,73 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 
 // startPollTimer - starts the timer and ends the voting
 func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *PollSession, keyboard *telebot.ReplyMarkup) {
-	// time.Sleep(15 * time.Second)
-	time.Sleep(1 * time.Minute)
+	game, _ := storage_db.GetGameByChatId(chatID)
+	currentTaskID := game.CurrentTaskID
 
-	// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
-	utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
+	if currentTaskID == 4 {
+		// time.Sleep(15 * time.Second)
+		time.Sleep(1 * time.Minute)
 
-	// Processing the results (stopPoll will be called inside)
-	winner, err := pm.ProcessPollResultsWithBot(bot, session.GameID)
-	if err != nil {
-		utils.Logger.Errorf("Failed to process poll results: %v", err)
-		return
+		// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
+		utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
+
+		// Processing the results (stopPoll will be called inside)
+		winner, err := pm.ProcessPollResultsWithBot(bot, session.GameID)
+		if err != nil {
+			utils.Logger.Errorf("Failed to process poll results: %v", err)
+			return
+		}
+
+		// The rest of the code remains the same...
+		processedDescription := processTaskDescription(winner.ID, winner.Description)
+		
+		utils.Logger.Infof("Processing subtask ID %d, original description length: %d, processed length: %d", 
+			winner.ID, len(winner.Description), len(processedDescription))
+
+		chat := &telebot.Chat{ID: chatID}
+		winnerMessage := fmt.Sprintf("🎉 Переможець голосування:\n\n%s\n\n%s", winner.Title, processedDescription)
+
+		_, err = bot.Send(chat, winnerMessage, keyboard, telebot.ModeHTML)
+		if err != nil {
+			utils.Logger.Errorf("Failed to send winner message: %v", err)
+		}
+
+		utils.Logger.Infof("Poll voting completed for game %d, selected subtask ID: %d", session.GameID, winner.ID)
 	}
 
-	// The rest of the code remains the same...
-	processedDescription := processTaskDescription(winner.ID, winner.Description)
+	// // time.Sleep(15 * time.Second)
+	// time.Sleep(1 * time.Minute)
+
+	// // Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
+	// utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
+
+	// // Processing the results (stopPoll will be called inside)
+	// winner, err := pm.ProcessPollResultsWithBot(bot, session.GameID)
+	// if err != nil {
+	// 	utils.Logger.Errorf("Failed to process poll results: %v", err)
+	// 	return
+	// }
+
+	// // The rest of the code remains the same...
+	// processedDescription := processTaskDescription(winner.ID, winner.Description)
 	
-	utils.Logger.Infof("Processing subtask ID %d, original description length: %d, processed length: %d", 
-		winner.ID, len(winner.Description), len(processedDescription))
+	// utils.Logger.Infof("Processing subtask ID %d, original description length: %d, processed length: %d", 
+	// 	winner.ID, len(winner.Description), len(processedDescription))
 
-	chat := &telebot.Chat{ID: chatID}
-	winnerMessage := fmt.Sprintf("🎉 Переможець голосування:\n\n%s\n\n%s",
-		winner.Title, processedDescription)
+	// chat := &telebot.Chat{ID: chatID}
+	// winnerMessage := fmt.Sprintf("🎉 Переможець голосування:\n\n%s\n\n%s",
+	// 	winner.Title, processedDescription)
 
-	_, err = bot.Send(chat, winnerMessage, keyboard, telebot.ModeHTML)
-	if err != nil {
-		utils.Logger.Errorf("Failed to send winner message: %v", err)
-	}
+	// if currentTaskID == 4 {
+	// 	_, err = bot.Send(chat, winnerMessage, keyboard, telebot.ModeHTML)
+	// 	if err != nil {
+	// 		utils.Logger.Errorf("Failed to send winner message: %v", err)
+	// 	}
 
-	utils.Logger.Infof("Poll voting completed for game %d, selected subtask ID: %d", session.GameID, winner.ID)
+	// 	utils.Logger.Infof("Poll voting completed for game %d, selected subtask ID: %d", session.GameID, winner.ID)
+	// }
+	
+	
 }
 
 // ProcessPollResultsWithBot - version with access to bot for API requests
