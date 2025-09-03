@@ -2,6 +2,7 @@ package storage_db
 
 import (
 	"database/sql"
+	
 	//"log"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
@@ -133,6 +134,20 @@ func createTables() error {
 				answerer_user_id INTEGEER,
 				selected_user_id INTEGER,
 				selected_username TEXT
+			)`,
+		},
+		{
+			"subtask_10_answers",
+			`CREATE TABLE IF NOT EXISTS subtask_10_answers (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id INTEGER NOT NULL,
+				task_id INTEGER NOT NULL,
+				question_index INTEGER NOT NULL,
+				question_id INTEGER NOT NULL,
+				answerer_user_id INTEGER NOT NULL,
+				selected_option TEXT NOT NULL,
+				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 			)`,
 		},
 	}
@@ -863,4 +878,37 @@ func GetSubtaskResults(gameID, taskID int) (map[int]map[string]int, error) {
     }).Info("Subtask results retrieved successfully")
     
     return results, rows.Err()
+}
+
+// AddSubtask10Answer adds a new subtask 10 answer to the database
+func AddSubtask10Answer(answer *models.Subtask10Answer) error {
+	query := `INSERT INTO subtask_10_answers (game_id, task_id, question_index, question_id, answerer_user_id, selected_option)
+		VALUES (?, ?, ?, ?, ?, ?)`
+	
+	_, err := Db.Exec(query, answer.GameID, answer.TaskID, answer.QuestionIndex, answer.QuestionID, answer.AnswererUserID, answer.SelectedOption)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":           "Db: AddSubtask10Answer",
+			"game_id":          answer.GameID,
+			"task_id":          answer.TaskID,
+			"question_index":   answer.QuestionIndex,
+			"question_id":      answer.QuestionID,
+			"answerer_user_id": answer.AnswererUserID,
+			"selected_option":  answer.SelectedOption,
+			"error":            err,
+		}).Error("Failed to add subtask 10 answer")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":           "Db: AddSubtask10Answer",
+		"game_id":          answer.GameID,
+		"task_id":          answer.TaskID,
+		"question_index":   answer.QuestionIndex,
+		"question_id":      answer.QuestionID,
+		"answerer_user_id": answer.AnswererUserID,
+		"selected_option":  answer.SelectedOption,
+	}).Info("Subtask 10 answer added successfully")
+	
+	return nil
 }

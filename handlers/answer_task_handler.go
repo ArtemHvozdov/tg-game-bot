@@ -101,7 +101,7 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		case 7:
 			// call function for subtask for task 7
 		case 10:
-			quizdna.StartQuizDnaTask(bot)(c)
+			quizdna.WhoIsUsSubTask10(bot)(c)
 			return nil
 		}
 
