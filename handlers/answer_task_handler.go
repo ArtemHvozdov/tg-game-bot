@@ -97,45 +97,45 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		switch idTask {
 		case 3:
-			// session, exists := subtasks.GlobalSessionManager.GetActiveSession(game.ID)
-			// if exists && session.UserID == user.ID {
-			// 	msgTextOtherUserAnswer := fmt.Sprintf("@%s ти вже відповідаєш на це питання", user.Username)
+			session, exists := subtasks.GlobalSessionManager.GetActiveSession(game.ID)
+			if exists && session.UserID == user.ID {
+				msgTextOtherUserAnswer := fmt.Sprintf("@%s ти вже відповідаєш на це питання", user.Username)
 
-			// 	_, err = msgmanager.SendTemporaryMessage(
-			// 		chat.ID,
-			// 		user.ID,
-			// 		msgmanager.TypeNotInGame,
-			// 		msgTextOtherUserAnswer,
-			// 		10 * time.Second,
-			// 	)
-			// 	if err != nil {
-			// 			utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
-			// 	}
+				_, err = msgmanager.SendTemporaryMessage(
+					chat.ID,
+					user.ID,
+					msgmanager.TypeNotInGame,
+					msgTextOtherUserAnswer,
+					10 * time.Second,
+				)
+				if err != nil {
+						utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
+				}
 
-			// 	return nil
-			// }
+				return nil
+			}
 			subtasks.WhoIsUsSubTask(bot)(c)
 			return nil
 		case 7:
 			// call function for subtask for task 7
 		case 10:
-			// session, exists := quizdna.GlobalSubtask10SessionManager.GetActiveSession(game.ID)
-			// if exists && session.UserID == user.ID {
-			// 	msgTextOtherUserAnswer := fmt.Sprintf("@%s ти вже відповідаєш на це питання", user.Username)
+			session, exists := quizdna.GlobalSubtask10SessionManager.GetActiveSession(game.ID)
+			if exists && session.UserID == user.ID {
+				msgTextOtherUserAnswer := fmt.Sprintf("@%s ти вже відповідаєш на це питання", user.Username)
 
-			// 	_, err = msgmanager.SendTemporaryMessage(
-			// 		chat.ID,
-			// 		user.ID,
-			// 		msgmanager.TypeNotInGame,
-			// 		msgTextOtherUserAnswer,
-			// 		10*time.Second,
-			// 	)
-			// 	if err != nil {
-			// 		utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
-			// 	}
+				_, err = msgmanager.SendTemporaryMessage(
+					chat.ID,
+					user.ID,
+					msgmanager.TypeNotInGame,
+					msgTextOtherUserAnswer,
+					10*time.Second,
+				)
+				if err != nil {
+					utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
+				}
 
-			// 	return nil
-			// }
+				return nil
+			}
 
 			quizdna.WhoIsUsSubTask10(bot)(c)
 			return nil
