@@ -209,3 +209,44 @@ func ProcessSubtask10Results(gameID int) (string, error) {
 
 	return message, nil
 }
+
+// GetSubtask10WinnersArray returns array of winning image names for subtask 10
+func GetSubtask10WinnersArray(gameID int) ([]string, error) {
+	winners, err := CalculateSubtask10Winners(gameID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "GetSubtask10WinnersArray",
+			"game_id": gameID,
+			"error":   err,
+		}).Error("Failed to calculate subtask 10 winners")
+		return nil, fmt.Errorf("failed to calculate winners: %w", err)
+	}
+
+	if len(winners) == 0 {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "GetSubtask10WinnersArray",
+			"game_id": gameID,
+		}).Warn("No winners found for subtask 10")
+		return nil, fmt.Errorf("no winners found for game %d", gameID)
+	}
+
+	// Convert .png extensions to .jpg for collage assets
+	var winnersForCollage []string
+	for _, winner := range winners {
+		// Remove .png extension and add .jpg
+		imageName := winner
+		if len(imageName) >= 4 && imageName[len(imageName)-4:] == ".png" {
+			imageName = imageName[:len(imageName)-4] + ".png"
+		}
+		winnersForCollage = append(winnersForCollage, imageName)
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":          "GetSubtask10WinnersArray",
+		"game_id":         gameID,
+		"winners_count":   len(winnersForCollage),
+		"winners":         winnersForCollage,
+	}).Info("Successfully retrieved subtask 10 winners array")
+
+	return winnersForCollage, nil
+}

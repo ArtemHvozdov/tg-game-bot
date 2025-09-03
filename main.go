@@ -112,7 +112,8 @@ func main() {
 	bot.Handle("/create", handlers.CreateCollageFromResultsImageNine(bot))
 	// Register handler for showing results
 	bot.Handle("/subtask_results", handlers.SendSubtaskResultsToChat(bot))
-	bot.Handle("/subtask10_results", handlers.ShowSubtask10Results(bot))
+	bot.Handle("/subtask10_results", handlers.CreateSubtask10Collage(bot))
+	
 
 	// bot.Handle(&telebot.InlineButton{Data: "color_answer_1"}, handlers.HandleColorAnswer(bot))
     // bot.Handle(&telebot.InlineButton{Data: "color_answer_2"}, handlers.HandleColorAnswer(bot))
