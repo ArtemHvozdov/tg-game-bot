@@ -31,7 +31,7 @@ func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		// Inform user
-		c.Send("🎨 Створюю колаж з результатів підзавдання 10 (2160×2160)...")
+		c.Send("Чекайте-чекайте, меджик у процесі … 🧚✨")
 
 		// Get winners array
 		winners, err := storage_db.GetSubtask10WinnersArray(game.ID)
@@ -50,11 +50,11 @@ func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
 		if _, err := os.Stat("subtask10_collage.jpg"); os.IsNotExist(err) {
 			return c.Send("❌ Файл колажу не був створений")
 		}
-
+		
 		// Send as photo
 		photo := &telebot.Photo{
 			File:    telebot.FromDisk("subtask10_collage.jpg"),
-			Caption: "🎨 Ваш колаж з результатів підзавдання 10!\n\n📱 Формат 2160×2160 — ідеально для Instagram або квадратних шпалер",
+			Caption: "Готово! Ловіть колаж із відповідей, які набрали найбільшу кількість голосів. Схоже на те, що подобається вашій гьорлз бенд? 💅",
 		}
 		_, err = bot.Send(chat, photo)
 		if err != nil {
@@ -66,7 +66,7 @@ func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
 			File:     telebot.FromDisk("subtask10_collage.jpg"),
 			MIME:     "image/jpeg",
 			FileName: "subtask10_collage_2160x2160.jpg",
-			Caption:  "📱 Високоякісна версія без стиснення Telegram",
+			Caption:  "Cупер висока якість для моїх aesthetic girls 🎀",
 		}
 		bot.Send(chat, document)
 

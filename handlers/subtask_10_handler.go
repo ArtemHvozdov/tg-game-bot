@@ -2,39 +2,35 @@ package handlers
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/internal/msgmanager"
+	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/quiz_dna"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
-	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/telebot.v3"
 )
 
-// func HandleSubtask10(bot *telebot.Bot) func(c telebot.Context) error {
-// 	return func(c telebot.Context) error {
-// 		user := c.Sender()
-//         chat := c.Chat()
-//         //msg := c.Message()
-//         data := c.Data()
+var (
+	greetings = []string{
+		"кицю 🐱", 
+		"пандочко 🐼", 
+		"лисичко 🦊",  
+		"мишко 🐭", 
+		"левице 🦁",
+	}
+	
+	// Map to track used greetings per game: gameID -> map[userID -> greeting]
+	gameGreetings = make(map[int]map[int64]string)
+	greetingsMutex = sync.Mutex{}
+)
 
-// 		utils.Logger.Infof("HandleSubtask10 called by user %s in chat %s with data: %s", user.Username, chat.Title, data)
-
-// 		game, err := storage_db.GetGameByChatId(chat.ID)
-//         if err != nil {
-//             utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chat.ID, err)
-//             return c.Send("Помилка отримання гри")
-//         }
-
-// 		utils.Logger.Infof("Game: %v", game)
-
-// 		return nil
-// 	}
-// }
 
 // HandleSubTask10 handles button clicks for subtask 10
 func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
@@ -212,10 +208,71 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 			storage_db.AddPlayerResponse(playerResponse)
 			storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerNoWaiting)
 
-			return c.Send(fmt.Sprintf("@%s, дякую за відповідь, кицю 🐈Очікуй результатів, коли всі подружки поділяться своєю думкою 💁‍♀️", user.Username))
+			//greetingMsg := utils.GetRandomMsg(greetings)
+			greetingMsg := getUniqueGreeting(game.ID, user.ID)
+
+			return c.Send(fmt.Sprintf("@%s дякую %s Коли усі подружки дадуть свої відповіді, я зроблю ваш спільний колаж!", user.Username, greetingMsg))
 		}
 
 		// Send next question
 		return quizdna.SendCurrentSubtask10Question(bot, c, game.ID)
 	}
+}
+
+// getUniqueGreeting returns a unique greeting for the user in specific game
+func getUniqueGreeting(gameID int, userID int64) string {
+	greetingsMutex.Lock()
+	defer greetingsMutex.Unlock()
+	
+	// Initialize game map if doesn't exist
+	if gameGreetings[gameID] == nil {
+		gameGreetings[gameID] = make(map[int64]string)
+	}
+	
+	// Check if user already has a greeting in this game
+	if greeting, exists := gameGreetings[gameID][userID]; exists {
+		return greeting
+	}
+	
+	// Find available greetings for this game
+	availableGreetings := make([]string, 0)
+	usedSet := make(map[string]bool)
+	
+	// Mark used greetings in this game
+	for _, used := range gameGreetings[gameID] {
+		usedSet[used] = true
+	}
+	
+	// Find available ones
+	for _, greeting := range greetings {
+		if !usedSet[greeting] {
+			availableGreetings = append(availableGreetings, greeting)
+		}
+	}
+	
+	// If all are used in this game, reset and use all
+	if len(availableGreetings) == 0 {
+		gameGreetings[gameID] = make(map[int64]string) // Reset for this game
+		availableGreetings = greetings
+	}
+	
+	// Pick random from available
+	rand.Seed(time.Now().UnixNano())
+	selectedGreeting := availableGreetings[rand.Intn(len(availableGreetings))]
+	
+	// Assign to user in this game
+	gameGreetings[gameID][userID] = selectedGreeting
+	
+	fmt.Printf("Assigned greeting '%s' to user %d in game %d\n", selectedGreeting, userID, gameID)
+	
+	return selectedGreeting
+}
+
+// clearGameGreetings clears greetings for specific game (optional cleanup function)
+func clearGameGreetings(gameID int) {
+	greetingsMutex.Lock()
+	defer greetingsMutex.Unlock()
+	
+	delete(gameGreetings, gameID)
+	fmt.Printf("Cleared greetings for game %d\n", gameID)
 }

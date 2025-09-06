@@ -132,26 +132,15 @@ func (sm *Subtask10SessionManager) CompleteSession(gameID int) map[int]string {
 func createSubtask10Keyboard(subtask Subtask10Item, taskID int, questionIndex int, userID int64) *telebot.ReplyMarkup {
 	var rows [][]telebot.InlineButton
 
-	// Create buttons in 2x2 layout
-	for i := 0; i < len(subtask.Options); i += 2 {
-		var row []telebot.InlineButton
-
-		// First button in row
-		btn1 := telebot.InlineButton{
+	// Create each button on its own row for full width
+	for i := 0; i < len(subtask.Options); i++ {
+		btn := telebot.InlineButton{
 			Text: subtask.Options[i],
 			Data: fmt.Sprintf("subtask_10_%d_%d_%s", userID, questionIndex, subtask.Data[i]),
 		}
-		row = append(row, btn1)
-
-		// Second button if exists
-		if i+1 < len(subtask.Options) {
-			btn2 := telebot.InlineButton{
-				Text: subtask.Options[i+1],
-				Data: fmt.Sprintf("subtask_10_%d_%d_%s", userID, questionIndex, subtask.Data[i+1]),
-			}
-			row = append(row, btn2)
-		}
-
+		
+		// Each button gets its own row
+		row := []telebot.InlineButton{btn}
 		rows = append(rows, row)
 	}
 
