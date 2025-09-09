@@ -267,12 +267,3 @@ func getUniqueGreeting(gameID int, userID int64) string {
 	
 	return selectedGreeting
 }
-
-// clearGameGreetings clears greetings for specific game (optional cleanup function)
-func clearGameGreetings(gameID int) {
-	greetingsMutex.Lock()
-	defer greetingsMutex.Unlock()
-	
-	delete(gameGreetings, gameID)
-	fmt.Printf("Cleared greetings for game %d\n", gameID)
-}
