@@ -21,7 +21,7 @@ func CreateCollageFromResultsImageNine(bot *telebot.Bot) func(c telebot.Context)
 		c.Send("🎨 Створюю колаж...")
 		
 		// Create the collage
-		err := CreateCollageWithGGNine()
+		err := CreateCollageWithGGNine1()
 		if err != nil {
 			return c.Send(fmt.Sprintf("❌ Помилка створення колажу: %v", err))
 		}
@@ -63,7 +63,7 @@ func CreateCollageFromResultsImageNine(bot *telebot.Bot) func(c telebot.Context)
 	}
 }
 
-func CreateCollageWithGGNine() error {
+func CreateCollageWithGGNine1() error {
     fmt.Println("=== START CREATE COLLAGE ===")
     
     // Find all images in results folder
@@ -327,7 +327,7 @@ func processImageForSquareNine(img image.Image, targetSize int) image.Image {
 }
 
 // Bot handler function for creating collage - updated for JPEG
-func CreateCollageFromResultsNine(bot *telebot.Bot) func(c telebot.Context) error {
+func CreateCollageFromResultsNine1(bot *telebot.Bot) func(c telebot.Context) error {
     return func(c telebot.Context) error {
         chat := c.Chat()
         
@@ -349,7 +349,7 @@ func CreateCollageFromResultsNine(bot *telebot.Bot) func(c telebot.Context) erro
         c.Send(fmt.Sprintf("🎨 Створюю колаж з %d зображень...", len(imagePaths)))
         
         // Create collage
-        err = CreateCollageWithGGNine()
+        err = CreateCollageWithGGNine1()
         if err != nil {
             return c.Send(fmt.Sprintf("❌ Помилка створення колажу: %v", err))
         }

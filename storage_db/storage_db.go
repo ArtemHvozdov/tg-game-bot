@@ -2,6 +2,7 @@ package storage_db
 
 import (
 	"database/sql"
+	
 	//"log"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
@@ -48,106 +49,6 @@ func CloseDB(Db *sql.DB) {
 			utils.Logger.Info("The database connection was closed successfully.")
 		}
 	}
-}
-
-// createTables creates necessary tables in the database
-func createTables() error {
-	queries := []struct {
-		tableName string
-		query     string
-	}{
-		{
-			"players",
-			`CREATE TABLE IF NOT EXISTS players (
-				id INTEGER,
-				username TEXT NOT NULL,
-				name TEXT NOT NULL,
-				game_id INTEGER,
-				status TEXT,
-				skipped INT,
-				role TEXT NOT NULL
-			)`,
-		},
-		{
-			"games",
-			`CREATE TABLE IF NOT EXISTS games (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				name TEXT NOT NULL,
-				game_chat_id INTEGER,
-				msg_join_id INTEGER NOT NULL DEFAULT 0,
-				current_task_id INTEGER NOT NULL DEFAULT 0,
-				total_players INTEGER NOT NULL DEFAULT 0,
-				status TEXT CHECK(status IN ('waiting', 'playing', 'finished')) NOT NULL
-			)`,
-		},
-		{
-			"game_players",
-			`CREATE TABLE IF NOT EXISTS game_players (
-				game_id INTEGER,
-				player_id INTEGER,
-				status TEXT CHECK(status IN ('joined', 'playing', 'finished')) NOT NULL,
-				PRIMARY KEY (game_id, player_id),
-				FOREIGN KEY (game_id) REFERENCES games(id),
-				FOREIGN KEY (player_id) REFERENCES players(id)
-			)`,
-		},
-		{
-			"tasks",
-			`CREATE TABLE IF NOT EXISTS tasks (
-				id INTEGER PRIMARY KEY,
-				game_id INTEGER,
-				question TEXT NOT NULL,
-				answer TEXT NOT NULL,
-				FOREIGN KEY (game_id) REFERENCES games(id)
-			)`,
-		},
-		{
-			"player_responses",
-			`CREATE TABLE IF NOT EXISTS player_responses (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				player_id INTEGER,
-				game_id INTEGER,
-				task_id INTEGER,
-				has_answer BOOLEAN,
-				skipped BOOLEAN DEFAULT FALSE,
-				FOREIGN KEY (player_id) REFERENCES players(id),
-				FOREIGN KEY (game_id) REFERENCES games(id),
-				FOREIGN KEY (task_id) REFERENCES tasks(id)
-			)`,
-		},
-		{
-			"game_state",
-			`CREATE TABLE IF NOT EXISTS game_state (
-				game_id INTEGER PRIMARY KEY UNIQUE ,
-				status TEXT NOT NULL,
-				FOREIGN KEY (game_id) REFERENCES games(id)
-			)`,
-		},
-		{
-			"subtask_answers",
-			`CREATE TABLE IF NOT EXISTS subtask_answers (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				game_id INTEGER,
-				task_id INTEGER,
-				question_index INTEGER,
-				answerer_user_id INTEGEER,
-				selected_user_id INTEGER,
-				selected_username TEXT
-			)`,
-		},
-	}
-
-	for _, q := range queries {
-		if _, err := Db.Exec(q.query); err != nil {
-			return err
-		}
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "Db: createTables",
-			"table": q.tableName,
-		}).Info("Table has been created or already exists.")
-	}
-
-	return nil
 }
 
 // CreateGame добавляет новую игру в базу данных и возвращает ее ID
@@ -863,4 +764,37 @@ func GetSubtaskResults(gameID, taskID int) (map[int]map[string]int, error) {
     }).Info("Subtask results retrieved successfully")
     
     return results, rows.Err()
+}
+
+// AddSubtask10Answer adds a new subtask 10 answer to the database
+func AddSubtask10Answer(answer *models.Subtask10Answer) error {
+	query := `INSERT INTO subtask_10_answers (game_id, task_id, question_index, question_id, answerer_user_id, selected_option)
+		VALUES (?, ?, ?, ?, ?, ?)`
+	
+	_, err := Db.Exec(query, answer.GameID, answer.TaskID, answer.QuestionIndex, answer.QuestionID, answer.AnswererUserID, answer.SelectedOption)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":           "Db: AddSubtask10Answer",
+			"game_id":          answer.GameID,
+			"task_id":          answer.TaskID,
+			"question_index":   answer.QuestionIndex,
+			"question_id":      answer.QuestionID,
+			"answerer_user_id": answer.AnswererUserID,
+			"selected_option":  answer.SelectedOption,
+			"error":            err,
+		}).Error("Failed to add subtask 10 answer")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":           "Db: AddSubtask10Answer",
+		"game_id":          answer.GameID,
+		"task_id":          answer.TaskID,
+		"question_index":   answer.QuestionIndex,
+		"question_id":      answer.QuestionID,
+		"answerer_user_id": answer.AnswererUserID,
+		"selected_option":  answer.SelectedOption,
+	}).Info("Subtask 10 answer added successfully")
+	
+	return nil
 }

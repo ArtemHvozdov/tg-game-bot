@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Player struct {
 	ID       int64
 	UserName string
@@ -73,6 +75,19 @@ type SubtaskAnswer struct {
 	AnswererUserID int64  `json:"answerer_user_id"` // кто отвечал
 	SelectedUserID int64  `json:"selected_user_id"` // кого выбрали
 	SelectedUsername string `json:"selected_username"` // username выбранного (для быстрого доступа)
+}
+
+// Subtask10Answer represents a user's answer to a subtask 10 question
+type Subtask10Answer struct {
+	ID               int       `json:"id"`
+	GameID           int       `json:"game_id"`
+	TaskID           int       `json:"task_id"`
+	QuestionIndex    int       `json:"question_index"`
+	QuestionID       int       `json:"question_id"`        // ID from JSON file
+	AnswererUserID   int64     `json:"answerer_user_id"`
+	SelectedOption   string    `json:"selected_option"`    // Data value from JSON
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 // Const of state
