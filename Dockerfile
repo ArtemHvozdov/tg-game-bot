@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
 
+ENV TZ=Europe/Kyiv
+
 # Скопировать бинарь из builder
 COPY --from=builder /app/bot .
 

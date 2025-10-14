@@ -1,4 +1,4 @@
-module github.com/ArtemHvozdov/tg-echo-post-bot/notifier
+module notifier
 
 go 1.23.3
 

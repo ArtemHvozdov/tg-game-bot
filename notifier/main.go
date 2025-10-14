@@ -66,8 +66,9 @@ func main() {
 	}
 
 	// Setting pool of connection
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
+	db.SetMaxOpenConns(5) 
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Minute * 5)
 
 	defer db.Close()
 
