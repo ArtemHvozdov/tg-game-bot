@@ -832,4 +832,27 @@ func GetAllActiveGames() ([]models.Game, error) {
 	return games, nil
 }
 
-// reposistorys 
+// ClearNotificationsForGame removes all notification records for a specific game and chat
+func ClearNotificationsForGame(gameID, gameChatID int64) error {
+    query := `
+        DELETE FROM notifications 
+        WHERE game_id = ? 
+            AND game_chat_id = ?
+    `
+    
+	result, err := Db.Exec(query, gameID, gameChatID)
+	if err != nil {
+		utils.Logger.Errorf("failed to clear notifications: %v", err)
+		return err
+	}
+    
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        utils.Logger.Errorf("failed to get rows affected: %v", err)
+		return  err
+    }
+    
+    utils.Logger.Infof("Cleared %d notification records for game %d, chat %d", rowsAffected, gameID, gameChatID)
+    
+    return nil
+}

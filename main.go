@@ -167,4 +167,16 @@ func main() {
 	// } else {
 	// 	utils.Logger.Info("Prod mode — DB dir not removed.")
 	// }
+
+	if cfg.Mode == "dev" {
+		err := os.RemoveAll(dataDir)
+		if err != nil {
+			utils.Logger.Errorf("Failed to remove DB dir: %v", err)
+		} else {
+			utils.Logger.Info("DB dir removed (dev mode).")
+		}
+	} else {
+		utils.Logger.Info("Prod mode — DB dir not removed.")
+	}
+
 }

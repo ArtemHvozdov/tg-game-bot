@@ -97,9 +97,9 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 			// 	time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			// }
 			// Delay pause between sending tasks
-			//time.Sleep(3 * time.Minute)
-			if (cfg.Durations.TimePauseBetweenSendingTasks == 3*time.Minute) {
-				utils.Logger.Info("Value of time delay from config is 3 minute! The all is the ok!")
+			//time.Sleep(15 * time.Minute)
+			if (cfg.Durations.TimePauseBetweenSendingTasks == 15*time.Minute) {
+				utils.Logger.Info("Value of time delay from config is 15 minute! The all is the ok!")
 			} else {
 				utils.Logger.Warn("Value of time delay from config is not 3 minute! Check the config!")
 			}
