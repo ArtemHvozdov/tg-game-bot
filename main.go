@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -21,15 +22,25 @@ func main() {
 	utils.InitNewLogger()
 
 	// Initialize the database
-	dataDir := cfg.DatabaseDir
-	dataFile := cfg.DatabaseFile
+	// dataDir := cfg.DatabaseDir
+	// dataFile := cfg.DatabaseFile
+	// dataDir := "../data/"
+	// dataFile := "tg-game-bot.db"
+	// dbPath := dataDir + dataFile
 
-	dbPath := dataDir + dataFile
+	// if err := os.MkdirAll(dataDir, 0755); err != nil {
+	// 	utils.Logger.WithError(err).Fatal("Error creating folder:")
+	// }
+
+	dataDir := "/app/data"
+	dataFile := "tg-game-bot.db"
+	dbPath := fmt.Sprintf("%s/%s", dataDir, dataFile)
 
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		utils.Logger.WithError(err).Fatal("Error creating folder:")
+		log.Println("Error creating folder:")
 		//log.Fatalf("Error creating folder %s: %v", dataDir, err)
 	}
+
 	
 	db, err := storage_db.InitDB(dbPath)
 	if err != nil {
@@ -146,6 +157,17 @@ func main() {
 
 	<-stop // Wait Ctrl+C or SIGTERM
 
+	// if cfg.Mode == "dev" {
+	// 	err := os.RemoveAll(dataDir)
+	// 	if err != nil {
+	// 		utils.Logger.Errorf("Failed to remove DB dir: %v", err)
+	// 	} else {
+	// 		utils.Logger.Info("DB dir removed (dev mode).")
+	// 	}
+	// } else {
+	// 	utils.Logger.Info("Prod mode — DB dir not removed.")
+	// }
+
 	if cfg.Mode == "dev" {
 		err := os.RemoveAll(dataDir)
 		if err != nil {
@@ -156,4 +178,5 @@ func main() {
 	} else {
 		utils.Logger.Info("Prod mode — DB dir not removed.")
 	}
+
 }

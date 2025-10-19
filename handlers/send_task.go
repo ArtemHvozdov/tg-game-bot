@@ -15,6 +15,8 @@ import (
 // SendFirstTasks send all tasks in group chat
 func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
+
+		utils.Logger.Infof("SendTasks called")
 		game, err := storage_db.GetGameByChatId(chatID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
@@ -39,7 +41,8 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 
     for i, task := range tasks {
         //task := tasks[i]
-		storage_db.UpdateCurrentTaskID(game.ID, task.ID)
+		timeUpdate := time.Now().Unix()
+		storage_db.UpdateCurrentTaskID(game.ID, task.ID, timeUpdate)
         // msg := "🌟 *" + task.Tittle + "*\n" + task.Description
 
 		msg := task.Tittle + "\n\n" + task.Description
@@ -94,6 +97,12 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 			// 	time.Sleep(5 * time.Minute) // Wait for 5 seconds before sending the next task
 			// }
 			// Delay pause between sending tasks
+			//time.Sleep(15 * time.Minute)
+			if (cfg.Durations.TimePauseBetweenSendingTasks == 15*time.Minute) {
+				utils.Logger.Info("Value of time delay from config is 15 minute! The all is the ok!")
+			} else {
+				utils.Logger.Warn("Value of time delay from config is not 3 minute! Check the config!")
+			}
 			time.Sleep(cfg.Durations.TimePauseBetweenSendingTasks) // await some minutes or hours before sending the next task
 		}
 

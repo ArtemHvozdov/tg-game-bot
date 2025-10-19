@@ -31,6 +31,7 @@ func createTables() error {
 				game_chat_id INTEGER,
 				msg_join_id INTEGER NOT NULL DEFAULT 0,
 				current_task_id INTEGER NOT NULL DEFAULT 0,
+				time_update_task INTEGER,
 				total_players INTEGER NOT NULL DEFAULT 0,
 				status TEXT CHECK(status IN ('waiting', 'playing', 'finished')) NOT NULL
 			)`,
@@ -63,8 +64,9 @@ func createTables() error {
 				player_id INTEGER,
 				game_id INTEGER,
 				task_id INTEGER,
-				has_answer BOOLEAN,
+				has_answer BOOLEAN DEFAULT FALSE,
 				skipped BOOLEAN DEFAULT FALSE,
+				notification_sent INTEGER DEFAULT 0 CHECK (notification_sent IN (0,1)),
 				FOREIGN KEY (player_id) REFERENCES players(id),
 				FOREIGN KEY (game_id) REFERENCES games(id),
 				FOREIGN KEY (task_id) REFERENCES tasks(id)
@@ -102,6 +104,17 @@ func createTables() error {
 				selected_option TEXT NOT NULL,
 				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			)`,
+		},
+		{
+			"notifications",
+			`CREATE TABLE IF NOT EXISTS notifications (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id INTEGER NOT NULL,
+				game_chat_id INTEGER,
+				task_id INTEGER NOT NULL,
+				user_id INTEGER NOT NULL,
+				notification_sent INTEGER DEFAULT 0 CHECK (notification_sent IN (0,1))
 			)`,
 		},
 	}

@@ -463,14 +463,16 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 		"task_id": playerResponse.TaskID,
 	}).Info("Db: AddPlayerResponse - AddPlayerResponse was called")
 	
-	query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped) VALUES (?, ?, ?, ?, ?)`
-	_, err := Db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped)
+	query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped, notification_sent) VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := Db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped, playerResponse.NotificationSent)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "Db: AddPlayerResponse",
 			"player_id": playerResponse.PlayerID,
 			"game_id": playerResponse.GameID,
 			"task_id": playerResponse.TaskID,
+			//"date_create": playerResponse.DateCreate,
+			"notification_sent": playerResponse.NotificationSent,
 			"err": err,
 		}).Error("Failed to add player answer")
 		
@@ -482,6 +484,8 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 		"player_id": playerResponse.PlayerID,
 		"game_id": playerResponse.GameID,
 		"task_id": playerResponse.TaskID,
+		//"date_create": playerResponse.DateCreate,
+		"notification_sent": playerResponse.NotificationSent,
 	}).Info("Player response added successfully")
 	
 	return nil
@@ -639,14 +643,15 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 
 
 // Update current task ID in game
-func UpdateCurrentTaskID(gameID int, taskID int) error {
-	query := `UPDATE games SET current_task_id = ? WHERE id = ?`
-	_, err := Db.Exec(query, taskID, gameID)
+func UpdateCurrentTaskID(gameID int, taskID int, timeUpdate int64) error {
+	query := `UPDATE games SET current_task_id = ?, time_update_task = ? WHERE id = ?`
+	_, err := Db.Exec(query, taskID, timeUpdate, gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "Db: UpdateCurrentTaskID",
 			"game_id": gameID,
 			"task_id": taskID,
+			"time_update_task": timeUpdate,
 			"error": err,
 		}).Error("Error updating current task ID for game")
 	
@@ -657,6 +662,7 @@ func UpdateCurrentTaskID(gameID int, taskID int) error {
 		"source": "Db: UpdateCurrentTaskID",
 		"game_id": gameID,
 		"task_id": taskID,
+		"time_update_task": timeUpdate,
 	}).Info("Current task ID for game updated successfully")
 	
 	return nil
@@ -797,4 +803,56 @@ func AddSubtask10Answer(answer *models.Subtask10Answer) error {
 	}).Info("Subtask 10 answer added successfully")
 	
 	return nil
+}
+
+// Get all games with status "playing"
+func GetAllActiveGames() ([]models.Game, error) {
+	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE status = ?`
+	rows, err := Db.Query(query, models.StatusGamePlaying)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "Db: GetAllActiveGames",
+			"error": err,
+		}).Error("Failed to get all active games")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var games []models.Game
+	for rows.Next() {
+		var game models.Game
+		err := rows.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
+		if err != nil {
+			utils.Logger.Errorf("Error scanning game: %v", err)
+			return nil, err
+		}
+		games = append(games, game)
+	}
+
+	return games, nil
+}
+
+// ClearNotificationsForGame removes all notification records for a specific game and chat
+func ClearNotificationsForGame(gameID, gameChatID int64) error {
+    query := `
+        DELETE FROM notifications 
+        WHERE game_id = ? 
+            AND game_chat_id = ?
+    `
+    
+	result, err := Db.Exec(query, gameID, gameChatID)
+	if err != nil {
+		utils.Logger.Errorf("failed to clear notifications: %v", err)
+		return err
+	}
+    
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        utils.Logger.Errorf("failed to get rows affected: %v", err)
+		return  err
+    }
+    
+    utils.Logger.Infof("Cleared %d notification records for game %d, chat %d", rowsAffected, gameID, gameChatID)
+    
+    return nil
 }

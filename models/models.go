@@ -36,6 +36,8 @@ type PlayerResponse struct {
 	TaskID      int
 	HasResponse bool
 	Skipped     bool
+	//DateCreate int64
+	NotificationSent int64
 }
 
 type GameState struct {
