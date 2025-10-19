@@ -1,22 +1,22 @@
-# Этап сборки
+# Assembly stage
 FROM golang:1.23 AS builder
 WORKDIR /app
 
-# Скопировать go.mod и go.sum
+# Copy go.mod and go.sum
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Скопировать исходники
+# Copy sources
 COPY . .
 
-# Собрать бинарник
+# Build the binary
 RUN go build -o bot ./main.go
 
-# Этап запуска
+# Launch stage
 FROM debian:bookworm-slim
 WORKDIR /app
 
-# Установим SQLite (если нужно sqlite3 CLI)
+# Install SQLite (if need sqlite3 CLI)
 RUN apt-get update && apt-get install -y \
     sqlite3 \
     ca-certificates \
@@ -25,18 +25,18 @@ RUN apt-get update && apt-get install -y \
 
 ENV TZ=Europe/Kyiv
 
-# Скопировать бинарь из builder
+# Copy binary from builder
 COPY --from=builder /app/bot .
 
-# Скопировать все необходимые конфигурационные файлы и директории
+# Copy all configurations files and dirs
 COPY --from=builder /app/internal ./internal
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/prompts ./prompts
 
-# Создать папку для базы (на всякий случай)
+#  Create dir for DB
 RUN mkdir -p /app/data
 
-# ENV для токена (значение передаётся при запуске)
+# ENV for token
 ENV TELEGRAM_TOKEN=""
 
 CMD ["./bot"]
