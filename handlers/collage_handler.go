@@ -19,6 +19,7 @@ import (
 )
 
 // CreateSubtask10Collage creates a collage from subtask 10 winning images
+// Variant with context handler for calling in the chat
 // func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
 // 	return func(c telebot.Context) error {
 // 		chat := c.Chat()
@@ -81,6 +82,7 @@ import (
 // 	}
 // }
 
+// Variant withouut context for calling as external function
 func CreateSubtask10Collage(bot *telebot.Bot, chatID int64) error {
 	chat := &telebot.Chat{ID: chatID}
 	
