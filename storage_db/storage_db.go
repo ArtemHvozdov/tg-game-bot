@@ -2,7 +2,9 @@ package storage_db
 
 import (
 	"database/sql"
-	
+	"fmt"
+	"time"
+
 	//"log"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
@@ -18,11 +20,19 @@ var Db *sql.DB // Global variable for database connection
 func InitDB(DbPath string) (*sql.DB, error) {
 	var err error
 	// Connect to database
-	Db, err = sql.Open("sqlite3", DbPath)
+	// Db, err = sql.Open("sqlite3", DbPath)
+	// if err != nil {
+	// 	utils.Logger.Fatalf("Error connection database: %v", err)
+	// 	return nil, err
+	// }
+
+	Db, err = sql.Open("sqlite3", DbPath+"?_journal_mode=WAL&_foreign_keys=on&_busy_timeout=60000")
 	if err != nil {
-		utils.Logger.Fatalf("Error connection database: %v", err)
 		return nil, err
 	}
+	Db.SetMaxOpenConns(5)
+	Db.SetMaxIdleConns(2)
+	Db.SetConnMaxLifetime(time.Minute * 5)
 
 	// Check connection
 	if err := Db.Ping(); err != nil {
@@ -207,12 +217,12 @@ func GetCurrentGameStatus(gameID int) (string, error) {
 
 // GetGameById getting a game by ID
 func GetGameById(gameID int) (*models.Game, error) {
-	query := `SELECT id, name, current_task_id, total_players, status FROM games WHERE id = ?`
+	query := `SELECT id, name, game_chat_id, current_task_id, total_players, status FROM games WHERE id = ?`
 	row := Db.QueryRow(query, gameID)
 
 	game := &models.Game{}
 
-	err := row.Scan(&game.ID, &game.Name, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
+	err := row.Scan(&game.ID, &game.Name, &game.GameChatID, &game.CurrentTaskID, &game.TotalPlayers, &game.Status)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "Db: GetGameById",
@@ -295,23 +305,23 @@ func DeletePlayerFromGame(playerID int64, gameID int) error {
 	return nil
 }
 
-func GetPlayerCount(gameId int) (int, error) {
-	query := `SELECT COUNT(*) FROM players WHERE game_id = ?`
-	row := Db.QueryRow(query, gameId)
+// func GetPlayerCount(gameId int) (int, error) {
+// 	query := `SELECT COUNT(*) FROM players WHERE game_id = ?`
+// 	row := Db.QueryRow(query, gameId)
 
-	var count int
-	err := row.Scan(&count)
-	if err != nil {
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "Db: GetPlayerCount",
-			"game_id": gameId,
-			"error": err,
-		}).Error("Failed to get player count")
-		return 0, err
-	}
+// 	var count int
+// 	err := row.Scan(&count)
+// 	if err != nil {
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"source": "Db: GetPlayerCount",
+// 			"game_id": gameId,
+// 			"error": err,
+// 		}).Error("Failed to get player count")
+// 		return 0, err
+// 	}
 
-	return count, nil
-}
+// 	return count, nil
+// }
 
 func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
 	query := `SELECT id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ?`
@@ -340,23 +350,23 @@ func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
 	return players, nil
 }
 
-func GetCountTasksByGameID(gameId int) (int, error) {
-	query := `SELECT COUNT(*) FROM tasks WHERE game_id = ?`
-	row := Db.QueryRow(query, gameId)
+// func GetCountTasksByGameID(gameId int) (int, error) {
+// 	query := `SELECT COUNT(*) FROM tasks WHERE game_id = ?`
+// 	row := Db.QueryRow(query, gameId)
 
-	var count int
-	err := row.Scan(&count)
-	if err != nil {
-		utils.Logger.WithFields(logrus.Fields{
-			"source": "Db: GetCountTasksByGameID",
-			"game_id": gameId,
-			"error": err,
-		}).Error("Error fetching task count")
-		return 0, err
-	}
+// 	var count int
+// 	err := row.Scan(&count)
+// 	if err != nil {
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"source": "Db: GetCountTasksByGameID",
+// 			"game_id": gameId,
+// 			"error": err,
+// 		}).Error("Error fetching task count")
+// 		return 0, err
+// 	}
 
-	return count, nil
-}
+// 	return count, nil
+// }
 
 // UpdatePlayerStatus update player status in Db
 func UpdatePlayerStatus(playerID int64, status string) error {
@@ -462,9 +472,85 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 		"game_id": playerResponse.GameID,
 		"task_id": playerResponse.TaskID,
 	}).Info("Db: AddPlayerResponse - AddPlayerResponse was called")
+
+	// Проверка 1: Существует ли игрок
+    var playerExists bool
+    checkQuery := `SELECT EXISTS(SELECT 1 FROM players WHERE id = ?)`
+    err := Db.QueryRow(checkQuery, playerResponse.PlayerID).Scan(&playerExists)
+    if err != nil {
+        utils.Logger.WithFields(logrus.Fields{
+            "source": "Db: AddPlayerResponse",
+            "player_id": playerResponse.PlayerID,
+            "err": err,
+        }).Error("Failed to check if player exists")
+        return err
+    }
+    
+    if !playerExists {
+        utils.Logger.WithFields(logrus.Fields{
+            "source": "Db: AddPlayerResponse",
+            "player_id": playerResponse.PlayerID,
+        }).Error("Player does not exist in players table!")
+        return fmt.Errorf("player %d does not exist in players table", playerResponse.PlayerID)
+    }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source": "Db: AddPlayerResponse",
+        "player_id": playerResponse.PlayerID,
+    }).Info("Player exists in database, proceeding to add response")
+    
+    // Проверка 2: Существует ли игра ← ДОБАВЬТЕ ЭТО
+    var gameExists bool
+    err = Db.QueryRow(`SELECT EXISTS(SELECT 1 FROM games WHERE id = ?)`, playerResponse.GameID).Scan(&gameExists)
+    if err != nil {
+        utils.Logger.WithFields(logrus.Fields{
+            "source": "Db: AddPlayerResponse",
+            "game_id": playerResponse.GameID,
+            "err": err,
+        }).Error("Failed to check if game exists")
+        return err
+    }
+    
+    if !gameExists {
+        utils.Logger.WithFields(logrus.Fields{
+            "source": "Db: AddPlayerResponse",
+            "game_id": playerResponse.GameID,
+        }).Error("Game does not exist in games table!")
+        return fmt.Errorf("game %d does not exist in games table", playerResponse.GameID)
+    }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source": "Db: AddPlayerResponse",
+        "game_id": playerResponse.GameID,
+    }).Info("Game exists in database")
+    
+    // // Проверка 3: Существует ли таска ← ДОБАВЬТЕ ЭТО
+    // var taskExists bool
+    // err = Db.QueryRow(`SELECT EXISTS(SELECT 1 FROM tasks WHERE id = ?)`, playerResponse.TaskID).Scan(&taskExists)
+    // if err != nil {
+    //     utils.Logger.WithFields(logrus.Fields{
+    //         "source": "Db: AddPlayerResponse",
+    //         "task_id": playerResponse.TaskID,
+    //         "err": err,
+    //     }).Error("Failed to check if task exists")
+    //     return err
+    // }
+    
+    // if !taskExists {
+    //     utils.Logger.WithFields(logrus.Fields{
+    //         "source": "Db: AddPlayerResponse",
+    //         "task_id": playerResponse.TaskID,
+    //     }).Error("Task does not exist in tasks table!")
+    //     return fmt.Errorf("task %d does not exist in tasks table", playerResponse.TaskID)
+    // }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source": "Db: AddPlayerResponse",
+        "task_id": playerResponse.TaskID,
+    }).Info("Task exists in database")
 	
-	query := `INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped, notification_sent) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err := Db.Exec(query, playerResponse.PlayerID, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped, playerResponse.NotificationSent)
+	query := `INSERT INTO player_responses (player_id, user_name, game_id, task_id, has_answer, skipped, notification_sent) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	_, err = Db.Exec(query, playerResponse.PlayerID, playerResponse.UserName, playerResponse.GameID, playerResponse.TaskID, playerResponse.HasResponse, playerResponse.Skipped, playerResponse.NotificationSent)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "Db: AddPlayerResponse",
@@ -513,7 +599,7 @@ func CheckPlayerResponseStatus(playerID int64, gameID int, taskID int) (*models.
 }
 
 // SkipPlayerResponse handles skip logic for a specific task by a player
-func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipStatus, error) {
+func SkipPlayerResponse(playerID int64, userName string, gameID, taskID int) (*models.SkipStatus, error) {
 	status := &models.SkipStatus{}
 
 	// Check how many times player has already skipped tasks
@@ -557,9 +643,9 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 	case err == sql.ErrNoRows:
 		// No response yet — insert a new skipped record
 		_, err := Db.Exec(`
-			INSERT INTO player_responses (player_id, game_id, task_id, has_answer, skipped)
-			VALUES (?, ?, ?, 0, 1)
-		`, playerID, gameID, taskID)
+			INSERT INTO player_responses (player_id, user_name, game_id, task_id, has_answer, skipped)
+			VALUES (?, ?, ?, ?, 0, 1)
+		`, playerID, userName, gameID, taskID)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
 				"source": "Db: SkipPlayerResponse",
@@ -623,7 +709,7 @@ func SkipPlayerResponse(playerID int64, gameID int, taskID int) (*models.SkipSta
 		}
 
 		// Update existing entry to mark as skipped
-		_, err := Db.Exec(`UPDATE player_responses SET skipped = 1 WHERE player_id = ? AND game_id = ? AND task_id = ?`, playerID, gameID, taskID)
+		_, err := Db.Exec(`UPDATE player_responses SET skipped = 1 WHERE player_id = ? AND user_name = ? AND game_id = ? AND task_id = ?`, playerID, userName, gameID, taskID)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
 				"source": "Db: SkipPlayerResponse",
@@ -853,6 +939,143 @@ func ClearNotificationsForGame(gameID, gameChatID int64) error {
     }
     
     utils.Logger.Infof("Cleared %d notification records for game %d, chat %d", rowsAffected, gameID, gameChatID)
+    
+    return nil
+}
+
+func GetPlayersWithAnswer(gameID, taskID int64) ([]models.PlayerNot, error) {
+    query := `
+        SELECT player_id, user_name
+        FROM player_responses
+        WHERE game_id = ? AND task_id = ? AND has_answer = 1
+    `
+    
+    rows, err := Db.Query(query, gameID, taskID)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка выполнения запроса GetPlayersWithAnswer: %w", err)
+    }
+    defer rows.Close()
+    
+    var players []models.PlayerNot
+    for rows.Next() {
+        var player models.PlayerNot
+        err := rows.Scan(
+            &player.ID,
+            &player.UserName,
+        )
+        if err != nil {
+            return nil, fmt.Errorf("ошибка сканирования строки в GetPlayersWithAnswer: %w", err)
+        }
+        players = append(players, player)
+    }
+    
+    if err = rows.Err(); err != nil {
+        return nil, fmt.Errorf("ошибка итерации по строкам в GetPlayersWithAnswer: %w", err)
+    }
+    
+    return players, nil
+}
+
+// GetPlayersWhoSkipped возвращает игроков, которые не дали ответ (skipped = true)
+func GetPlayersWhoSkipped(gameID, taskID int64) ([]models.PlayerNot, error) {
+	query := `
+		SELECT player_id, user_name
+        FROM player_responses
+		WHERE game_id = ? AND task_id = ? AND skipped = true
+	`
+	
+	rows, err := Db.Query(query, gameID, taskID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения запроса GetPlayersWhoSkipped: %w", err)
+	}
+	defer rows.Close()
+	
+	var players []models.PlayerNot
+	for rows.Next() {
+		var player models.PlayerNot
+		err := rows.Scan(
+			&player.ID,
+			&player.UserName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка сканирования строки в GetPlayersWhoSkipped: %w", err)
+		}
+		players = append(players, player)
+	}
+	
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка итерации по строкам в GetPlayersWhoSkipped: %w", err)
+	}
+	
+	return players, nil
+}
+
+// add 
+func MarkSummaryAsSent(gameID, taskID int64) error {
+    query := `
+        INSERT INTO summary_notifications (game_id, task_id, summary_sent)
+        VALUES (?, ?, 1)
+    `
+    
+    _, err := Db.Exec(query, gameID, taskID)
+    if err != nil {
+        return fmt.Errorf("failed to mark summary as sent: %w", err)
+    }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source":  "Db: MarkSummaryAsSent",
+        "game_id": gameID,
+        "task_id": taskID,
+    }).Info("Summary marked as sent successfully")
+    
+    return nil
+}
+
+// 2. Проверка существования записи об отправленных итогах
+// Возвращает true, если итоги уже были отправлены
+// Возвращает false, если итоги еще не отправлялись
+func HasSummaryBeenSent(gameID, taskID int64) (bool, error) {
+    query := `
+        SELECT EXISTS(
+            SELECT 1 
+            FROM summary_notifications 
+            WHERE game_id = ? 
+                AND task_id = ?
+                AND summary_sent = 1
+        )
+    `
+    
+    var exists bool
+    err := Db.QueryRow(query, gameID, taskID).Scan(&exists)
+    if err != nil {
+        return false, fmt.Errorf("failed to check if summary was sent: %w", err)
+    }
+    
+    return exists, nil
+}
+
+// 3. Очистка всех записей для конкретной игры
+func ClearSummaryNotifications(gameID int64) error {
+    query := `
+        DELETE FROM summary_notifications 
+        WHERE game_id = ?
+    `
+    
+    result, err := Db.Exec(query, gameID)
+    if err != nil {
+        return fmt.Errorf("failed to clear summary notifications: %w", err)
+    }
+    
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return fmt.Errorf("failed to get rows affected: %w", err)
+    }
+    
+    utils.Logger.WithFields(logrus.Fields{
+        "source":        "Db: ClearSummaryNotifications",
+        "game_id":       gameID,
+        "rows_affected": rowsAffected,
+    }).Info("Summary notifications cleared successfully")
     
     return nil
 }

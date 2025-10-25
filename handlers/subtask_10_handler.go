@@ -199,6 +199,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 
 			playerResponse := &models.PlayerResponse{
 				PlayerID:    user.ID,
+				UserName:    user.Username,
 				GameID:      game.ID,
 				TaskID:      10,
 				HasResponse: true,

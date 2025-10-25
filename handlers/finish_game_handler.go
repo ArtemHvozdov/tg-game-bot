@@ -36,6 +36,15 @@ func FinishGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 				"err": err,
 			}).Error("Error clearing notifications for finished game")
 		}
+
+		err = storage_db.ClearSummaryNotifications(int64(game.ID))
+		if err != nil {
+			utils.Logger.WithFields(logrus.Fields{
+				"source": "FinishGameHandler",
+				"group": chat.Title,
+				"err": err,
+			}).Error("Error clearing summary notifications for finished game")
+		}
 		
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "FinishGameHandler",

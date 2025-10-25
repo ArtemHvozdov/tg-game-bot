@@ -11,6 +11,7 @@ COPY . .
 
 # Build the binary
 RUN go build -o bot ./main.go
+#RUN go build -o bot .
 
 # Launch stage
 FROM debian:bookworm-slim

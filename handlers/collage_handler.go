@@ -19,67 +19,134 @@ import (
 )
 
 // CreateSubtask10Collage creates a collage from subtask 10 winning images
-func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
-	return func(c telebot.Context) error {
-		chat := c.Chat()
+// func CreateSubtask10Collage(bot *telebot.Bot) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		chat := c.Chat()
 
-		// Get game by chat ID
-		game, err := storage_db.GetGameByChatId(chat.ID)
-		if err != nil {
-			utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chat.ID, err)
-			return c.Send("Помилка отримання гри")
-		}
+// 		// Get game by chat ID
+// 		game, err := storage_db.GetGameByChatId(chat.ID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chat.ID, err)
+// 			return c.Send("Помилка отримання гри")
+// 		}
 
-		// Inform user
-		c.Send("Чекайте-чекайте, меджик у процесі … 🧚✨")
+// 		// Inform user
+// 		c.Send("Чекайте-чекайте, меджик у процесі … 🧚✨")
 
-		// Get winners array
-		winners, err := storage_db.GetSubtask10WinnersArray(game.ID)
-		if err != nil {
-			utils.Logger.Errorf("Failed to get subtask 10 winners for game %d: %v", game.ID, err)
-			return c.Send(fmt.Sprintf("❌ Помилка отримання результатів: %v", err))
-		}
+// 		// Get winners array
+// 		winners, err := storage_db.GetSubtask10WinnersArray(game.ID)
+// 		if err != nil {
+// 			utils.Logger.Errorf("Failed to get subtask 10 winners for game %d: %v", game.ID, err)
+// 			return c.Send(fmt.Sprintf("❌ Помилка отримання результатів: %v", err))
+// 		}
 
-		// Generate collage
-		err = CreateSubtask10CollageWithGG(winners)
-		if err != nil {
-			return c.Send(fmt.Sprintf("❌ Помилка створення колажу: %v", err))
-		}
+// 		// Generate collage
+// 		err = CreateSubtask10CollageWithGG(winners)
+// 		if err != nil {
+// 			return c.Send(fmt.Sprintf("❌ Помилка створення колажу: %v", err))
+// 		}
 
-		// Check if file exists
-		if _, err := os.Stat("subtask10_collage.jpg"); os.IsNotExist(err) {
-			return c.Send("❌ Файл колажу не був створений")
-		}
+// 		// Check if file exists
+// 		if _, err := os.Stat("subtask10_collage.jpg"); os.IsNotExist(err) {
+// 			return c.Send("❌ Файл колажу не був створений")
+// 		}
 		
-		// Send as photo
-		photo := &telebot.Photo{
-			File:    telebot.FromDisk("subtask10_collage.jpg"),
-			Caption: "Готово! Ловіть колаж із відповідей, які набрали найбільшу кількість голосів. Схоже на те, що подобається вашій гьорлз бенд? 💅",
-		}
-		_, err = bot.Send(chat, photo)
-		if err != nil {
-			return c.Send(fmt.Sprintf("❌ Помилка відправки колажу: %v", err))
-		}
+// 		// Send as photo
+// 		photo := &telebot.Photo{
+// 			File:    telebot.FromDisk("subtask10_collage.jpg"),
+// 			Caption: "Готово! Ловіть колаж із відповідей, які набрали найбільшу кількість голосів. Схоже на те, що подобається вашій гьорлз бенд? 💅",
+// 		}
+// 		_, err = bot.Send(chat, photo)
+// 		if err != nil {
+// 			return c.Send(fmt.Sprintf("❌ Помилка відправки колажу: %v", err))
+// 		}
 
-		// Send as document (original without compression)
-		document := &telebot.Document{
-			File:     telebot.FromDisk("subtask10_collage.jpg"),
-			MIME:     "image/jpeg",
-			FileName: "subtask10_collage_2160x2160.jpg",
-			Caption:  "Cупер висока якість для моїх aesthetic girls 🎀",
-		}
-		bot.Send(chat, document)
+// 		// Send as document (original without compression)
+// 		document := &telebot.Document{
+// 			File:     telebot.FromDisk("subtask10_collage.jpg"),
+// 			MIME:     "image/jpeg",
+// 			FileName: "subtask10_collage_2160x2160.jpg",
+// 			Caption:  "Cупер висока якість для моїх aesthetic girls 🎀",
+// 		}
+// 		bot.Send(chat, document)
 
-		// Clean up temporary file
-		go func() {
-			time.Sleep(5 * time.Second)
-			os.Remove("subtask10_collage.jpg")
-			fmt.Println("Temporary subtask 10 collage file cleaned up")
-		}()
+// 		// Clean up temporary file
+// 		go func() {
+// 			time.Sleep(5 * time.Second)
+// 			os.Remove("subtask10_collage.jpg")
+// 			fmt.Println("Temporary subtask 10 collage file cleaned up")
+// 		}()
 
-		return nil
+// 		return nil
+// 	}
+// }
+
+func CreateSubtask10Collage(bot *telebot.Bot, chatID int64) error {
+	chat := &telebot.Chat{ID: chatID}
+	
+	// Get game by chat ID
+	game, err := storage_db.GetGameByChatId(chat.ID)
+	if err != nil {
+		utils.Logger.Errorf("Failed to get game by chat ID %d: %v", chat.ID, err)
+		return err
 	}
+
+	_, err = bot.Send(chat, "Чекайте-чекайте, меджик у процесі … 🧚✨")
+	if err != nil {
+		utils.Logger.Errorf("Failed to send waiting message to chat %d: %v", chat.ID, err)
+	}
+
+	// Get winners array
+	winners, err := storage_db.GetSubtask10WinnersArray(game.ID)
+	if err != nil {
+		utils.Logger.Errorf("Failed to get subtask 10 winners for game %d: %v", game.ID, err)
+		return err
+	}
+
+	// Generate collage
+	err = CreateSubtask10CollageWithGG(winners)
+	if err != nil {
+		_, err = bot.Send(chat, "Упс... Щось я не можу створити коллаж. Що ж робити?")
+		utils.Logger.Errorf("Failed to create subtask 10 collage: %v", err)
+		return err
+	}
+
+	// Check if file exists
+	if _, err := os.Stat("subtask10_collage.jpg"); os.IsNotExist(err) {
+		utils.Logger.Errorf("Subtask 10 collage file does not exist after creation")
+		return err
+	}
+
+	// Send as photo
+	photo := &telebot.Photo{
+		File:    telebot.FromDisk("subtask10_collage.jpg"),
+		Caption: "Готово! Ловіть колаж із відповідей, які набрали найбільшу кількість голосів. Схоже на те, що подобається вашій гьорлз бенд? 💅",
+	}
+	_, err = bot.Send(chat, photo)
+	if err != nil {
+		utils.Logger.Errorf("Failed to send subtask 10 collage photo: %v", err)
+		return err
+	}
+
+	// Send as document (original without compression)
+	document := &telebot.Document{
+		File:     telebot.FromDisk("subtask10_collage.jpg"),
+		MIME:     "image/jpeg",
+		FileName: "subtask10_collage_2160x2160.jpg",
+		Caption:  "Cупер висока якість для моїх aesthetic girls 🎀",
+	}
+	bot.Send(chat, document)
+
+	// Clean up temporary file
+	go func() {
+		time.Sleep(5 * time.Second)
+		os.Remove("subtask10_collage.jpg")
+		fmt.Println("Temporary subtask 10 collage file cleaned up")
+	}()
+
+	return nil
 }
+
 
 // CreateSubtask10CollageWithGG creates a 3×3 collage from winning images
 func CreateSubtask10CollageWithGG(winners []string) error {

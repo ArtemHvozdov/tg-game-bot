@@ -1,0 +1,80 @@
+1. func CreateGame(gameName string, gameGroupChatId int64) (*models.Game, error)
+    создаёт запись игры и возвращает объект игры
+
+2. func UpdateGameStatus(gameID int64, status string) error
+    обновляет статус игры
+
+3. func GetCurrentGameStatus(gameID int) (string, error)
+    возвращает текущий статус игры
+
+4. func GetGameById(gameID int) (*models.Game, error)
+    возвращает объект игры по её айди
+
+5. func GetGameByChatId(chatID int64) (*models.Game, error)
+    возвращает объект игры по айди чата в телегамм
+
+6. func AddPlayerToGame(player *models.Player) error
+    добавляет игрока в игру
+
+7. func DeletePlayerFromGame(playerID int64, gameID int) error
+    удаляется игрока из игры по айди игрока и айди группы
+
+8. func GetAllPlayersByGameID(gameId int) ([]models.Player, error)
+    возвращает массива всех игроков по айди игры
+
+9. func UpdatePlayerStatus(playerID int64, status string) error
+    обновляет статус игрока
+
+10. func GetStatusPlayer(playerID int64) (string, error) 
+    возвращает статус игрока по его айди
+
+11. func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error)
+    возвращает роль игрока в игре по его айди и айди игры
+
+12. func GetAdminPlayerByGameID(gameID int) (*models.Player, error)
+    возвращает игрока с ролью админ в игре по айди игры
+
+13. func AddPlayerResponse(playerResponse *models.PlayerResponse) error
+    добавляет ответ иргока на таску
+
+14. func CheckPlayerResponseStatus(playerID int64, gameID int, taskID int) (*models.AddResponseResult, error)
+    проверяет отвечал ли игрок на таску в игре по их айди
+
+15. func SkipPlayerResponse(playerID int64, userName string, gameID, taskID int) (*models.SkipStatus, error)
+    добавляет пропуск игрока таски в игре по их айди
+
+16. func UpdateCurrentTaskID(gameID int, taskID int, timeUpdate int64) error
+    обновляет айди текущей таски в игре по их айди и сохраняет время обновления
+
+17. func IsUserInGame(playerID int64, gameID int) (bool, error)
+    проверяет добавлен ли игрок в игру
+
+18. func AddSubtaskAnswer(answer *models.SubtaskAnswer) error
+    добавляет ответ игрока на сабтаску
+
+19. func GetSubtaskResults(gameID, taskID int) (map[int]map[string]int, error)
+    возвращает результаты сабтаскт
+
+20. func AddSubtask10Answer(answer *models.Subtask10Answer) error
+    добавляет ответ на сабтаску 10
+
+21. func GetAllActiveGames() ([]models.Game, error) 
+    возвращает все активные игры, которые в данный момент играются
+
+22. func ClearNotificationsForGame(gameID, gameChatID int64) error
+    очищает таблицу об уведомления напоминаняих игрокам, когда игра заканчивается
+
+23. func GetPlayersWithAnswer(gameID, taskID int64) ([]models.PlayerNot, error)
+    возвращает игрока, который уже ответил на текущую таску в игре
+
+24. func GetPlayersWhoSkipped(gameID, taskID int64) ([]models.PlayerNot, error)
+    возвращает игрока, который уже пропустил текущую таску в игре
+
+25. func MarkSummaryAsSent(gameID, taskID int64) error
+    делает запись для игры и таски по их айди, что для этой атски и игры уже были подведены итоги
+
+26. func HasSummaryBeenSent(gameID, taskID int64) (bool, error)
+    проверяет были ли уже подведены итоги для игры и таски по их айди
+
+27. func ClearSummaryNotifications(gameID int64) error
+    очищает все записи подведения итогов для игры по ее айди

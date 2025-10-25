@@ -266,12 +266,14 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 
 // startPollTimer - starts the timer and ends the voting
 func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *PollSession, keyboard *telebot.ReplyMarkup) {
+	utils.Logger.Info("Starting poll timer...")
 	game, _ := storage_db.GetGameByChatId(chatID)
 	currentTaskID := game.CurrentTaskID
 
-	if currentTaskID == 4 {
+	if currentTaskID == 5 {
+		utils.Logger.Info("Poll timer started for subtask 5...")
 		// time.Sleep(15 * time.Second)
-		time.Sleep(1 * time.Minute)
+		time.Sleep(2 * time.Minute)
 
 		// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
 		utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
@@ -515,7 +517,7 @@ func StartSubtask5VotingDirect(bot *telebot.Bot, chatID int64, mainTaskText stri
 }
 
 // HandlePollAnswer - poll answer handler (if additional logic is needed)
-func HandlePollAnswer(bot *telebot.Bot) func(c telebot.Context) error {
+func HandlePollAnswer1(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		// Simple logging without detailed processing
 		utils.Logger.Info("Poll answer received")
