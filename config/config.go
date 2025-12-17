@@ -33,20 +33,20 @@ var (
 
 var devDurations = TimeDurations{
 	TimePauseMsgStartGameAndMsgJoinGame:   5 * time.Second,  // 5 seconds
-	TimeDeleteMsgUserIsAlreadyInGame:      5 * time.Second, // 30 seconds Feature: change time to 5 seconds
-	TimeDeleteMsgOnlyAdmniCanStartGame:	   5 * time.Second, // 30 seconds
+	TimeDeleteMsgUserIsAlreadyInGame:      10 * time.Second, // 30 seconds Feature: change time to 5 seconds
+	TimeDeleteMsgOnlyAdmniCanStartGame:	   10 * time.Second, // 30 seconds
 	TimeDeleteMsgYouAlreadyStartedGame:	   5 * time.Minute,	 // 1 minute 		
 	TimePauseBeforeStartSendingTask:	   2 * time.Second,  // 1 minute				
 	TimeDeleteAlbumId:					   2 * time.Minute,  // 2 minutes						
-	TimePauseBetweenSendingTasks:		   20 * time.Minute,  // 3 minutes
-	TimeDeleteMsgJoinGamerReminder:		   5 * time.Second,  // 5 seconds
-	TimeDeleteMsgYouAlreadyAnswered:	   5 * time.Second,  // 5 seconds 			
-	TimeDeleteMsgYouAreNotInGame: 		   5 * time.Second, // 5 seconds			
-	TimeDeleteMsgAwaitingAnswer:		   5 * time.Second,  // 3 seconds 			
-	TimeDeleteMsgMaxSkipTasks:			   5 * time.Second,  // 5 minutes
-	TimeDeleteMsgReturnToGame:             5 * time.Second,  // 5 seconds	
-	TimeDeleteMsgExitGame:                 5 * time.Second,  // 5 seconds
-	TimeDeleteMsgAdminExit:         	   5 * time.Second,  // 5 seconds			 
+	TimePauseBetweenSendingTasks:		   15 * time.Minute,  // 3 minutes
+	TimeDeleteMsgJoinGamerReminder:		   10 * time.Second,  // 5 seconds
+	TimeDeleteMsgYouAlreadyAnswered:	   10 * time.Second,  // 5 seconds 			
+	TimeDeleteMsgYouAreNotInGame: 		   10 * time.Second, // 5 seconds			
+	TimeDeleteMsgAwaitingAnswer:		   10 * time.Second,  // 5 seconds 			
+	TimeDeleteMsgMaxSkipTasks:			   10 * time.Second,  // 5 minutes
+	TimeDeleteMsgReturnToGame:             10 * time.Second,  // 5 seconds	
+	TimeDeleteMsgExitGame:                 10 * time.Second,  // 5 seconds
+	TimeDeleteMsgAdminExit:         	   10 * time.Second,  // 5 seconds			 
 }
 
 var prodDurations = TimeDurations{
