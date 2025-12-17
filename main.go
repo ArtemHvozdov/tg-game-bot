@@ -116,9 +116,11 @@ func main() {
 	bot.Handle("/test", handlers.TestRunHandler(bot))
 	bot.Handle("/test_start", handlers.SendStartGameMessages(bot))
 	bot.Handle("/test_finish", handlers.FinishTestHandler(bot))
-	bot.Handle("/test_referal", handlers.SendReferalMsg(bot))
-	bot.Handle("/test_feedback", handlers.SendFeedbackMsg(bot))
-	bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
+
+	// bot.Handle("/test_referal", handlers.SendReferalMsg(bot))
+	// bot.Handle("/test_feedback", handlers.SendFeedbackMsg(bot))
+	// bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
+
 	//bot.Handle("/test_ref_link", handlers.GetReferalLinkHandler(bot))
 	//bot.Handle("/photo_task", handlers.SendPhotoTask(bot))
 	bot.Handle("/create", handlers.CreateCollageFromResultsImageNine(bot))
@@ -144,7 +146,7 @@ func main() {
 	handlers.InitLoaderMessages()
 	
 
-	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe))
+	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe)) 
 	bot.Handle("/start", handlers.StartHandler(bot))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))
 	//bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
