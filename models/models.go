@@ -12,6 +12,11 @@ type Player struct {
 	Role     string // "admin", "player"
 }
 
+type PlayerNot struct {
+	ID	   int64
+	UserName string
+}
+
 type Game struct {
 	ID         int
 	Name       string
@@ -32,6 +37,7 @@ type GamePlayer struct {
 type PlayerResponse struct {
 	ID          int
 	PlayerID    int64
+	UserName    string
 	GameID      int
 	TaskID      int
 	HasResponse bool
@@ -63,6 +69,11 @@ type Task struct {
 	ID          int    `json:"id"`
 	Tittle      string `json:"title"`
 	Description string `json:"description"`
+}
+
+type SummaryMsg struct {
+	ID int
+	Summary string
 }
 
 // type SubTask struct {

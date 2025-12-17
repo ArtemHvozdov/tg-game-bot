@@ -14,7 +14,7 @@ func createTables() error {
 		{
 			"players",
 			`CREATE TABLE IF NOT EXISTS players (
-				id INTEGER,
+				id INTEGER PRIMARY KEY,
 				username TEXT NOT NULL,
 				name TEXT NOT NULL,
 				game_id INTEGER,
@@ -47,29 +47,30 @@ func createTables() error {
 				FOREIGN KEY (player_id) REFERENCES players(id)
 			)`,
 		},
-		{
-			"tasks",
-			`CREATE TABLE IF NOT EXISTS tasks (
-				id INTEGER PRIMARY KEY,
-				game_id INTEGER,
-				question TEXT NOT NULL,
-				answer TEXT NOT NULL,
-				FOREIGN KEY (game_id) REFERENCES games(id)
-			)`,
-		},
+		// {
+		// 	"tasks",
+		// 	`CREATE TABLE IF NOT EXISTS tasks (
+		// 		id INTEGER PRIMARY KEY,
+		// 		game_id INTEGER,
+		// 		question TEXT NOT NULL,
+		// 		answer TEXT NOT NULL,
+		// 		FOREIGN KEY (game_id) REFERENCES games(id)
+		// 	)`,
+		// },
 		{
 			"player_responses",
 			`CREATE TABLE IF NOT EXISTS player_responses (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				player_id INTEGER,
+				user_name TEXT,
 				game_id INTEGER,
 				task_id INTEGER,
 				has_answer BOOLEAN DEFAULT FALSE,
 				skipped BOOLEAN DEFAULT FALSE,
 				notification_sent INTEGER DEFAULT 0 CHECK (notification_sent IN (0,1)),
 				FOREIGN KEY (player_id) REFERENCES players(id),
-				FOREIGN KEY (game_id) REFERENCES games(id),
-				FOREIGN KEY (task_id) REFERENCES tasks(id)
+				FOREIGN KEY (game_id) REFERENCES games(id)
+				
 			)`,
 		},
 		{
@@ -115,6 +116,15 @@ func createTables() error {
 				task_id INTEGER NOT NULL,
 				user_id INTEGER NOT NULL,
 				notification_sent INTEGER DEFAULT 0 CHECK (notification_sent IN (0,1))
+			)`,
+		},
+		{
+			"summary_notifications",
+			`CREATE TABLE IF NOT EXISTS summary_notifications (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id INTEGER NOT NULL,
+				task_id INTEGER NOT NULL,
+				summary_sent INTEGER DEFAULT 0 CHECK (summary_sent IN (0,1))
 			)`,
 		},
 	}

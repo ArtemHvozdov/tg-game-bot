@@ -46,7 +46,7 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
-		status, err := storage_db.SkipPlayerResponse(user.ID, game.ID, userTaskID)
+		status, err := storage_db.SkipPlayerResponse(user.ID, user.Username, game.ID, userTaskID)
 		if err != nil {
 			utils.Logger.Errorf("Error skipping task %d bu user: %v. %v", userTaskID, user.Username, err)
 			return nil
