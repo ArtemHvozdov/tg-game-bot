@@ -127,6 +127,15 @@ func createTables() error {
 				summary_sent INTEGER DEFAULT 0 CHECK (summary_sent IN (0,1))
 			)`,
 		},
+		{
+			"collage_requests",
+			`CREATE TABLE IF NOT EXISTS collage_requests (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id INTEGER NOT NULL,
+				chat_id INTEGER NOT NULL,
+				status TEXT NOT NULL
+			)`,
+		},
 	}
 
 	for _, q := range queries {

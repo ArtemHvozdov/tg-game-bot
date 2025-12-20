@@ -103,6 +103,13 @@ type Subtask10Answer struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+type CollageRequest struct {
+	ID        int64
+	GameID    int64
+	ChatID    int64
+	Status    string // "waiting", "processing", "done"
+}
+
 // Const of state
 const (
 	StatusGameWaiting  = "waiting"
@@ -111,6 +118,10 @@ const (
 
 	StatusPlayerWaiting   = "waiting_"
 	StatusPlayerNoWaiting = "no_waiting"
+
+	StatusReqCollageWaiting = "waiting"
+	StatusReqCollageProcessing = "processing"
+	StatusReqCollageDone = "done"
 
 	// Unique buttons
 	UniqueHelp = "help_menu"

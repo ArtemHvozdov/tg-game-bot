@@ -117,6 +117,9 @@ func main() {
 	bot.Handle("/test_start", handlers.SendStartGameMessages(bot))
 	bot.Handle("/test_finish", handlers.FinishTestHandler(bot))
 
+	bot.Handle("/request_collage", handlers.RequestCollageHandler(bot))
+	bot.Handle("/select_request", handlers.SelectRequestHandler(bot))
+
 	// bot.Handle("/test_referal", handlers.SendReferalMsg(bot))
 	// bot.Handle("/test_feedback", handlers.SendFeedbackMsg(bot))
 	// bot.Handle("/test_coffee", handlers.SendBuyMeCoffeeMsg(bot))
