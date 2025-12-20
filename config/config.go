@@ -3,8 +3,11 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -29,6 +32,7 @@ type TimeDurations struct {
 
 var (
 	durations TimeDurations
+	AdminIDs  []int64
 )
 
 var devDurations = TimeDurations{
@@ -75,6 +79,7 @@ type Config struct {
 	DatabaseFile  string // Name database file
 	Mode          string // Mode of bot (dev | prod)
 	Durations     TimeDurations // Duratuions for settings bot
+	AdminIDs	  []int64 // Slice of admin IDs
 }
 
 // LoadConfig load configuration from .env file
@@ -114,11 +119,28 @@ func LoadConfig() *Config {
 		panic("Invalid mode specified. Use 'dev' or 'prod'.")
 	}
 
+	adminIDsStr := os.Getenv("ADMIN_IDS")
+    if adminIDsStr != "" {
+        parts := strings.Split(adminIDsStr, ",")
+        for _, part := range parts {
+            part = strings.TrimSpace(part)
+            if part != "" {
+                id, err := strconv.ParseInt(part, 10, 64)
+                if err != nil {
+					utils.Logger.Errorf("Erro load config by admin's ID: %v", err)
+                    return nil 
+                }
+                AdminIDs = append(AdminIDs, id)
+            }
+        }
+    }
+
 	return &Config{
 		TelegramToken: token,
 		DatabaseDir:   dbDir,
 		DatabaseFile:  dbFile,
 		Mode:		   mode,
 		Durations: 	   durations,
+		AdminIDs:      AdminIDs,
 	}
 }

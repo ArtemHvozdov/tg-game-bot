@@ -282,3 +282,104 @@ func HasResponses(gameID, taskID int64) (bool, error) {
 
 	return exists, nil
 }
+
+// add request to collage_requests table
+func AddCollageRequest(gameID, chatID int64, status string) error {
+	query := `INSERT INTO collage_requests (game_id, chat_id, status) VALUES (?, ?, ?)`
+	_, err := Db.Exec(query, gameID, chatID, status)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "Db: AddCollageRequest",
+			"game_id": gameID,
+			"chat_id": chatID,
+			"status":  status,
+			"error":   err,
+		}).Error("Failed to add collage request")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":  "Db: AddCollageRequest",
+		"game_id": gameID,
+		"chat_id": chatID,
+		"status":  status,
+	}).Info("Collage request has been added successfully")
+	return nil
+}
+
+// update status request in collage_requests table
+func UpdateCollageRequestStatus(gameID, chatID int64, status string) error {
+	query := `UPDATE collage_requests SET status = ? WHERE game_id = ? AND chat_id = ?`
+	_, err := Db.Exec(query, status, gameID, chatID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "Db: UpdateCollageRequestStatus",
+			"game_id": gameID,
+			"chat_id": chatID,
+			"status":  status,
+			"error":   err,
+		}).Error("Failed to update collage request status")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":  "Db: UpdateCollageRequestStatus",
+		"game_id": gameID,
+		"chat_id": chatID,
+		"status":  status,
+	}).Info("Collage request status has been updated successfully")
+	return nil
+}
+
+// get status request in collage_requests table
+func GetCollageRequestStatus(gameID, chatID int64) (string, error) {
+	query := `SELECT status FROM collage_requests WHERE game_id = ? AND chat_id = ?`
+	row := Db.QueryRow(query, gameID, chatID)
+
+	var status string
+	err := row.Scan(&status)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "Db: GetCollageRequestStatus",
+			"game_id": gameID,
+			"chat_id": chatID,
+			"error":   err,
+		}).Error("Failed to get collage request status")
+		return "", err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":  "Db: GetCollageRequestStatus",
+		"game_id": gameID,
+		"chat_id": chatID,
+		"status":  status,
+	}).Info("Collage request status has been retrieved successfully")
+	return status, nil
+}
+
+// GetAllCollageRequests get all collage requests with status "waiting"
+func GetAllCollageRequests() ([]models.CollageRequest, error) {
+	query := `SELECT id, game_id, chat_id, status FROM collage_requests WHERE status = ?`
+	rows, err := Db.Query(query, models.StatusReqCollageWaiting)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source": "Db: GetAllCollageRequests",
+			"error":  err,
+		}).Error("Failed to get all collage requests")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var requests []models.CollageRequest
+	for rows.Next() {
+		var req models.CollageRequest
+		err := rows.Scan(&req.ID, &req.GameID, &req.ChatID, &req.Status)
+		if err != nil {
+			utils.Logger.Errorf("Error scanning collage request: %v", err)
+			return nil, err
+		}
+		requests = append(requests, req)
+	}
+
+	return requests, nil
+}
