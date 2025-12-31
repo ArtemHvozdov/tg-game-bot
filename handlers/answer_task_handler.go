@@ -50,6 +50,8 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			utils.Logger.Errorf("Error getting task ID from data button: %v", err)
 		}
 
+		utils.Logger.Infof("User %s is answering to task %d in game %d", user.Username, idTask, game.ID)
+
 		// switch idTask {
 		// case 3:
 		// 	subtasks.WhoIsUsSubTask(bot)(c)
@@ -96,6 +98,9 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 		storage_db.UpdatePlayerStatus(user.ID, models.StatusPlayerWaiting+strconv.Itoa(idTask))
 
 		switch idTask {
+		case 1:
+			handleSubTask53(c)
+			return nil
 		case 3:
 			session, exists := subtasks.GlobalSessionManager.GetActiveSession(game.ID)
 			if exists && session.UserID == user.ID {

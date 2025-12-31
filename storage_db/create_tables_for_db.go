@@ -136,6 +136,14 @@ func createTables() error {
 				status TEXT NOT NULL
 			)`,
 		},
+		{
+			"voice_memes",
+			`CREATE TABLE IF NOT EXISTS voice_memes (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id INTEGER NOT NULL UNIQUE,
+				count_answers INTEGER NOT NULL
+			)`,
+		},
 	}
 
 	for _, q := range queries {

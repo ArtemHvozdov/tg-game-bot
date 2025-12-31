@@ -383,3 +383,54 @@ func GetAllCollageRequests() ([]models.CollageRequest, error) {
 
 	return requests, nil
 }
+
+// IncrementVoiceMemeAnswers increments the count_answers for a given game in voice_memes table
+func IncrementVoiceMemeAnswers(gameID int64) error {
+	query := `
+		INSERT INTO voice_memes (game_id, count_answers)
+		VALUES (?, 1)
+		ON CONFLICT(game_id) DO UPDATE SET count_answers = count_answers + 1;
+	`
+	_, err := Db.Exec(query, gameID)
+	if err != nil {
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "Db: IncrementVoiceMemeAnswers",
+			"game_id": gameID,
+			"error":   err,
+		}).Error("Failed to increment voice meme answers")
+		return err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":  "Db: IncrementVoiceMemeAnswers",
+		"game_id": gameID,
+	}).Info("Voice meme answers count has been incremented successfully")
+	return nil
+}
+
+// GetVoiceMemeAnswersCount retrieves the count_answers for a given game from voice_memes table
+func GetVoiceMemeAnswersCount(gameID int64) (int, error) {
+	query := `SELECT count_answers FROM voice_memes WHERE game_id = ?`
+	row := Db.QueryRow(query, gameID)
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil // No entries yet
+		}
+		utils.Logger.WithFields(logrus.Fields{
+			"source":  "Db: GetVoiceMemeAnswersCount",
+			"game_id": gameID,
+			"error":   err,
+		}).Error("Failed to get voice meme answers count")
+		return 0, err
+	}
+
+	utils.Logger.WithFields(logrus.Fields{
+		"source":       "Db: GetVoiceMemeAnswersCount",
+		"game_id":  gameID,
+		"count_answers": count,
+	}).Info("Voice meme answers count has been retrieved successfully")
+	return count, nil
+}

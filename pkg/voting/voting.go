@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	//"github.com/ArtemHvozdov/tg-game-bot.git/models"
+	//"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 	"gopkg.in/telebot.v3"
@@ -270,10 +272,10 @@ func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *P
 	game, _ := storage_db.GetGameByChatId(chatID)
 	currentTaskID := game.CurrentTaskID
 
-	if currentTaskID == 5 {
+	if currentTaskID == 1 {
 		utils.Logger.Info("Poll timer started for subtask 5...")
 		// time.Sleep(15 * time.Second)
-		time.Sleep(2 * time.Minute)
+		time.Sleep(10 * time.Second) // time called summary voiting - 2 minutes
 
 		// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
 		utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
@@ -294,7 +296,21 @@ func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *P
 		chat := &telebot.Chat{ID: chatID}
 		winnerMessage := fmt.Sprintf("🎉 Переможець голосування:\n\n%s\n\n%s", winner.Title, processedDescription)
 
-		_, err = bot.Send(chat, winnerMessage, keyboard, telebot.ModeHTML)
+		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
+
+		answerTaskData := fmt.Sprintf("waiting_1_%d", winner.ID) // в проде заменить на waituing_5_winner.ID
+		skipTaskData := fmt.Sprintf("skip_1_%d", winner.ID) // в проде заменить на skip_5_winner.ID
+
+		answerBtn := inlineKeys.Data("Хочу відповісти", answerTaskData)
+		//skipBtn := btnmanager.Get(inlineKeys, models.UniqueSkipTask, taskId)
+		skipBtn := inlineKeys.Data("Пропустити", skipTaskData)
+
+		inlineKeys.Inline(
+			inlineKeys.Row(answerBtn, skipBtn),
+		)
+
+		//_, err = bot.Send(chat, winnerMessage, keyboard, telebot.ModeHTML)
+		_, err = bot.Send(chat, winnerMessage, inlineKeys, telebot.ModeHTML)
 		if err != nil {
 			utils.Logger.Errorf("Failed to send winner message: %v", err)
 		}

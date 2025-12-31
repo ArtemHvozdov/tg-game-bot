@@ -25,6 +25,8 @@ func RegisterCallbackHandlers(bot *telebot.Bot) {
 			return handleExitGame(bot, c)
 		case strings.HasPrefix(data, "\fexit_"):
 			return handleExitConfirm(bot, c)
+		// case strings.HasPrefix(data,"\fwaiting_1_" ):
+		// 	return HandleSubTask5(bot)(c)
 		// case data == "support_menu":
 		// 	return handleSupportMenu(bot, c)
 		case data == "\fhelp_menu":

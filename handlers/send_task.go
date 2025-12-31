@@ -60,21 +60,30 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 		inlineKeys.Row(answerBtn, skipBtn),
 	)
 
-	// Создаем объект фото
-	photo := &telebot.Photo{
-		File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/1.jpg"),
-		Caption: msg,
-	}
+	utils.Logger.Info("Starting subtask 5 voiting fot test test")
+			err = voting.StartSubtask5VotingDirect(bot, chatID, msg, inlineKeys)
+			if err != nil {
+				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+				// Можете решить, продолжать ли выполнение или вернуть ошибку
+			} else {
+				utils.Logger.Info("Successfully started subtask 5 voting")
+			}
 
-	_, err = bot.Send(&telebot.Chat{ID: chatID}, photo, inlineKeys, telebot.ModeMarkdown)
-	if err != nil {
-		utils.Logger.Errorf("SendTasks logs: Error sending first task with media to chat %d: %v", chatID, err)
-		_, err = bot.Send(&telebot.Chat{ID: chatID}, msg, inlineKeys, telebot.ModeMarkdown)
-		if err != nil {
-			utils.Logger.Errorf("SendTasks logs: Error sending first task without media to chat %d: %v", chatID, err)
-			return err
-		}
-    }
+	// Создаем объект фото
+	// photo := &telebot.Photo{
+	// 	File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/1.jpg"),
+	// 	Caption: msg,
+	// }
+
+	// _, err = bot.Send(&telebot.Chat{ID: chatID}, photo, inlineKeys, telebot.ModeMarkdown)
+	// if err != nil {
+	// 	utils.Logger.Errorf("SendTasks logs: Error sending first task with media to chat %d: %v", chatID, err)
+	// 	_, err = bot.Send(&telebot.Chat{ID: chatID}, msg, inlineKeys, telebot.ModeMarkdown)
+	// 	if err != nil {
+	// 		utils.Logger.Errorf("SendTasks logs: Error sending first task without media to chat %d: %v", chatID, err)
+	// 		return err
+	// 	}
+    // }
 
 	return nil
 
@@ -124,19 +133,28 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 	)
 
 	switch currentTask.ID {
-		case 2:
-			video := &telebot.Video{
-				File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/2.mp4"),
-				Caption: msg,
-			}
-			_, err = bot.Send(chat, video, inlineKeys, telebot.ModeMarkdown)
+		case 1:
+			utils.Logger.Info("Starting subtask 5 voiting fot test test")
+			err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
 			if err != nil {
-				utils.Logger.Errorf("Error sending task %d with video: %v", currentTask.ID,err)
-				_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
-				if err != nil {
-					return err
-				}
+				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+				// Можете решить, продолжать ли выполнение или вернуть ошибку
+			} else {
+				utils.Logger.Info("Successfully started subtask 5 voting")
 			}
+		case 2:
+			// video := &telebot.Video{
+			// 	File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/2.mp4"),
+			// 	Caption: msg,
+			// }
+			// _, err = bot.Send(chat, video, inlineKeys, telebot.ModeMarkdown)
+			// if err != nil {
+			// 	utils.Logger.Errorf("Error sending task %d with video: %v", currentTask.ID,err)
+			// 	_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
 		case 3:
 			photo := &telebot.Photo{
 				File:	telebot.FromDisk("internal/data/tasks/media_for_tasks/3.jpg"),

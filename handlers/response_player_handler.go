@@ -133,6 +133,8 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
+		utils.Logger.Infof("HandlerPlayerResponse called by user %s in group %s with status %s", user.Username, chat.Title, statusUser)
+
 		utils.Logger.WithFields(logrus.Fields{
 				"source": "HandlerPlayerResponse",
 				"username": user.Username,
@@ -157,7 +159,10 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 
 		// Switch case for different task IDs
         switch userTaskID {
-        case 1:
+		case 1: // for the task 5
+			HandleSubTask5Response(bot)(msg)
+			return nil
+        case 13:
             // Handle photo saving for task 1
             if msg.Photo != nil {
                 err := savePhotosForTask13(bot, chat.ID, msg)
