@@ -159,9 +159,10 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 
 		// Switch case for different task IDs
         switch userTaskID {
-		case 1: // for the task 5
-			HandleSubTask5Response(bot)(msg)
-			return nil
+		// this case is for quick test of subtask memes
+		// case 1: // for the task 5
+		// 	HandleSubTask5Response(bot)(msg)
+		// 	return nil
         case 13:
             // Handle photo saving for task 1
             if msg.Photo != nil {
@@ -194,9 +195,9 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
                 }
             }
 
-        case 3:
-            // Skip messages from user. User answered subtask
-            return nil
+        // case 3:
+        //     // Skip messages from user. User answered subtask
+        //     return nil
 
         default:
             // For non-photo messages in albums, skip if already processed

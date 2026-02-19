@@ -14,7 +14,8 @@ func createTables() error {
 		{
 			"players",
 			`CREATE TABLE IF NOT EXISTS players (
-				id INTEGER PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				user_id INTEGER NOT NULL,
 				username TEXT NOT NULL,
 				name TEXT NOT NULL,
 				game_id INTEGER,
@@ -68,7 +69,7 @@ func createTables() error {
 				has_answer BOOLEAN DEFAULT FALSE,
 				skipped BOOLEAN DEFAULT FALSE,
 				notification_sent INTEGER DEFAULT 0 CHECK (notification_sent IN (0,1)),
-				FOREIGN KEY (player_id) REFERENCES players(id),
+				
 				FOREIGN KEY (game_id) REFERENCES games(id)
 				
 			)`,
@@ -94,8 +95,8 @@ func createTables() error {
 			)`,
 		},
 		{
-			"subtask_10_answers",
-			`CREATE TABLE IF NOT EXISTS subtask_10_answers (
+			"subtask_2_answers",
+			`CREATE TABLE IF NOT EXISTS subtask_2_answers (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				game_id INTEGER NOT NULL,
 				task_id INTEGER NOT NULL,

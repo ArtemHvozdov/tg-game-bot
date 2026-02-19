@@ -115,15 +115,15 @@ func GetSubtaskResults(gameID, taskID int) (map[int]map[string]int, error) {
     return results, rows.Err()
 }
 
-// AddSubtask10Answer adds a new subtask 10 answer to the database
-func AddSubtask10Answer(answer *models.Subtask10Answer) error {
-	query := `INSERT INTO subtask_10_answers (game_id, task_id, question_index, question_id, answerer_user_id, selected_option)
+// AddSubtask2Answer adds a new subtask 2 answer to the database
+func AddSubtask2Answer(answer *models.Subtask2Answer) error {
+	query := `INSERT INTO subtask_2_answers (game_id, task_id, question_index, question_id, answerer_user_id, selected_option)
 		VALUES (?, ?, ?, ?, ?, ?)`
 	
 	_, err := Db.Exec(query, answer.GameID, answer.TaskID, answer.QuestionIndex, answer.QuestionID, answer.AnswererUserID, answer.SelectedOption)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":           "Db: AddSubtask10Answer",
+			"source":           "Db: AddSubtask2Answer",
 			"game_id":          answer.GameID,
 			"task_id":          answer.TaskID,
 			"question_index":   answer.QuestionIndex,
@@ -131,19 +131,19 @@ func AddSubtask10Answer(answer *models.Subtask10Answer) error {
 			"answerer_user_id": answer.AnswererUserID,
 			"selected_option":  answer.SelectedOption,
 			"error":            err,
-		}).Error("Failed to add subtask 10 answer")
+		}).Error("Failed to add subtask 2 answer")
 		return err
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source":           "Db: AddSubtask10Answer",
+		"source":           "Db: AddSubtask2Answer",
 		"game_id":          answer.GameID,
 		"task_id":          answer.TaskID,
 		"question_index":   answer.QuestionIndex,
 		"question_id":      answer.QuestionID,
 		"answerer_user_id": answer.AnswererUserID,
 		"selected_option":  answer.SelectedOption,
-	}).Info("Subtask 10 answer added successfully")
+	}).Info("Subtask 2 answer added successfully")
 	
 	return nil
 }

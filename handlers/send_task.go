@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
-	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/voting"
+
+	//"github.com/ArtemHvozdov/tg-game-bot.git/pkg/voting"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 	"github.com/sirupsen/logrus"
@@ -30,7 +33,7 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	return err
 	}
 
-    tasks, err := utils.LoadTasks("internal/data/tasks/tasks.json")
+    tasks, err := utils.LoadTasks("internal/data/tasks/tasks_v3.json")
     if err != nil {
 		    utils.Logger.Errorf("SendTasks logs: Error loading tasks: %v", err)
         return err
@@ -49,6 +52,20 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	storage_db.UpdateCurrentTaskID(game.ID, firstTask.ID, timeUpdate)
 
 	msg := firstTask.Tittle + "\n\n" + firstTask.Description
+	fileGif := telebot.FromDisk(fmt.Sprintf("internal/data/tasks/media_for_tasks/%d.gif", firstTask.ID))
+
+	weight, height, err := utils.GetImageDimensions(fileGif.FileLocal)
+	if err != nil {
+		utils.Logger.Errorf("Error getting GIF dimensions: %v", err)
+		return err
+	}
+
+	photo := &telebot.Animation{
+		File:   fileGif,
+		Caption: msg,
+		Width:  weight,
+		Height: height,
+	}
 		
 		// create buttons Answer and Skip
 	inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
@@ -60,14 +77,14 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 		inlineKeys.Row(answerBtn, skipBtn),
 	)
 
-	utils.Logger.Info("Starting subtask 5 voiting fot test test")
-			err = voting.StartSubtask5VotingDirect(bot, chatID, msg, inlineKeys)
-			if err != nil {
-				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
-				// Можете решить, продолжать ли выполнение или вернуть ошибку
-			} else {
-				utils.Logger.Info("Successfully started subtask 5 voting")
-			}
+	// utils.Logger.Info("Starting subtask 5 voiting fot test test")
+	// 		err = voting.StartSubtask5VotingDirect(bot, chatID, msg, inlineKeys)
+	// 		if err != nil {
+	// 			utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+	// 			// Можете решить, продолжать ли выполнение или вернуть ошибку
+	// 		} else {
+	// 			utils.Logger.Info("Successfully started subtask 5 voting")
+	// 		}
 
 	// Создаем объект фото
 	// photo := &telebot.Photo{
@@ -75,15 +92,23 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	// 	Caption: msg,
 	// }
 
-	// _, err = bot.Send(&telebot.Chat{ID: chatID}, photo, inlineKeys, telebot.ModeMarkdown)
-	// if err != nil {
-	// 	utils.Logger.Errorf("SendTasks logs: Error sending first task with media to chat %d: %v", chatID, err)
-	// 	_, err = bot.Send(&telebot.Chat{ID: chatID}, msg, inlineKeys, telebot.ModeMarkdown)
-	// 	if err != nil {
-	// 		utils.Logger.Errorf("SendTasks logs: Error sending first task without media to chat %d: %v", chatID, err)
-	// 		return err
-	// 	}
-    // }
+	_, err = bot.Send(&telebot.Chat{ID: chatID}, photo, inlineKeys, telebot.ModeMarkdown)
+	if err != nil {
+		utils.Logger.Errorf("SendTasks logs: Error sending first task with media to chat %d: %v", chatID, err)
+		_, err = bot.Send(&telebot.Chat{ID: chatID}, msg, inlineKeys, telebot.ModeMarkdown)
+		if err != nil {
+			utils.Logger.Errorf("SendTasks logs: Error sending first task without media to chat %d: %v", chatID, err)
+			return err
+		}
+    }
+
+	// ticker := time.NewTicker(2 * time.Minute) // создаём тикер с интервалом 10 секунд
+	// defer ticker.Stop()                        // останавливаем тикер при выходе из main
+
+	// for {
+	// 	<-ticker.C // ждём, пока пройдёт 10 секунд
+	// 	SendNextTask(bot, int64(game.ID))
+	// }
 
 	return nil
 
@@ -102,7 +127,7 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 
 	utils.Logger.Info(chat.Title)
 
-    tasks, err := utils.LoadTasks("internal/data/tasks/tasks.json")
+    tasks, err := utils.LoadTasks("internal/data/tasks/tasks_v3.json")
     if err != nil {
         utils.Logger.Errorf("failed to load tasks: %v", err)
 		return err
@@ -121,6 +146,20 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 	storage_db.UpdateCurrentTaskID(game.ID, nextTaskID, timeUpdate)
 
 	msg := currentTask.Tittle + "\n\n" + currentTask.Description
+
+	fileGif := telebot.FromDisk(fmt.Sprintf("internal/data/tasks/media_for_tasks/%d.gif", currentTask.ID))
+
+	weight, height, err := utils.GetImageDimensions(fileGif.FileLocal)
+	if err != nil {
+		utils.Logger.Errorf("Error getting GIF dimensions: %v", err)
+	}
+
+	photo := &telebot.Animation{
+		File:   fileGif,
+		Caption: msg,
+		Width:  weight,
+		Height: height,
+	}
 		
 		// create buttons Answer and Skip
 	inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
@@ -132,56 +171,77 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 		inlineKeys.Row(answerBtn, skipBtn),
 	)
 
-	switch currentTask.ID {
-		case 1:
-			utils.Logger.Info("Starting subtask 5 voiting fot test test")
-			err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
+	// switch currentTask.ID {
+	// 	case 1:
+	// 		utils.Logger.Info("Starting subtask 5 voiting fot test test")
+	// 		err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
+	// 		if err != nil {
+	// 			utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+	// 			// Можете решить, продолжать ли выполнение или вернуть ошибку
+	// 		} else {
+	// 			utils.Logger.Info("Successfully started subtask 5 voting")
+	// 		}
+	// 	case 2:
+	// 		// video := &telebot.Video{
+	// 		// 	File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/2.mp4"),
+	// 		// 	Caption: msg,
+	// 		// }
+	// 		// _, err = bot.Send(chat, video, inlineKeys, telebot.ModeMarkdown)
+	// 		// if err != nil {
+	// 		// 	utils.Logger.Errorf("Error sending task %d with video: %v", currentTask.ID,err)
+	// 		// 	_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
+	// 		// 	if err != nil {
+	// 		// 		return err
+	// 		// 	}
+	// 		// }
+	// 	case 3:
+	// 		photo := &telebot.Photo{
+	// 			File:	telebot.FromDisk("internal/data/tasks/media_for_tasks/3.jpg"),
+	// 			Caption: msg,
+	// 		}
+	// 		_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown)
+	// 		if err != nil {
+	// 			utils.Logger.Errorf("Error sending task %d with photo: %v", currentTask.ID,err)
+	// 			_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
+	// 			if err != nil {
+	// 				return err
+	// 			}
+	// 		}
+	// 	case 5:
+	// 		err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
+	// 		if err != nil {
+	// 			utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+	// 			// Можете решить, продолжать ли выполнение или вернуть ошибку
+	// 		} else {
+	// 			utils.Logger.Info("Successfully started subtask 5 voting")
+	// 		}
+	// 	default:
+	// 		_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown )
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// }
+
+	if _, err := os.Stat(fileGif.FileLocal); os.IsNotExist(err) {
+    utils.Logger.Warnf("GIF file not found for task %d: %s", currentTask.ID, fileGif.FileLocal)
+}
+
+
+	_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown )
 			if err != nil {
-				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
-				// Можете решить, продолжать ли выполнение или вернуть ошибку
-			} else {
-				utils.Logger.Info("Successfully started subtask 5 voting")
-			}
-		case 2:
-			// video := &telebot.Video{
-			// 	File:    telebot.FromDisk("internal/data/tasks/media_for_tasks/2.mp4"),
-			// 	Caption: msg,
-			// }
-			// _, err = bot.Send(chat, video, inlineKeys, telebot.ModeMarkdown)
-			// if err != nil {
-			// 	utils.Logger.Errorf("Error sending task %d with video: %v", currentTask.ID,err)
-			// 	_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// }
-		case 3:
-			photo := &telebot.Photo{
-				File:	telebot.FromDisk("internal/data/tasks/media_for_tasks/3.jpg"),
-				Caption: msg,
-			}
-			_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown)
-			if err != nil {
-				utils.Logger.Errorf("Error sending task %d with photo: %v", currentTask.ID,err)
-				_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
-				if err != nil {
-					return err
-				}
-			}
-		case 5:
-			err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
-			if err != nil {
-				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
-				// Можете решить, продолжать ли выполнение или вернуть ошибку
-			} else {
-				utils.Logger.Info("Successfully started subtask 5 voting")
-			}
-		default:
-			_, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown )
-			if err != nil {
+				 
+					utils.Logger.Errorf("Error sending task %d as text: %v", currentTask.ID, err)
+				
 				return err
 			}
-	}
+
+// 	if err != nil {
+//     utils.Logger.Errorf("Error sending task %d: %v", currentTask.ID, err)
+//     _, err = bot.Send(chat, msg, inlineKeys, telebot.ModeMarkdown)
+//     if err != nil {
+//         utils.Logger.Errorf("Error sending task %d as text: %v", currentTask.ID, err)
+//     }
+// }
 	
 	utils.Logger.WithFields(logrus.Fields{
         "game_id": game.ID,

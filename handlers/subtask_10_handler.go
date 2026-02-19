@@ -32,18 +32,18 @@ var (
 )
 
 
-// HandleSubTask10 handles button clicks for subtask 10
-func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
+// HandleSubTask2 handles button clicks for subtask 2
+func HandleSubTask2(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
 		user := c.Sender()
 		chat := c.Chat()
 		msg := c.Message()
 		data := c.Data()
 
-		utils.Logger.Infof("HandleSubTask10 called by user %s in chat %s with data: %s", user.Username, chat.Title, data)
+		utils.Logger.Infof("HandleSubTask2 called by user %s in chat %s with data: %s", user.Username, chat.Title, data)
 
-		// Check if this is a subtask 10 callback
-		if !strings.HasPrefix(data, "subtask_10_") {
+		// Check if this is a subtask 2 callback
+		if !strings.HasPrefix(data, "subtask_2_") {
 			return nil
 		}
 
@@ -53,8 +53,8 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 			return c.Send("Помилка отримання гри")
 		}
 
-		// Parse callback data: "subtask_10_{userID}_{questionIndex}_{selectedData}"
-		dataWithoutPrefix := strings.TrimPrefix(data, "subtask_10_")
+		// Parse callback data: "subtask_2_{userID}_{questionIndex}_{selectedData}"
+		dataWithoutPrefix := strings.TrimPrefix(data, "subtask_2_")
 		parts := strings.Split(dataWithoutPrefix, "_")
 
 		if len(parts) < 3 {
@@ -89,7 +89,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 				user.ID,
 				msgmanager.TypeNotInGame,
 				msgTextWrongUser,
-				10*time.Second,
+				2*time.Second,
 			)
 			if err != nil {
 				utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
@@ -98,7 +98,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		// Check player response status
-		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, 10)
+		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, 2)
 		if err != nil {
 			utils.Logger.Errorf("Error checking player response status: %v", err)
 			return nil
@@ -108,13 +108,13 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		case status.AlreadyAnswered:
 			msgYouAlreadyAnswered, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(alreadyAnswerMessages), user.Username))
 			if err != nil {
-				utils.Logger.Errorf("Error sending message that user %s already answered task 10: %v", user.Username, err)
+				utils.Logger.Errorf("Error sending message that user %s already answered task 2: %v", user.Username, err)
 			}
 
 			time.AfterFunc(cfg.Durations.TimeDeleteMsgYouAlreadyAnswered, func() {
 				err = bot.Delete(msgYouAlreadyAnswered)
 				if err != nil {
-					utils.Logger.Errorf("Error deleting message that user %s already answered task 10: %v", user.Username, err)
+					utils.Logger.Errorf("Error deleting message that user %s already answered task 2: %v", user.Username, err)
 				}
 			})
 
@@ -124,7 +124,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		// Check if user has active session
-		session, exists := quizdna.GlobalSubtask10SessionManager.GetActiveSession(game.ID)
+		session, exists := quizdna.GlobalSubtask2SessionManager.GetActiveSession(game.ID)
 		if !exists || session.UserID != user.ID {
 			msgTextOtherUserAnswer := fmt.Sprintf("@%s донт пуш зе хорсес! Інша зірочка зараз відповідає.", user.Username)
 
@@ -133,7 +133,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 				user.ID,
 				msgmanager.TypeNotInGame,
 				msgTextOtherUserAnswer,
-				10*time.Second,
+				2*time.Second,
 			)
 			if err != nil {
 				utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
@@ -149,9 +149,9 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source":           "HandleSubTask10",
+			"source":           "HandleSubTask2",
 			"username":         user.Username,
-			"task_id":          10,
+			"task_id":          2,
 			"question_index":   questionIndex,
 			"selected_data":    selectedData,
 		}).Infof("User %s selected option %s for question %d", user.Username, selectedData, questionIndex)
@@ -163,45 +163,45 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		// Save answer and check if completed
-		completed, err := quizdna.GlobalSubtask10SessionManager.SaveAnswerAndNext(game.ID, selectedData)
+		completed, err := quizdna.GlobalSubtask2SessionManager.SaveAnswerAndNext(game.ID, selectedData)
 		if err != nil {
-			utils.Logger.Errorf("Error saving subtask 10 answer: %v", err)
+			utils.Logger.Errorf("Error saving subtask 2 answer: %v", err)
 			return c.Send("Помилка збереження відповіді")
 		}
 
 		// Save to database
-		subtask10Answer := &models.Subtask10Answer{
+		subtask2Answer := &models.Subtask2Answer{
 			GameID:           game.ID,
-			TaskID:           10,
+			TaskID:           2,
 			QuestionIndex:    questionIndex,
 			AnswererUserID:   user.ID,
 			SelectedOption:   selectedData,
 			QuestionID:       session.Subtasks[questionIndex].ID,
 		}
 
-		err = storage_db.AddSubtask10Answer(subtask10Answer)
+		err = storage_db.AddSubtask2Answer(subtask2Answer)
 		if err != nil {
-			utils.Logger.Errorf("Error add subtask 10 answer to DB: %v", err)
+			utils.Logger.Errorf("Error add subtask 2 answer to DB: %v", err)
 		} else {
-			utils.Logger.Infof("Answer of subtask 10 add to DB: success")
+			utils.Logger.Infof("Answer of subtask 2 add to DB: success")
 		}
 
 		if completed {
 			// All questions answered
-			answers := quizdna.GlobalSubtask10SessionManager.CompleteSession(game.ID)
+			answers := quizdna.GlobalSubtask2SessionManager.CompleteSession(game.ID)
 
 			utils.Logger.WithFields(logrus.Fields{
-				"source":        "HandleSubTask10",
+				"source":        "HandleSubTask2",
 				"username":      user.Username,
 				"total_answers": len(answers),
-				"task_id":       10,
-			}).Info("Subtask 10 completed")
+				"task_id":       2,
+			}).Info("Subtask 2 completed")
 
 			playerResponse := &models.PlayerResponse{
 				PlayerID:    user.ID,
 				UserName:    user.Username,
 				GameID:      game.ID,
-				TaskID:      10,
+				TaskID:      2,
 				HasResponse: true,
 				Skipped:     false,
 			}
@@ -216,7 +216,7 @@ func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
 		}
 
 		// Send next question
-		return quizdna.SendCurrentSubtask10Question(bot, c, game.ID)
+		return quizdna.SendCurrentSubtask2Question(bot, c, game.ID)
 	}
 }
 

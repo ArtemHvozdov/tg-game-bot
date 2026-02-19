@@ -11,7 +11,7 @@ import (
 
 // AddPlayerToGame add player to game
 func AddPlayerToGame(player *models.Player) error {
-	query := `INSERT INTO players (id, username, name, game_id, status,
+	query := `INSERT INTO players (user_id, username, name, game_id, status,
 				skipped, role) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	_, err := Db.Exec(query, player.ID, player.UserName, player.Name, player.GameID, player.Status, player.Skipped, player.Role)
 	if err != nil {
@@ -38,7 +38,7 @@ func AddPlayerToGame(player *models.Player) error {
 
 // DeletePlayerFromGame delete player from game
 func DeletePlayerFromGame(playerID int64, gameID int) error {
-	query := `DELETE FROM players WHERE id = ? AND game_id = ?`
+	query := `DELETE FROM players WHERE user_id = ? AND game_id = ?`
 	_, err := Db.Exec(query, playerID, gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
@@ -60,7 +60,7 @@ func DeletePlayerFromGame(playerID int64, gameID int) error {
 }
 
 func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
-	query := `SELECT id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ?`
+	query := `SELECT user_id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ?`
 	rows, err := Db.Query(query, gameId)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
@@ -88,7 +88,7 @@ func GetAllPlayersByGameID(gameId int) ([]models.Player, error) {
 
 // UpdatePlayerStatus update player status in Db
 func UpdatePlayerStatus(playerID int64, status string) error {
-	query := `UPDATE players SET status = ? WHERE id = ?`
+	query := `UPDATE players SET status = ? WHERE user_id = ?`
 	_, err := Db.Exec(query, status, playerID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
@@ -111,7 +111,7 @@ func UpdatePlayerStatus(playerID int64, status string) error {
 
 // GetPlayerStatus get player status by ID
 func GetStatusPlayer(playerID int64) (string, error) {
-	query := `SELECT status FROM players WHERE id = ?`
+	query := `SELECT status FROM players WHERE user_id = ?`
 	row := Db.QueryRow(query, playerID)
 
 	var status string
@@ -138,7 +138,7 @@ func GetStatusPlayer(playerID int64) (string, error) {
 
 // Get player role by ID in game using player ID and game ID
 func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) {
-	query := `SELECT role FROM players WHERE id = ? AND game_id = ?`
+	query := `SELECT role FROM players WHERE user_id = ? AND game_id = ?`
 	row := Db.QueryRow(query, playerID, gameID)
 
 	var role string
@@ -165,7 +165,7 @@ func GetPlayerRoleByUserIDAndGameID(playerID int64, gameID int) (string, error) 
 
 // GetAdminPlayerByGameID get admin player by game ID
 func GetAdminPlayerByGameID(gameID int) (*models.Player, error) {
-	query := `SELECT id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ? AND role = 'admin'`
+	query := `SELECT user_id, username, name, game_id, status, skipped, role FROM players WHERE game_id = ? AND role = 'admin'`
 	row := Db.QueryRow(query, gameID)
 
 	player := &models.Player{}
@@ -193,7 +193,7 @@ func AddPlayerResponse(playerResponse *models.PlayerResponse) error {
 	}).Info("Db: AddPlayerResponse - AddPlayerResponse was called")
 
     var playerExists bool
-    checkQuery := `SELECT EXISTS(SELECT 1 FROM players WHERE id = ?)`
+    checkQuery := `SELECT EXISTS(SELECT 1 FROM players WHERE user_id = ?)`
     err := Db.QueryRow(checkQuery, playerResponse.PlayerID).Scan(&playerExists)
     if err != nil {
         utils.Logger.WithFields(logrus.Fields{
@@ -426,7 +426,7 @@ func SkipPlayerResponse(playerID int64, userName string, gameID, taskID int) (*m
 
 // Check user is in the game by ID
 func IsUserInGame(playerID int64, gameID int) (bool, error) {
-	query := `SELECT COUNT(*) FROM players WHERE id = ? AND game_id = ?`
+	query := `SELECT COUNT(*) FROM players WHERE user_id = ? AND game_id = ?`
 	row := Db.QueryRow(query, playerID, gameID)
 
 	var count int

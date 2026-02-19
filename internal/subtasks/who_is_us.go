@@ -193,7 +193,7 @@ func WhoIsUsSubTask(bot *telebot.Bot) func(c telebot.Context) error {
         }
         
         // Load subtasks from JSON file
-        subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_3.json")
+        subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_4.json")
         if err != nil {
             utils.Logger.Errorf("Failed to load subtasks: %v", err)
             return c.Send("Помилка завантаження підзавдань")
@@ -203,10 +203,10 @@ func WhoIsUsSubTask(bot *telebot.Bot) func(c telebot.Context) error {
             return c.Send("Підзавдання порожнє")
         }
         
-        utils.Logger.Infof("Loaded subtasks for task 3: %d questions", len(subtasks))
+        utils.Logger.Infof("Loaded subtasks for task 4: %d questions", len(subtasks))
         
         // Start new session
-        err = GlobalSessionManager.StartSession(game.ID, 3, user.ID, user.Username, subtasks)
+        err = GlobalSessionManager.StartSession(game.ID, 4, user.ID, user.Username, subtasks)
         if err != nil {
             utils.Logger.Errorf("Error starting subtask session: %v", err)
             return c.Send("Помилка запуску підзавдань")

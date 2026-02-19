@@ -3,9 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-
+	
 	//"log"
-	//"image"
 
 	// "image/color"
 	// "image/draw"
@@ -104,52 +103,69 @@ func InitButtons(gameID int) {
 	menuExit.Inline(menuExit.Row(btnExactlyExit), menuExit.Row(btnReturnToGame))
 }
 
-func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
-	return func(c telebot.Context) error {
-		//chat := c.Chat()
-		user := c.Sender()
+// func StartHandler(bot *telebot.Bot) func(c telebot.Context) error {
+// 	return func(c telebot.Context) error {
+// 		//chat := c.Chat()
+// 		user := c.Sender()
 		
-		utils.Logger.WithFields(logrus.Fields{
-			"user_id": user.ID,
-			"username": user.Username,
-		}).Info("User started the bot")
+// 		utils.Logger.WithFields(logrus.Fields{
+// 			"user_id": user.ID,
+// 			"username": user.Username,
+// 		}).Info("User started the bot")
 
-		startMsg := `ОУ, ПРИВІТ ЗІРОНЬКО! 🌟
+// // 		startMsg1 := `ОУ, ПРИВІТ ЗІРОНЬКО! 🌟
 
-Хочеш створити гру для своїх найкращих подруг? Лови інструкцію, як запустити магію✨:
+// // Хочеш створити гру для своїх найкращих подруг? Лови інструкцію, як запустити магію✨:
 
-➊ Створи групу з УСІМА подругами, з якими хочеш грати!
-(Не забудь нікого! Пізніше додати вже не вийде 😬)
+// // ➊ Створи групу з УСІМА подругами, з якими хочеш грати!
+// // (Не забудь нікого! Пізніше додати вже не вийде 😬)
 
-➋ Додай також і мене — @bestie_game_bot — я твоя ведуча, хе-хе 😎
+// // ➋ Додай також і мене — @bestie_game_bot — я твоя ведуча, хе-хе 😎
 
-➌ Можеш обрати фото і назву для групи! Це не must-have, але так фановіше 🤪
+// // ➌ Можеш обрати фото і назву для групи! Це не must-have, але так фановіше 🤪
 
-➍ Дочекайся, поки всі подружки натиснуть “Приєднатись до гри” 
-(не тисни “Почати гру”, поки не зібрались усі ❗️)
+// // ➍ Дочекайся, поки всі подружки натиснуть “Приєднатись до гри” 
+// // (не тисни “Почати гру”, поки не зібрались усі ❗️)
 
-➎ Коли УСІ приєднаються — тисни “Почати гру”! 🚀
-Це можеш зробити тільки ти, бо ти тут — босс! 💅👑
+// // ➎ Коли УСІ приєднаються — тисни “Почати гру”! 🚀
+// // Це можеш зробити тільки ти, бо ти тут — босс! 💅👑
 
-І… let the madness begin! 💃🎉
+// // І… let the madness begin! 💃🎉
 
-ps  Маєше труднощі? Тоді пиши сюди`
+// // ps  Маєше труднощі? Тоді пиши сюди`
 
-		startMenu := &telebot.ReplyMarkup{}
-		//startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
+// 		startMsg, err := utils.LoadSingleMessage("./internal/data/messages/personal/start_message.json")
+// 		if err != nil {
+// 			utils.Logger.Errorf("Error loading start message for the private chat with bot: %v", err)
+// 		}
 
-		startBtnSupport := btnmanager.Get(startMenu, models.UniqueSupport)
+// 		startMenu := &telebot.ReplyMarkup{}
+// 		//startBtnSupport := startMenu.URL("🕹️ Техпідтримка", "https://t.me/Jay_jayss")
 
-		startMenu.Inline(
-			startMenu.Row(startBtnSupport),
-		)
+// 		startBtnSupport := btnmanager.Get(startMenu, models.UniqueSupport)
 
-		return c.Send(startMsg, startMenu)
- 	}
-}
+// 		startMenu.Inline(
+// 			startMenu.Row(startBtnSupport),
+// 		)
+
+// 		return c.Send(startMsg, startMenu, telebot.ModeHTML)
+//  	}
+// }
 
 func TestRunHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
+		args := c.Args()
+		if len(args) == 0 {
+			return nil
+		} else {
+			currentTaskId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+			c.Set("task_id", currentTaskId)
+			utils.Logger.Info("Test mode is running with task ID:", currentTaskId)
+		}
+
 		utils.Logger.Info("Test mode is running")
 
 		SetupGameHandler(bot)(c)
@@ -241,6 +257,13 @@ func SetupGameHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			"group": chat.Title,
 			"group_id": chat.ID,
 		}).Infof("Start creating game in the group (%d | %s)", chat.ID, chat.Title)
+
+		taskId := c.Get("task_id")
+		if taskId != nil {
+			utils.Logger.Infof("Creating game with test task ID: %d", taskId.(int))
+		} else {
+			utils.Logger.Info("Task id in context is empty")
+		}
 		
 		gameName := chat.Title
 	
@@ -529,11 +552,27 @@ func SendStartGameMessages(bot *telebot.Bot) func(c telebot.Context) error {
 		msg1 := startGameMessages[0]
 		msg2 := startGameMessages[1]
 
-		if _, err := bot.Send(chat, msg1, telebot.ModeMarkdown); err != nil {
+		fileGif := telebot.FromDisk("internal/data/tasks/media_for_tasks/0_Intro.gif")
+		width, height, err := utils.GetImageDimensions(fileGif.FileLocal)
+		if err != nil {
+			utils.Logger.Errorf("Error getting GIF dimensions: %v", err)
 			return err
 		}
 
-		if _, err := bot.Send(chat, msg2, telebot.ModeMarkdown); err != nil {
+		utils.Logger.Infof("GIF dimensions: width=%d, height=%d", width, height)
+
+		photo := &telebot.Animation{
+			File:    fileGif,
+			Caption: msg1,
+			Width:   width,
+			Height:  height,
+		}
+
+		if _, err := bot.Send(chat, photo, telebot.ModeMarkdown); err != nil {
+			return err
+		}
+
+		if _, err := bot.Send(chat, msg2, telebot.ModeHTML); err != nil {
 			return err
 		}
 
@@ -548,10 +587,22 @@ func StartGameHandlerFoo(bot *telebot.Bot) func(c telebot.Context) error {
 		chat := c.Chat()
 		user := c.Sender()
 
+		callbackDataBtn := c.Callback().Data
+		dataBtn := c.Data()
+
+// 		raw := c.Callback().Data
+// // raw будет выглядеть как "\fstart_game" или "\f"
+// fmt.Println("raw data:", strconv.Quote(raw))
+
+		fmt.Println("raw data:", strconv.Quote(callbackDataBtn))
+
 		utils.Logger.WithFields(logrus.Fields{
 			"user_id": user.ID,
 			"username": user.Username,
 			"group": chat.Title,
+			"source": "StartGameHandlerFoo",
+			"callback_data_button": callbackDataBtn,
+			"data_button": dataBtn,
 		}).Infof("Start game handler called by %s", user.Username)
 
 		memberUser, _ := bot.ChatMemberOf(chat, user)

@@ -279,7 +279,7 @@ func sendMeme(session *SubTask5Session, bot *telebot.Bot) error {
 	// Create photo object
 	photo := &telebot.Animation{
 		File: telebot.FromDisk(memePath),
-		Width: 480,    // Укажите ширину
+		Width: 480,
     	Height: 270,
 		//Caption: fmt.Sprintf("Озвуч мем №%d", session.CurrentMeme),
 	}

@@ -61,7 +61,7 @@ func processTaskDescription(subtaskID int, description string) string {
 		processed := description
 		if link, exists := youtubeLinks[subtaskID]; exists && link != "" {
 			// Replacing "цього" with a link
-			processed = strings.Replace(processed, "цього", `<a href="https://www.youtube.com/shorts/Cb5ljmm3820?si=qWu3oIgz890cV0xo">цього</a>`, 1)
+			processed = strings.Replace(processed, "цей", `<a href="https://www.youtube.com/shorts/Cb5ljmm3820?si=qWu3oIgz890cV0xo">цього</a>`, 1)
 		}
 		return processed
 

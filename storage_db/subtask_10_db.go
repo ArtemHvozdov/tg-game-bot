@@ -20,21 +20,21 @@ type Subtask10ResultItem struct {
 	VoteCount      int    `json:"vote_count"`
 }
 
-// GetSubtask10ResultsByGame retrieves all subtask 10 answers grouped by question for a specific game
-func GetSubtask10ResultsByGame(gameID int) ([]Subtask10ResultItem, error) {
+// GetSubtask2ResultsByGame retrieves all subtask 10 answers grouped by question for a specific game
+func GetSubtask2ResultsByGame(gameID int) ([]Subtask10ResultItem, error) {
 	query := `SELECT question_index, question_id, selected_option, COUNT(*) as vote_count 
-			  FROM subtask_10_answers 
+			  FROM subtask_2_answers 
 			  WHERE game_id = ? AND task_id = ? 
 			  GROUP BY question_index, question_id, selected_option 
 			  ORDER BY question_index ASC, vote_count DESC, selected_option ASC`
 
-	rows, err := Db.Query(query, gameID, 10)
+	rows, err := Db.Query(query, gameID, 2)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":  "Db: GetSubtask10ResultsByGame",
+			"source":  "Db: GetSubtask2ResultsByGame",
 			"game_id": gameID,
 			"error":   err,
-		}).Error("Failed to get subtask 10 results")
+		}).Error("Failed to get subtask 2 results")
 		return nil, err
 	}
 	defer rows.Close()
@@ -45,7 +45,7 @@ func GetSubtask10ResultsByGame(gameID int) ([]Subtask10ResultItem, error) {
 		err := rows.Scan(&result.QuestionIndex, &result.QuestionID, &result.SelectedOption, &result.VoteCount)
 		if err != nil {
 			utils.Logger.WithFields(logrus.Fields{
-				"source":  "Db: GetSubtask10ResultsByGame",
+				"source":  "Db: GetSubtask2ResultsByGame",
 				"game_id": gameID,
 				"error":   err,
 			}).Error("Failed to scan subtask 10 result row")
@@ -56,7 +56,7 @@ func GetSubtask10ResultsByGame(gameID int) ([]Subtask10ResultItem, error) {
 
 	if err = rows.Err(); err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":  "Db: GetSubtask10ResultsByGame",
+			"source":  "Db: GetSubtask2ResultsByGame",
 			"game_id": gameID,
 			"error":   err,
 		}).Error("Error iterating subtask 10 result rows")
@@ -64,23 +64,23 @@ func GetSubtask10ResultsByGame(gameID int) ([]Subtask10ResultItem, error) {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source":       "Db: GetSubtask10ResultsByGame",
+		"source":       "Db: GetSubtask2ResultsByGame",
 		"game_id":      gameID,
 		"result_count": len(results),
-	}).Info("Successfully retrieved subtask 10 results")
+	}).Info("Successfully retrieved subtask 2 results")
 
 	return results, nil
 }
 
-// CalculateSubtask10Winners determines the winning option for each question
-func CalculateSubtask10Winners(gameID int) ([]string, error) {
-	results, err := GetSubtask10ResultsByGame(gameID)
+// CalculateSubtask2Winners determines the winning option for each question
+func CalculateSubtask2Winners(gameID int) ([]string, error) {
+	results, err := GetSubtask2ResultsByGame(gameID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get subtask 10 results: %w", err)
+		return nil, fmt.Errorf("failed to get subtask 2 results: %w", err)
 	}
 
 	if len(results) == 0 {
-		return nil, fmt.Errorf("no subtask 10 results found for game %d", gameID)
+		return nil, fmt.Errorf("no subtask 2 results found for game %d", gameID)
 	}
 
 	// Group results by question index
@@ -119,7 +119,7 @@ func CalculateSubtask10Winners(gameID int) ([]string, error) {
 		winners = append(winners, winner.SelectedOption)
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source":          "CalculateSubtask10Winners",
+			"source":          "CalculateSubtask2Winners",
 			"game_id":         gameID,
 			"question_index":  questionIndex,
 			"winning_option":  winner.SelectedOption,
@@ -129,11 +129,11 @@ func CalculateSubtask10Winners(gameID int) ([]string, error) {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source":        "CalculateSubtask10Winners",
+		"source":        "CalculateSubtask2Winners",
 		"game_id":       gameID,
 		"total_winners": len(winners),
 		"winners":       winners,
-	}).Info("All subtask 10 winners calculated")
+	}).Info("All subtask 2 winners calculated")
 
 	return winners, nil
 }
@@ -172,13 +172,13 @@ func extractSecondNumber(option string) int {
 }
 
 // FormatSubtask10Results formats the winning results into a readable message
-func FormatSubtask10Results(winners []string) string {
+func FormatSubtask2Results(winners []string) string {
 	if len(winners) == 0 {
-		return "Результати підзавдання 10:\n\nНемає даних для відображення"
+		return "Результати підзавдання 2:\n\nНемає даних для відображення"
 	}
 
 	var message strings.Builder
-	message.WriteString("🏆 Результати підзавдання 10:\n\n")
+	message.WriteString("🏆 Результати підзавдання 2:\n\n")
 
 	for i, winner := range winners {
 		message.WriteString(fmt.Sprintf("%d. %s\n", i+1, winner))
@@ -187,46 +187,46 @@ func FormatSubtask10Results(winners []string) string {
 	return message.String()
 }
 
-// ProcessSubtask10Results - main function to calculate and format results
-func ProcessSubtask10Results(gameID int) (string, error) {
-	winners, err := CalculateSubtask10Winners(gameID)
+// ProcessSubtask2Results - main function to calculate and format results
+func ProcessSubtask2Results(gameID int) (string, error) {
+	winners, err := CalculateSubtask2Winners(gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":  "ProcessSubtask10Results",
+			"source":  "ProcessSubtask2Results",
 			"game_id": gameID,
 			"error":   err,
 		}).Error("Failed to calculate subtask 10 winners")
 		return "", fmt.Errorf("failed to calculate winners: %w", err)
 	}
 
-	message := FormatSubtask10Results(winners)
+	message := FormatSubtask2Results(winners)
 	
 	utils.Logger.WithFields(logrus.Fields{
-		"source":        "ProcessSubtask10Results",
+		"source":        "ProcessSubtask2Results",
 		"game_id":       gameID,
 		"winners_count": len(winners),
-	}).Info("Subtask 10 results processed successfully")
+	}).Info("Subtask 2 results processed successfully")
 
 	return message, nil
 }
 
 // GetSubtask10WinnersArray returns array of winning image names for subtask 10
-func GetSubtask10WinnersArray(gameID int) ([]string, error) {
-	winners, err := CalculateSubtask10Winners(gameID)
+func GetSubtask2WinnersArray(gameID int) ([]string, error) {
+	winners, err := CalculateSubtask2Winners(gameID)
 	if err != nil {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":  "GetSubtask10WinnersArray",
+			"source":  "GetSubtask2WinnersArray",
 			"game_id": gameID,
 			"error":   err,
-		}).Error("Failed to calculate subtask 10 winners")
+		}).Error("Failed to calculate subtask 2 winners")
 		return nil, fmt.Errorf("failed to calculate winners: %w", err)
 	}
 
 	if len(winners) == 0 {
 		utils.Logger.WithFields(logrus.Fields{
-			"source":  "GetSubtask10WinnersArray",
+			"source":  "GetSubtask2WinnersArray",
 			"game_id": gameID,
-		}).Warn("No winners found for subtask 10")
+		}).Warn("No winners found for subtask 2")
 		return nil, fmt.Errorf("no winners found for game %d", gameID)
 	}
 
@@ -242,11 +242,11 @@ func GetSubtask10WinnersArray(gameID int) ([]string, error) {
 	}
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source":          "GetSubtask10WinnersArray",
+		"source":          "GetSubtask2WinnersArray",
 		"game_id":         gameID,
 		"winners_count":   len(winnersForCollage),
 		"winners":         winnersForCollage,
-	}).Info("Successfully retrieved subtask 10 winners array")
+	}).Info("Successfully retrieved subtask 2 winners array")
 
 	return winnersForCollage, nil
 }

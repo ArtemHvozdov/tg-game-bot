@@ -150,7 +150,7 @@ func main() {
 	
 
 	//bot.Handle("/start", handlers.StartHandler(bot, btnCreateGame, btnHelpMe)) 
-	bot.Handle("/start", handlers.StartHandler(bot))
+	bot.Handle("/start", handlers.StartBotHandler(bot))
 	bot.Handle("/help", handlers.HelpMeHandler(bot))
 	//bot.Handle("/check_admin_bot", handlers.CheckAdminBotHandler(bot, btnStartGame))
 

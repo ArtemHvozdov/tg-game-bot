@@ -155,7 +155,33 @@ func createTaskSummary(bot *telebot.Bot, gameID, taskID int64) error {
 	// }
 
 	switch taskID {
-    case 3:
+    case 2:
+        utils.Logger.Info("Task 2: Creating subtask collage")
+
+        hasAnswers, err := storage_db.HasResponses(gameID, taskID)
+        if err != nil {
+            utils.Logger.Errorf("Error checking no responses in the game %d for task %d: %v", gameID, taskID, err)
+        }
+
+        if !hasAnswers {
+            message := utils.GetRandomMsg(noAnswersMsgs)
+            
+            _, err := bot.Send(chat, message)
+            if err != nil {
+                utils.Logger.Errorf("Failed to send no answers message for task 2: %v", err)
+                return fmt.Errorf("failed to send no answers message for task 2: %w", err)
+            }
+            storage_db.MarkSummaryAsSent(gameID, taskID)
+            return nil
+        } else {
+            if err := handlers.CreateSubtask2Collage(bot, game.GameChatID); err != nil {
+                utils.Logger.Errorf("Failed to create subtask 2 collage: %v", err)
+                return fmt.Errorf("failed to create subtask 2 collage: %w", err)
+            }
+            storage_db.MarkSummaryAsSent(gameID, taskID)
+            return nil
+        }
+    case 4:
         utils.Logger.Info("Task 3: Sending subtask results")
 
         hasAnswers, err := storage_db.HasResponses(gameID, taskID)
@@ -215,32 +241,32 @@ func createTaskSummary(bot *telebot.Bot, gameID, taskID int64) error {
             return nil
         }
         
-    case 10:
-        utils.Logger.Info("Task 10: Creating subtask collage")
+    // case 10:
+    //     utils.Logger.Info("Task 10: Creating subtask collage")
 
-        hasAnswers, err := storage_db.HasResponses(gameID, taskID)
-        if err != nil {
-            utils.Logger.Errorf("Error checking no responses in the game %d for task %d: %v", gameID, taskID, err)
-        }
+    //     hasAnswers, err := storage_db.HasResponses(gameID, taskID)
+    //     if err != nil {
+    //         utils.Logger.Errorf("Error checking no responses in the game %d for task %d: %v", gameID, taskID, err)
+    //     }
 
-        if !hasAnswers {
-            message := utils.GetRandomMsg(noAnswersMsgs)
+    //     if !hasAnswers {
+    //         message := utils.GetRandomMsg(noAnswersMsgs)
             
-            _, err := bot.Send(chat, message)
-            if err != nil {
-                utils.Logger.Errorf("Failed to send no answers message for task 3: %v", err)
-                return fmt.Errorf("failed to send no answers message for task 3: %w", err)
-            }
-            storage_db.MarkSummaryAsSent(gameID, taskID)
-            return nil
-        } else {
-            if err := handlers.CreateSubtask10Collage(bot, game.GameChatID); err != nil {
-                utils.Logger.Errorf("Failed to create subtask 10 collage: %v", err)
-                return fmt.Errorf("failed to create subtask 10 collage: %w", err)
-            }
-            storage_db.MarkSummaryAsSent(gameID, taskID)
-            return nil
-        }
+    //         _, err := bot.Send(chat, message)
+    //         if err != nil {
+    //             utils.Logger.Errorf("Failed to send no answers message for task 3: %v", err)
+    //             return fmt.Errorf("failed to send no answers message for task 3: %w", err)
+    //         }
+    //         storage_db.MarkSummaryAsSent(gameID, taskID)
+    //         return nil
+    //     } else {
+    //         if err := handlers.CreateSubtask10Collage(bot, game.GameChatID); err != nil {
+    //             utils.Logger.Errorf("Failed to create subtask 10 collage: %v", err)
+    //             return fmt.Errorf("failed to create subtask 10 collage: %w", err)
+    //         }
+    //         storage_db.MarkSummaryAsSent(gameID, taskID)
+    //         return nil
+    //     }
     }
 
 	for _, msg := range summaryMsgs {

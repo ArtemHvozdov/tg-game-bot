@@ -90,8 +90,8 @@ type SubtaskAnswer struct {
 	SelectedUsername string `json:"selected_username"` // username выбранного (для быстрого доступа)
 }
 
-// Subtask10Answer represents a user's answer to a subtask 10 question
-type Subtask10Answer struct {
+// Subtask2Answer represents a user's answer to a subtask 2 question
+type Subtask2Answer struct {
 	ID               int       `json:"id"`
 	GameID           int       `json:"game_id"`
 	TaskID           int       `json:"task_id"`

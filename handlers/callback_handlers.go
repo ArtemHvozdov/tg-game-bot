@@ -39,10 +39,10 @@ func RegisterCallbackHandlers(bot *telebot.Bot) {
 			return OnAnswerTaskBtnHandler(bot)(c)
 		case strings.HasPrefix(data,"\fskip_"):
 			return OnSkipTaskBtnHandler(bot)(c)
-		case strings.HasPrefix(data, "subtask_3_"):
-			return HandleSubTask3(bot)(c)
-		case strings.HasPrefix(data, "subtask_10_"):
-			return HandleSubTask10(bot)(c)
+		case strings.HasPrefix(data, "subtask_4_"):
+			return HandleSubTask4(bot)(c)
+		case strings.HasPrefix(data, "subtask_2_"): // last time version - subtask_10_ - task for Who is us
+			return HandleSubTask2(bot)(c)
 		default:
 			return nil
 		}

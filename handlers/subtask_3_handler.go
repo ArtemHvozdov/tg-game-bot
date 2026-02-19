@@ -15,7 +15,7 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func HandleSubTask3(bot *telebot.Bot) func(c telebot.Context) error {
+func HandleSubTask4(bot *telebot.Bot) func(c telebot.Context) error {
     return func(c telebot.Context) error {
         user := c.Sender()
         chat := c.Chat()

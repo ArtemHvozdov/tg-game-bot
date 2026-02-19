@@ -13,7 +13,7 @@ import (
 
 func ShowSubtaskResults(bot *telebot.Bot, gameID, taskID int) error {
     // Load subtask questions
-    subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_3.json")
+    subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_4.json")
     if err != nil {
         return fmt.Errorf("failed to load subtasks: %w", err)
     }
@@ -169,7 +169,7 @@ func SendSubtaskResultsToChat(bot *telebot.Bot, chatID int64) error {
         }
     
     // Load subtask questions
-    subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_3.json")
+    subtasks, err := utils.LoadSubTasks("internal/data/tasks/subtasks/subtask_4.json")
     if err != nil {
         utils.Logger.Errorf("Failed to load subtasks: %v", err)
         return fmt.Errorf("failed to load subtasks: %w", err)
@@ -180,7 +180,7 @@ func SendSubtaskResultsToChat(bot *telebot.Bot, chatID int64) error {
     }
     
     // Get results from database
-    taskID := 3 // for subtask 3
+    taskID := 4 // for subtask 4
     results, err := storage_db.GetSubtaskResults(game.ID, taskID)
     if err != nil {
         utils.Logger.Errorf("Failed to get subtask results: %v", err)
@@ -188,8 +188,8 @@ func SendSubtaskResultsToChat(bot *telebot.Bot, chatID int64) error {
     }
     
     if len(results) == 0 {
-        utils.Logger.Warn("No results found for subtask 3")
-        // Всё равно отправляем сообщение
+        utils.Logger.Warn("No results found for subtask 4")
+        // Sent the message anyway
         _, err = bot.Send(&telebot.Chat{ID: chatID}, 
             "Результати підзавдань не знайдені. Можливо, ніхто ще не відповідав на питання.")
         return err

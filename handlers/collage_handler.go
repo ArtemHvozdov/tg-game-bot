@@ -83,7 +83,7 @@ import (
 // }
 
 // Variant withouut context for calling as external function
-func CreateSubtask10Collage(bot *telebot.Bot, chatID int64) error {
+func CreateSubtask2Collage(bot *telebot.Bot, chatID int64) error {
 	chat := &telebot.Chat{ID: chatID}
 	
 	// Get game by chat ID
@@ -99,42 +99,42 @@ func CreateSubtask10Collage(bot *telebot.Bot, chatID int64) error {
 	}
 
 	// Get winners array
-	winners, err := storage_db.GetSubtask10WinnersArray(game.ID)
+	winners, err := storage_db.GetSubtask2WinnersArray(game.ID)
 	if err != nil {
-		utils.Logger.Errorf("Failed to get subtask 10 winners for game %d: %v", game.ID, err)
+		utils.Logger.Errorf("Failed to get subtask 2 winners for game %d: %v", game.ID, err)
 		return err
 	}
 
 	// Generate collage
-	err = CreateSubtask10CollageWithGG(winners)
+	err = CreateSubtask2CollageWithGG(winners)
 	if err != nil {
 		_, err = bot.Send(chat, "Упс... Щось я не можу створити коллаж. Що ж робити?")
-		utils.Logger.Errorf("Failed to create subtask 10 collage: %v", err)
+		utils.Logger.Errorf("Failed to create subtask 2 collage: %v", err)
 		return err
 	}
 
 	// Check if file exists
-	if _, err := os.Stat("subtask10_collage.jpg"); os.IsNotExist(err) {
-		utils.Logger.Errorf("Subtask 10 collage file does not exist after creation")
+	if _, err := os.Stat("subtask2_collage.jpg"); os.IsNotExist(err) {
+		utils.Logger.Errorf("Subtask 2 collage file does not exist after creation")
 		return err
 	}
 
 	// Send as photo
 	photo := &telebot.Photo{
-		File:    telebot.FromDisk("subtask10_collage.jpg"),
+		File:    telebot.FromDisk("subtask2_collage.jpg"),
 		Caption: "Готово! Ловіть колаж із відповідей, які набрали найбільшу кількість голосів. Схоже на те, що подобається вашій гьорлз бенд? 💅",
 	}
 	_, err = bot.Send(chat, photo)
 	if err != nil {
-		utils.Logger.Errorf("Failed to send subtask 10 collage photo: %v", err)
+		utils.Logger.Errorf("Failed to send subtask 2 collage photo: %v", err)
 		return err
 	}
 
 	// Send as document (original without compression)
 	document := &telebot.Document{
-		File:     telebot.FromDisk("subtask10_collage.jpg"),
+		File:     telebot.FromDisk("subtask2_collage.jpg"),
 		MIME:     "image/jpeg",
-		FileName: "subtask10_collage_2160x2160.jpg",
+		FileName: "subtask2_collage_2160x2160.jpg",
 		Caption:  "Cупер висока якість для моїх aesthetic girls 🎀",
 	}
 	bot.Send(chat, document)
@@ -142,20 +142,20 @@ func CreateSubtask10Collage(bot *telebot.Bot, chatID int64) error {
 	// Clean up temporary file
 	go func() {
 		time.Sleep(5 * time.Second)
-		os.Remove("subtask10_collage.jpg")
-		fmt.Println("Temporary subtask 10 collage file cleaned up")
+		os.Remove("subtask2_collage.jpg")
+		fmt.Println("Temporary subtask  collage file cleaned up")
 	}()
 
 	return nil
 }
 
 
-// CreateSubtask10CollageWithGG creates a 3×3 collage from winning images
-func CreateSubtask10CollageWithGG(winners []string) error {
-	fmt.Println("=== START CREATE SUBTASK 10 COLLAGE 2160×2160 ===")
+// CreateSubtask2CollageWithGG creates a 3×3 collage from winning images
+func CreateSubtask2CollageWithGG(winners []string) error {
+	fmt.Println("=== START CREATE SUBTASK 2 COLLAGE 2160×2160 ===")
 
 	// Build full paths to images
-	basePath := "internal/data/tasks/subtasks/subtask_10/assets_collage"
+	basePath := "internal/data/tasks/subtasks/subtask_2/assets_collage"
 	var imagePaths []string
 
 	for _, winner := range winners {
@@ -179,7 +179,7 @@ func CreateSubtask10CollageWithGG(winners []string) error {
 		imagePaths = imagePaths[:9]
 	}
 
-	fmt.Printf("Using %d images for subtask 10 collage\n", len(imagePaths))
+	fmt.Printf("Using %d images for subtask 2 collage\n", len(imagePaths))
 
 	// Grid settings
 	const (
@@ -199,7 +199,7 @@ func CreateSubtask10CollageWithGG(winners []string) error {
 			break
 		}
 
-		fmt.Printf("Processing subtask 10 image %d: %s\n", i+1, path)
+		fmt.Printf("Processing subtask 2 image %d: %s\n", i+1, path)
 
 		img, err := gg.LoadImage(path)
 		if err != nil {
@@ -208,7 +208,7 @@ func CreateSubtask10CollageWithGG(winners []string) error {
 		}
 
 		// Fit image into 720×720 square
-		processed := fitImageToTileSubtask10(img, cellSize, cellSize)
+		processed := fitImageToTileSubtask2(img, cellSize, cellSize)
 
 		row := i / gridSize
 		col := i % gridSize
@@ -219,7 +219,7 @@ func CreateSubtask10CollageWithGG(winners []string) error {
 	}
 
 	// Save JPEG
-	outFile, err := os.Create("subtask10_collage.jpg")
+	outFile, err := os.Create("subtask2_collage.jpg")
 	if err != nil {
 		return fmt.Errorf("failed to create collage file: %w", err)
 	}
@@ -227,15 +227,15 @@ func CreateSubtask10CollageWithGG(winners []string) error {
 
 	err = jpeg.Encode(outFile, dc.Image(), &jpeg.Options{Quality: 95})
 	if err != nil {
-		return fmt.Errorf("failed to encode subtask 10 collage jpeg: %w", err)
+		return fmt.Errorf("failed to encode subtask 2 collage jpeg: %w", err)
 	}
 
-	fmt.Println("=== SUBTASK 10 COLLAGE SAVED AS subtask10_collage.jpg (2160×2160) ===")
+	fmt.Println("=== SUBTASK 2 COLLAGE SAVED AS subtask2_collage.jpg (2160×2160) ===")
 	return nil
 }
 
-// fitImageToTileSubtask10 fits image into cellSize×cellSize square
-func fitImageToTileSubtask10(img image.Image, targetW, targetH int) image.Image {
+// fitImageToTileSubtask2 fits image into cellSize×cellSize square
+func fitImageToTileSubtask2(img image.Image, targetW, targetH int) image.Image {
 	b := img.Bounds()
 	iw, ih := b.Dx(), b.Dy()
 
