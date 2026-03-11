@@ -110,6 +110,11 @@ type CollageRequest struct {
 	Status    string // "waiting", "processing", "done"
 }
 
+type Task12Answer struct {
+    QuestionID int
+    Answer     string
+}
+
 // Const of state
 const (
 	StatusGameWaiting  = "waiting"
@@ -158,6 +163,7 @@ const (
 
 	LinkInstagram        		 = "instagram"
 	LinkTikTok            		 = "tiktok"
+	LinkQuiz            		 = "quiz"
 )
 
     

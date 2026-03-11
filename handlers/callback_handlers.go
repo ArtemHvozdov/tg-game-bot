@@ -35,6 +35,9 @@ func RegisterCallbackHandlers(bot *telebot.Bot) {
 			return handleReturnToGame(bot, c)
 		// case strings.HasPrefix(data, "\fphoto_choice_"):
 		// 	return HandlePhotoChoice(bot)(c)
+		case data == "\fsubtask12_share":
+			return HandleSubtask12ShareBtn(c)
+			// case strings.HasPrefix(data, "\fwaiting_12_"):
 		case strings.HasPrefix(data,"\fwaiting_" ):
 			return OnAnswerTaskBtnHandler(bot)(c)
 		case strings.HasPrefix(data,"\fskip_"):

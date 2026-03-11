@@ -260,9 +260,9 @@ func FinishGameHandler(bot *telebot.Bot, chat *telebot.Chat) error {
 
 		SendFeedbackMsg(bot, chat)
 
-		time.Sleep(5 * time.Second)
+		// time.Sleep(5 * time.Second)
 
-		SendBuyMeCoffeeMsg(bot, chat)
+		// SendBuyMeCoffeeMsg(bot, chat)
 
 		return nil
 	
@@ -297,13 +297,13 @@ func SendReferalMsg(bot *telebot.Bot, chat *telebot.Chat) error {
 
 		// Create message with social media links
 		msg := referalMsg
-		msg = strings.ReplaceAll(msg, "Instagram", fmt.Sprintf(`<a href="%s">Instagram</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkInstagram)))
-		msg = strings.ReplaceAll(msg, "TikTok", fmt.Sprintf(`<a href="%s">TikTok</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkTikTok)))
+		msg = strings.ReplaceAll(msg, "короткий опитувальник", fmt.Sprintf(`<a href="%s">короткий опитувальник</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkQuiz)))
 		msg = strings.ReplaceAll(
 			msg,
-			"Ось твоє Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру BESTIEVERSE",
-			fmt.Sprintf(`<a href="%s">Ось твоє Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру BESTIEVERSE</a>`, refLink),
+			"Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру Bestieverse",
+			fmt.Sprintf(`<a href="%s">Космічне посилання, за яким подружки і подружки подружок зможуть зіграти у власну гру Bestieverse</a>`, refLink),
 		)
+		msg = strings.ReplaceAll(msg, "Instagram", fmt.Sprintf(`<a href="%s">Instagram</a>`, utils.GetStaticMessage(socialMediaLinks, models.LinkInstagram)))
 
 		// Sending message
 		_, err = bot.Send(chat, msg, &telebot.SendOptions{

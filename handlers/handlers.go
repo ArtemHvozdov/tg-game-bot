@@ -154,17 +154,17 @@ func InitButtons(gameID int) {
 
 func TestRunHandler(bot *telebot.Bot) func(c telebot.Context) error {
 	return func(c telebot.Context) error {
-		args := c.Args()
-		if len(args) == 0 {
-			return nil
-		} else {
-			currentTaskId, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-			c.Set("task_id", currentTaskId)
-			utils.Logger.Info("Test mode is running with task ID:", currentTaskId)
-		}
+		// args := c.Args()
+		// if len(args) == 0 {
+		// 	return nil
+		// } else {
+		// 	currentTaskId, err := strconv.Atoi(args[0])
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	c.Set("task_id", currentTaskId)
+		// 	utils.Logger.Info("Test mode is running with task ID:", currentTaskId)
+		// }
 
 		utils.Logger.Info("Test mode is running")
 

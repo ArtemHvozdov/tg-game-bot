@@ -52,15 +52,6 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 
 		utils.Logger.Infof("User %s is answering to task %d in game %d", user.Username, idTask, game.ID)
 
-		// switch idTask {
-		// case 3:
-		// 	subtasks.WhoIsUsSubTask(bot)(c)
-		// 	return nil
-		// case 7:
-		// 	// call function for subtask for task 7
-		// case 12:
-		// 	// call function for subtask for task 12
-		// }
 
 		status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, idTask)
 		if err != nil {
@@ -143,29 +134,79 @@ func OnAnswerTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			}
 			subtasks.WhoIsUsSubTask(bot)(c)
 			return nil
-		case 7:
-			// call function for subtask for task 7
-		//case 10:
-			// session, exists := quizdna.GlobalSubtask10SessionManager.GetActiveSession(game.ID)
-			// if exists && session.UserID == user.ID {
-			// 	msgTextOtherUserAnswer := fmt.Sprintf("@%s ти вже відповідаєш на це питання", user.Username)
+		case 10:
+			if dataButton == "\fwaiting_10_3" {
+				handleSubTask13(c)
+				return nil
+			}
+		case 12:
+			userRole, err := storage_db.GetPlayerRoleByUserIDAndGameID(user.ID, game.ID)
+			if err != nil {
+				utils.Logger.Infof("Error getting player role for user %s in game %d during answering task %d: %v", user.Username, game.ID, idTask, err)
+			}
+
+			utils.Logger.Infof("User %s has role %s in game %d during answering task %d", user.Username, userRole, game.ID, idTask)
+			if userRole != "admin" {
+				msgTextOnlyAdmin := "⛔ *Стоп-кадр!*\nФінальне слово у цьому завданні – за *Адміном* 💼 \nАле твоя роль не менш важлива – продовжуй мріяти у чаті 💬"
+				_, err = msgmanager.SendTemporaryMessage(
+					chat.ID,
+					user.ID,
+					msgmanager.TypeNotInGame,
+					msgTextOnlyAdmin,
+					5*time.Second,
+					telebot.ModeMarkdown,
+				)
+				if err != nil {
+					utils.Logger.Errorf("Error sending message that only admin can answer task for user %s: %v", user.Username, err)
+				}
+				return nil
+			}
+
+			// if userRole == "admin" {
+			// 	HandleSubTask12(c)
+			// } 
+			// else {
+			// 	msgTextOnlyAdmin := "⛔ *Стоп-кадр!*\nФінальне слово у цьому завданні – за *Адміном* 💼 \nАле твоя роль не менш важлива – продовжуй мріяти у чаті 💬"
 
 			// 	_, err = msgmanager.SendTemporaryMessage(
 			// 		chat.ID,
 			// 		user.ID,
 			// 		msgmanager.TypeNotInGame,
-			// 		msgTextOtherUserAnswer,
-			// 		10*time.Second,
+			// 		msgTextOnlyAdmin,
+			// 		10 * time.Second,
+			// 		telebot.ModeMarkdown,
 			// 	)
 			// 	if err != nil {
-			// 		utils.Logger.Errorf("Error sending message that user %s is not in game: %v", user.Username, err)
+			// 		utils.Logger.Errorf("Error sending message that only admin can answer task for user %s: %v", user.Username, err)
 			// 	}
-
-			// 	return nil
 			// }
 
-			// quizdna.WhoIsUsSubTask10(bot)(c)
-			// return nil
+			// Проверяем: все 7 ответов уже есть
+			allAnswered, err := storage_db.HasAllTask12Answers(int64(game.ID), chat.ID)
+			if err != nil {
+				utils.Logger.Errorf("Error checking task 12 answers: %v", err)
+				return nil
+			}
+			if allAnswered {
+				msg, _ := bot.Send(chat, fmt.Sprintf("@%s, ти вже відповів на всі питання цього завдання 😊", user.Username))
+				time.AfterFunc(5*time.Second, func() {
+					bot.Delete(msg)
+				})
+				return nil
+			}
+
+			// Проверяем: уже отвечают прямо сейчас (есть state в памяти)
+			if _, exists := getSubtask12State(chat.ID); exists {
+				msg, _ := bot.Send(chat, fmt.Sprintf("@%s, ти прямо зараз відповідаєш на це завдання ⏳", user.Username))
+				time.AfterFunc(5*time.Second, func() {
+					bot.Delete(msg)
+				})
+				return nil
+			}
+
+			HandleSubTask12(c)
+
+			return nil
 		}
 
 		awaitingAnswerMsg, err := bot.Send(chat, fmt.Sprintf(utils.GetRandomMsg(wantAnswerMessages), user.Username))

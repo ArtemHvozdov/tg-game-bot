@@ -19,16 +19,16 @@ import (
 
 var pathMemes string
 
-func HandleSubTask5(bot *telebot.Bot) func(c telebot.Context) error {
+func HandleSubTask10(bot *telebot.Bot) func(c telebot.Context) error {
     return func(c telebot.Context) error {
-		utils.Logger.Info("HandleSubTask5 called")
+		utils.Logger.Info("HandleSubTask10 called")
         // Get callback data from the button press
         //data := c.Callback().Data
 
 		data := c.Callback().Data
         utils.Logger.WithFields(logrus.Fields{
             "callback_data": data,
-        }).Info("HandleSubTask5 received data")
+        }).Info("HandleSubTask10 received data")
         
         parts := strings.Split(data, "_")
         utils.Logger.WithFields(logrus.Fields{
@@ -39,12 +39,12 @@ func HandleSubTask5(bot *telebot.Bot) func(c telebot.Context) error {
         // Split the string by "_" delimiter
        // parts := strings.Split(data, "_")
         
-        // Check if we have the correct format (waiting_5_X)
+        // Check if we have the correct format (waiting_10_X)
         if len(parts) != 3 || parts[0] != "\fwaiting" || parts[1] != "1" {
             return c.Respond(&telebot.CallbackResponse{Text: "Invalid data format"})
         }
         
-        // Get the third part (digit after "5_")
+        // Get the third part (digit after "10_")
         subTaskNum, err := strconv.Atoi(parts[2])
         if err != nil {
             return c.Respond(&telebot.CallbackResponse{Text: "Invalid subtask number"})
@@ -57,7 +57,7 @@ func HandleSubTask5(bot *telebot.Bot) func(c telebot.Context) error {
         case 2:
             return handleSubTask52(c)
         case 3:
-            return handleSubTask53(c)
+            return handleSubTask13(c)
         default:
             return c.Respond(&telebot.CallbackResponse{Text: "Unknown subtask"})
         }
@@ -66,24 +66,24 @@ func HandleSubTask5(bot *telebot.Bot) func(c telebot.Context) error {
 
 // Functions for handling specific subtasks
 func handleSubTask51(c telebot.Context) error {
-    // Logic for subtask 5.1
-    return c.Respond(&telebot.CallbackResponse{Text: "Processing subtask 5.1"})
+    // Logic for subtask 10.1
+    return c.Respond(&telebot.CallbackResponse{Text: "Processing subtask 10.1"})
 }
 
 func handleSubTask52(c telebot.Context) error {
-    // Logic for subtask 5.2
-    return c.Respond(&telebot.CallbackResponse{Text: "Processing subtask 5.2"})
+    // Logic for subtask 10.2
+    return c.Respond(&telebot.CallbackResponse{Text: "Processing subtask 10.2"})
 }
 
-// func handleSubTask53(c telebot.Context) error {
-//     // Logic for subtask 5.3
-// 	pathMemes := "internal/data/tasks/subtasks/subtask_5"
+// func handleSubTask13(c telebot.Context) error {
+//     // Logic for subtask 10.3
+// 	pathMemes := "internal/data/tasks/subtasks/subtask_10"
 // 	return nil
 // }
 
 
-// SubTask5Session represents an active session for subtask 5
-type SubTask5Session struct {
+// SubTask10Session represents an active session for subtask 10
+type SubTask10Session struct {
 	UserID        int64
 	Username      string
 	GameID        int64
@@ -98,26 +98,26 @@ type SubTask5Session struct {
 	mu            sync.RWMutex
 }
 
-// Global session manager for subtask 5
+// Global session manager for subtask 10
 var (
-	subTask5Sessions = make(map[int64]*SubTask5Session) // key - GameID
+	subTask10Sessions = make(map[int64]*SubTask10Session) // key - GameID
 	sessionsMutex    sync.RWMutex
 )
 
 // Get active session for game
-func getSubTask5Session(gameID int64) (*SubTask5Session, bool) {
+func getSubTask10Session(gameID int64) (*SubTask10Session, bool) {
 	sessionsMutex.RLock()
 	defer sessionsMutex.RUnlock()
-	session, exists := subTask5Sessions[gameID]
+	session, exists := subTask10Sessions[gameID]
 	return session, exists
 }
 
 // Create new session
-func createSubTask5Session(userID int64, username string, gameID int64, taskID int, bot *telebot.Bot, chat *telebot.Chat) *SubTask5Session {
+func createSubTask10Session(userID int64, username string, gameID int64, taskID int, bot *telebot.Bot, chat *telebot.Chat) *SubTask10Session {
 	sessionsMutex.Lock()
 	defer sessionsMutex.Unlock()
 	
-	session := &SubTask5Session{
+	session := &SubTask10Session{
 		UserID:      userID,
 		Username:    username,
 		GameID:      gameID,
@@ -131,27 +131,27 @@ func createSubTask5Session(userID int64, username string, gameID int64, taskID i
 		IsActive:    true,
 	}
 	
-	subTask5Sessions[gameID] = session
+	subTask10Sessions[gameID] = session
 	return session
 }
 
 // Remove session
-func removeSubTask5Session(gameID int64) {
+func removeSubTask10Session(gameID int64) {
 	sessionsMutex.Lock()
 	defer sessionsMutex.Unlock()
-	delete(subTask5Sessions, gameID)
+	delete(subTask10Sessions, gameID)
 }
 
-func handleSubTask53(c telebot.Context) error {
+func handleSubTask13(c telebot.Context) error {
 	user := c.Sender()
 	chat := c.Chat()
 	
 	utils.Logger.WithFields(logrus.Fields{
-		"source":   "handleSubTask53",
+		"source":   "handleSubTask13",
 		"username": user.Username,
 		"user_id":  user.ID,
 		"chat_id":  chat.ID,
-	}).Info("User wants to answer SubTask 5.3")
+	}).Info("User wants to answer SubTask 10.3")
 
 	// Get game data
 	game, err := storage_db.GetGameByChatId(chat.ID)
@@ -161,7 +161,7 @@ func handleSubTask53(c telebot.Context) error {
 	}
 
 	// Check player status
-	status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, 1) // taskID = 5
+	status, err := storage_db.CheckPlayerResponseStatus(user.ID, game.ID, 10) // taskID = 10
 	if err != nil {
 		utils.Logger.Errorf("Error checking player response status: %v", err)
 		return c.Respond(&telebot.CallbackResponse{Text: "Помилка перевірки статусу"})
@@ -181,7 +181,7 @@ func handleSubTask53(c telebot.Context) error {
 	}
 
 	// Check if there's an active session
-	if existingSession, exists := getSubTask5Session(int64(game.ID)); exists {
+	if existingSession, exists := getSubTask10Session(int64(game.ID)); exists {
 		if existingSession.UserID != user.ID {
 			// Another user is already answering
 			msgTextOtherUserAnswer := fmt.Sprintf("@%s донт пуш зе хорсес! Інша зірочка зараз відповідає на мемчики.", user.Username)
@@ -202,9 +202,9 @@ func handleSubTask53(c telebot.Context) error {
 	}
 
 	// Create new session
-	session := createSubTask5Session(user.ID, user.Username, int64(game.ID), 1, c.Bot(), chat) // таск айди нужно указать 1
+	session := createSubTask10Session(user.ID, user.Username, int64(game.ID), 10, c.Bot(), chat) // fourth parameter of the task ID (our case 10)
 	utils.Logger.WithFields(logrus.Fields{
-		"source":   "handleSubTask53",
+		"source":   "handleSubTask13",
 		"user_id":  session.UserID,
 		"game_id":  session.GameID,
 		"task_id":  session.TaskID,
@@ -213,13 +213,13 @@ func handleSubTask53(c telebot.Context) error {
 		"responses": session.Responses,
 		"start_time": session.StartTime,
 		"is_active": session.IsActive,
-	}).Info("Created new SubTask 5 session")
+	}).Info("Created new SubTask 10 session")
 	
 	msg := fmt.Sprintf("@%s, ти починаєш відповідати на мемчики! 🎭", user.Username)
 	_, err = c.Bot().Send(chat, msg)
 	if err != nil {
-		utils.Logger.Errorf("Error notifying user %s about starting SubTask 5: %v", user.Username, err)
-		removeSubTask5Session(int64(game.ID))
+		utils.Logger.Errorf("Error notifying user %s about starting SubTask 10: %v", user.Username, err)
+		removeSubTask10Session(int64(game.ID))
 		return c.Respond(&telebot.CallbackResponse{Text: "Помилка початку завдання"})
 	}
 
@@ -229,7 +229,7 @@ func handleSubTask53(c telebot.Context) error {
 	err = sendMeme(session, c.Bot())
 	if err != nil {
 		utils.Logger.Errorf("Error sending first meme: %v", err)
-		removeSubTask5Session(int64(game.ID))
+		removeSubTask10Session(int64(game.ID))
 		return c.Respond(&telebot.CallbackResponse{Text: "Помилка відправки мема"})
 	}
 
@@ -237,7 +237,7 @@ func handleSubTask53(c telebot.Context) error {
 }
 
 // sendMeme sends the current meme to user
-func sendMeme(session *SubTask5Session, bot *telebot.Bot) error {
+func sendMeme(session *SubTask10Session, bot *telebot.Bot) error {
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
@@ -250,15 +250,15 @@ func sendMeme(session *SubTask5Session, bot *telebot.Bot) error {
 		utils.Logger.Errorf("Error getting voice meme answers count for game %s: %v", session.Chat.Title, err)
 	}
 
-	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_5/%d", countAnswer+1)
+	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_10/%d", countAnswer+1)
 
 	// if countAnswer == 0 {
-	// 	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_5/%d", countAnswer)
+	// 	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_10/%d", countAnswer)
 	// } else {
-	// 	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_5/%d", countAnswer+1)
+	// 	pathMemes = fmt.Sprintf("internal/data/tasks/subtasks/subtask_10/%d", countAnswer+1)
 	// }
 
-	//pathMemes = "internal/data/tasks/subtasks/subtask_5"
+	//pathMemes = "internal/data/tasks/subtasks/subtask_10"
 	memeFilename := fmt.Sprintf("meme_%d.gif", session.CurrentMeme)
 	memePath := filepath.Join(pathMemes, memeFilename)
 
@@ -300,10 +300,10 @@ func sendMeme(session *SubTask5Session, bot *telebot.Bot) error {
 	return nil
 }
 
-// HandleSubTask5Response handles user responses to memes
-func HandleSubTask5Response(bot *telebot.Bot) func(m *telebot.Message) {
+// HandleSubTask10Response handles user responses to memes
+func HandleSubTask10Response(bot *telebot.Bot) func(m *telebot.Message) {
 	return func(m *telebot.Message) {
-		utils.Logger.Info("HandleSubTask5Response called")
+		utils.Logger.Info("HandleSubTask10Response called")
 		user := m.Sender
 		chat := m.Chat
 
@@ -314,13 +314,13 @@ func HandleSubTask5Response(bot *telebot.Bot) func(m *telebot.Message) {
 		}
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source":   "HandleSubTask5Response",
+			"source":   "HandleSubTask10Response",
 			"username": user.Username,
 			"user_id":  user.ID,
 			"chat_id":  chat.ID,
-		}).Info("User is responding to SubTask 5")
+		}).Info("User is responding to SubTask 10")
 		// Check if there's an active session for this chat
-		session, exists := getSubTask5Session(int64(game.ID))
+		session, exists := getSubTask10Session(int64(game.ID))
 		if !exists {
 			utils.Logger.Info("Session is not exists")
 
@@ -353,7 +353,7 @@ func HandleSubTask5Response(bot *telebot.Bot) func(m *telebot.Message) {
 		session.Responses = append(session.Responses, responseText)
 
 		utils.Logger.WithFields(logrus.Fields{
-			"source":       "HandleSubTask5Response",
+			"source":       "HandleSubTask10Response",
 			"user_id":      session.UserID,
 			"meme_number":  session.CurrentMeme,
 			"response":     responseText,
@@ -378,9 +378,9 @@ func HandleSubTask5Response(bot *telebot.Bot) func(m *telebot.Message) {
 		if session.CurrentMeme >= session.TotalMemes {
 			// All memes processed, complete session
 			time.Sleep(2*time.Second)
-			err := completeSubTask5(session, bot)
+			err := completeSubTask10(session, bot)
 			if err != nil {
-				utils.Logger.Errorf("Error completing SubTask 5: %v", err)
+				utils.Logger.Errorf("Error completing SubTask 10: %v", err)
 			}
 			return
 		}
@@ -393,20 +393,20 @@ func HandleSubTask5Response(bot *telebot.Bot) func(m *telebot.Message) {
 			err := sendMeme(session, bot)
 			if err != nil {
 				utils.Logger.Errorf("Error sending next meme: %v", err)
-				removeSubTask5Session(session.GameID)
+				removeSubTask10Session(session.GameID)
 			}
 		})
 	}
 }
 
-// completeSubTask5 completes subtask 5
-func completeSubTask5(session *SubTask5Session, bot *telebot.Bot) error {
+// completeSubTask10 completes subtask 10
+func completeSubTask10(session *SubTask10Session, bot *telebot.Bot) error {
 	utils.Logger.WithFields(logrus.Fields{
-		"source":         "completeSubTask5",
+		"source":         "completeSubTask10",
 		"user_id":        session.UserID,
 		"game_id":        session.GameID,
 		"responses_count": len(session.Responses),
-	}).Info("Completing SubTask 5")
+	}).Info("Completing SubTask 10")
 
 	// Save player response to database
 	playerResponse := &models.PlayerResponse{
@@ -444,19 +444,19 @@ func completeSubTask5(session *SubTask5Session, bot *telebot.Bot) error {
 	
 	// Remove session after some time
 	time.AfterFunc(5*time.Second, func() {
-		removeSubTask5Session(session.GameID)
+		removeSubTask10Session(session.GameID)
 	})
 
 	utils.Logger.WithFields(logrus.Fields{
-		"source":  "completeSubTask5",
+		"source":  "completeSubTask10",
 		"user_id": session.UserID,
 		"game_id": session.GameID,
-	}).Info("SubTask 5 completed successfully")
+	}).Info("SubTask 10 completed successfully")
 
 	return nil
 }
 
-// GetActiveSubTask5Session returns active session for game (for use in other parts of code)
-func GetActiveSubTask5Session(gameID int64) (*SubTask5Session, bool) {
-	return getSubTask5Session(gameID)
+// GetActiveSubTask10Session returns active session for game (for use in other parts of code)
+func GetActiveSubTask10Session(gameID int64) (*SubTask10Session, bool) {
+	return getSubTask10Session(gameID)
 }

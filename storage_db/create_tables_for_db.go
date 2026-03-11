@@ -145,6 +145,17 @@ func createTables() error {
 				count_answers INTEGER NOT NULL
 			)`,
 		},
+		{
+			"subtask_12_answers",
+			`CREATE TABLE IF NOT EXISTS subtask_12_answers (
+				id          INTEGER PRIMARY KEY AUTOINCREMENT,
+				game_id     INTEGER NOT NULL,
+				chat_id     INTEGER NOT NULL,
+				question_id INTEGER NOT NULL,
+				answer      TEXT NOT NULL,
+				created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+			)`,
+		},
 	}
 
 	for _, q := range queries {

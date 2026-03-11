@@ -127,10 +127,10 @@ func processTaskDescription(subtaskID int, description string) string {
 }
 
 // Load subtasks from JSON file
-func loadSubtask5() ([]Subtask, error) {
-	data, err := ioutil.ReadFile("internal/data/tasks/subtasks/subtask_5.json")
+func loadSubtask10() ([]Subtask, error) {
+	data, err := ioutil.ReadFile("internal/data/tasks/subtasks/subtask_10.json")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read subtask_5.json: %v", err)
+		return nil, fmt.Errorf("failed to read subtask_10.json: %v", err)
 	}
 
 	var subtasks []Subtask
@@ -153,7 +153,7 @@ func (pm *PollManager) StartPollVoting(gameID int) (*PollSession, error) {
 	}
 
 	// Loading options for voting
-	subtasks, err := loadSubtask5()
+	subtasks, err := loadSubtask10()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load subtasks: %v", err)
 	}
@@ -269,13 +269,17 @@ func (pm *PollManager) CreateTelegramPoll(bot *telebot.Bot, chatID int64, sessio
 // startPollTimer - starts the timer and ends the voting
 func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *PollSession, keyboard *telebot.ReplyMarkup) {
 	utils.Logger.Info("Starting poll timer...")
-	game, _ := storage_db.GetGameByChatId(chatID)
+	game, err := storage_db.GetGameByChatId(chatID)
+	if err != nil {
+		utils.Logger.Errorf("Error getting game by chat ID: %v", err)
+		return
+	}
 	currentTaskID := game.CurrentTaskID
 
-	if currentTaskID == 1 {
-		utils.Logger.Info("Poll timer started for subtask 5...")
+	if currentTaskID == 10 {
+		utils.Logger.Info("Poll timer started for subtask 10...")
 		// time.Sleep(15 * time.Second)
-		time.Sleep(10 * time.Second) // time called summary voiting - 2 minutes
+		time.Sleep(3 * time.Minute) // time called summary voiting - 2 minutes
 
 		// Do NOT call bot.StopPoll here, as it is done in ProcessPollResults
 		utils.Logger.Infof("Poll timer expired for game %d, processing results...", session.GameID)
@@ -298,8 +302,8 @@ func (pm *PollManager) startPollTimer(bot *telebot.Bot, chatID int64, session *P
 
 		inlineKeys := &telebot.ReplyMarkup{} // initialize inline keyboard
 
-		answerTaskData := fmt.Sprintf("waiting_1_%d", winner.ID) // в проде заменить на waituing_5_winner.ID
-		skipTaskData := fmt.Sprintf("skip_1_%d", winner.ID) // в проде заменить на skip_5_winner.ID
+		answerTaskData := fmt.Sprintf("waiting_10_%d", winner.ID) // в проде заменить на waituing_5_winner.ID
+		skipTaskData := fmt.Sprintf("skip_10_%d", winner.ID) // в проде заменить на skip_5_winner.ID
 
 		answerBtn := inlineKeys.Data("Хочу відповісти", answerTaskData)
 		//skipBtn := btnmanager.Get(inlineKeys, models.UniqueSkipTask, taskId)

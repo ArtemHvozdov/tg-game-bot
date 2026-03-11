@@ -3,12 +3,13 @@ package handlers
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ArtemHvozdov/tg-game-bot.git/models"
 	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/btnmanager"
 
-	//"github.com/ArtemHvozdov/tg-game-bot.git/pkg/voting"
+	"github.com/ArtemHvozdov/tg-game-bot.git/pkg/voting"
 	"github.com/ArtemHvozdov/tg-game-bot.git/storage_db"
 	"github.com/ArtemHvozdov/tg-game-bot.git/utils"
 	"github.com/sirupsen/logrus"
@@ -110,7 +111,28 @@ func SendTasks(bot *telebot.Bot, chatID int64) func(c telebot.Context) error {
 	// 	SendNextTask(bot, int64(game.ID))
 	// }
 
-	return nil
+	for {
+		// Получаем текущую игру чтобы узнать актуальный task ID
+		currentGame, err := storage_db.GetGameById(int(game.ID))
+		if err != nil {
+			utils.Logger.Errorf("Error getting game: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		var interval time.Duration
+		if currentGame.CurrentTaskID == 12 {
+			interval = 5 * time.Minute
+		} else {
+			interval = 30 * time.Second
+		}
+
+		utils.Logger.Infof("Next task in %v (current task ID: %d)", interval, currentGame.CurrentTaskID)
+		time.Sleep(interval)
+		SendNextTask(bot, int64(game.ID))
+	}
+
+	// return nil
 
 	}
 	
@@ -171,7 +193,50 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 		inlineKeys.Row(answerBtn, skipBtn),
 	)
 
-	// switch currentTask.ID {
+	switch currentTask.ID {
+		case 10:
+			err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
+			if err != nil {
+				utils.Logger.Errorf("Error starting subtask 5 voting: %v", err)
+				// Можете решить, продолжать ли выполнение или вернуть ошибку
+			} else {
+				utils.Logger.Info("Successfully started subtask 5 voting")
+			}
+		case 12:
+			parts := strings.SplitN(currentTask.Description, "\n---PART2---\n", 2)
+
+			if len(parts) == 2 {
+				// Part 1 — GIF without buttons
+				photo.Caption = currentTask.Tittle + "\n\n" + parts[0]
+				_, err = bot.Send(chat, photo, telebot.ModeMarkdown)
+				if err != nil {
+					utils.Logger.Errorf("Error sending task %d part 1: %v", currentTask.ID, err)
+					return err
+				}
+				// Part 2 — text with buttons
+				_, err = bot.Send(chat, parts[1], inlineKeys, telebot.ModeMarkdown)
+				if err != nil {
+					utils.Logger.Errorf("Error sending task %d part 2: %v", currentTask.ID, err)
+					return err
+				}
+			} else {
+				// Default sending — GIF with buttons
+				_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown)
+				if err != nil {
+					utils.Logger.Errorf("Error sending task %d: %v", currentTask.ID, err)
+					return err
+				}
+			}
+			
+		default:
+			_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown )
+			if err != nil {
+						
+					utils.Logger.Errorf("Error sending task %d as text: %v", currentTask.ID, err)
+						
+				return err
+			}
+	}
 	// 	case 1:
 	// 		utils.Logger.Info("Starting subtask 5 voiting fot test test")
 	// 		err := voting.StartSubtask5VotingDirect(bot, chat.ID, msg, inlineKeys)
@@ -223,17 +288,17 @@ func SendNextTask(bot *telebot.Bot, gameID int64) error {
 	// }
 
 	if _, err := os.Stat(fileGif.FileLocal); os.IsNotExist(err) {
-    utils.Logger.Warnf("GIF file not found for task %d: %s", currentTask.ID, fileGif.FileLocal)
-}
+		utils.Logger.Warnf("GIF file not found for task %d: %s", currentTask.ID, fileGif.FileLocal)
+	}
 
-
-	_, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown )
-			if err != nil {
+	// main functionality for sending task with media
+	// _, err = bot.Send(chat, photo, inlineKeys, telebot.ModeMarkdown )
+	// 		if err != nil {
 				 
-					utils.Logger.Errorf("Error sending task %d as text: %v", currentTask.ID, err)
+	// 				utils.Logger.Errorf("Error sending task %d as text: %v", currentTask.ID, err)
 				
-				return err
-			}
+	// 			return err
+	// 		}
 
 // 	if err != nil {
 //     utils.Logger.Errorf("Error sending task %d: %v", currentTask.ID, err)

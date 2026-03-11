@@ -27,6 +27,72 @@ func OnSkipTaskBtnHandler(bot *telebot.Bot) func(c telebot.Context) error {
 			return nil
 		}
 
+		if userTaskID == 12 {
+			userRole, err := storage_db.GetPlayerRoleByUserIDAndGameID(user.ID, game.ID)
+			if err != nil {
+				utils.Logger.Errorf("Error getting player role: %v", err)
+				return nil
+			}
+			if userRole != "admin" {
+				c.Respond()
+				warning, err := bot.Send(chat,
+					fmt.Sprintf("@%s, тільки адмін може взаємодіяти з цим завданням 😊", user.Username),
+				)
+				if err != nil {
+					utils.Logger.Errorf("Error sending warning: %v", err)
+					return nil
+				}
+				time.AfterFunc(5*time.Second, func() {
+					bot.Delete(warning)
+				})
+				return nil
+			}
+
+			if userRole == "admin" {
+				// Отвечает прямо сейчас
+				if _, exists := getSubtask12State(chat.ID); exists {
+					msg, _ := bot.Send(chat, fmt.Sprintf("@%s, ти прямо зараз відповідаєш на це завдання ⏳", user.Username))
+					time.AfterFunc(5*time.Second, func() {
+						bot.Delete(msg)
+					})
+					return nil
+				}
+
+				// Уже ответил на все вопросы
+				allAnswered, err := storage_db.HasAllTask12Answers(int64(game.ID), chat.ID)
+				if err != nil {
+					utils.Logger.Errorf("Error checking task 12 answers: %v", err)
+					return nil
+				}
+				if allAnswered {
+					msg, _ := bot.Send(chat, fmt.Sprintf("@%s, ти вже відповів на всі питання цього завдання 😊", user.Username))
+					time.AfterFunc(5*time.Second, func() {
+						bot.Delete(msg)
+					})
+					return nil
+				}
+
+				// Иначе — стандартная логика скипа
+				status, err := storage_db.SkipPlayerResponse(user.ID, user.Username, game.ID, userTaskID)
+				if err != nil {
+					utils.Logger.Errorf("Error skipping task %d by user: %v. %v", userTaskID, user.Username, err)
+					return nil
+				}
+
+				switch {
+				case status.AlreadySkipped:
+					bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(staticMessages, models.MsgUserAlreadySkipTask), user.Username))
+				case status.SkipLimitReached:
+					msg, _ := bot.Send(chat, fmt.Sprintf(utils.GetStaticMessage(skipMessages, models.MsgSkipLimitReached), user.Username))
+					time.AfterFunc(cfg.Durations.TimeDeleteMsgMaxSkipTasks, func() {
+						bot.Delete(msg)
+					})
+				}
+
+				return nil
+			}
+		}
+
 		utils.Logger.WithFields(logrus.Fields{
 			"source": "OnSkipTaskBtnHandler",
 			"user": user.Username,

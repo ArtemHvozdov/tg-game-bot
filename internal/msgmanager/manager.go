@@ -74,7 +74,7 @@ func (mm *Manager) SendTemporaryMessage(chatID, userID int64, messageType, text 
 	recipient := &telebot.Chat{ID: chatID}
 	
 	// Send message
-	msg, err := mm.bot.Send(recipient, text, options...)
+	msg, err := mm.bot.Send(recipient, text,  options...)
 	if err != nil {
 		return nil, err
 	}

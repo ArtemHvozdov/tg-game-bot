@@ -160,9 +160,27 @@ func HandlerPlayerResponse(bot *telebot.Bot) func(c telebot.Context) error {
 		// Switch case for different task IDs
         switch userTaskID {
 		// this case is for quick test of subtask memes
-		// case 1: // for the task 5
-		// 	HandleSubTask5Response(bot)(msg)
-		// 	return nil
+		case 10: // for the task 5
+			// utils.Logger.Infof("Handling response for task 10, user %s, status: %s", user.Username, statusUser)
+			// if statusUser == "\fwaiting_10_3" {
+			// 	handleSubTask13(c)
+			// }
+			// HandleSubTask10(bot)
+			session, exists := GetActiveSubTask10Session(int64(game.ID))
+			if !exists {
+				return nil
+			}
+			// Проверяем что отвечает нужный юзер
+			if session.UserID != user.ID {
+				return nil
+			}
+			// Делегируем обработку в логику subtask10
+			HandleSubTask10Response(bot)(msg)
+			return nil
+
+		case 12:
+			HandleSubtask12Answer(c)
+			return nil
         case 13:
             // Handle photo saving for task 1
             if msg.Photo != nil {

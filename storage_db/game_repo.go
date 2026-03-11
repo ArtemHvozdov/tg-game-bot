@@ -434,3 +434,44 @@ func GetVoiceMemeAnswersCount(gameID int64) (int, error) {
 	}).Info("Voice meme answers count has been retrieved successfully")
 	return count, nil
 }
+
+func SaveTask12Answer(gameID, chatID int64, questionID int, answer string) error {
+    _, err := Db.Exec(
+        `INSERT INTO subtask_12_answers (game_id, chat_id, question_id, answer) VALUES (?, ?, ?, ?)`,
+        gameID, chatID, questionID, answer,
+    )
+    return err
+}
+
+func GetTask12Answers(gameID, chatID int64) ([]models.Task12Answer, error) {
+    rows, err := Db.Query(
+        `SELECT question_id, answer FROM subtask_12_answers WHERE game_id = ? AND chat_id = ? ORDER BY id ASC`,
+        gameID, chatID,
+    )
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var answers []models.Task12Answer
+    for rows.Next() {
+        var a models.Task12Answer
+        if err := rows.Scan(&a.QuestionID, &a.Answer); err != nil {
+            return nil, err
+        }
+        answers = append(answers, a)
+    }
+    return answers, nil
+}
+
+func HasAllTask12Answers(gameID, chatID int64) (bool, error) {
+    var count int
+    err := Db.QueryRow(
+        `SELECT COUNT(*) FROM subtask_12_answers WHERE game_id = ? AND chat_id = ?`,
+        gameID, chatID,
+    ).Scan(&count)
+    if err != nil {
+        return false, err
+    }
+    return count == 7, nil
+}
